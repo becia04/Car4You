@@ -1,7 +1,14 @@
+using Car4You.DAL;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<CarDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DB")));
+
+
 
 var app = builder.Build();
 
