@@ -1,0 +1,68 @@
+﻿@model Car4You.Models.Car
+@{
+    ViewData["Title"] = "Dodaj nowe auto";
+}
+
+<h2>Dodaj nowe auto</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="Title">Tytuł</label>
+        <input asp-for="Title" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Name">Model</label>
+        <input asp-for="Name" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="BrandId">Marka</label>
+        <select asp-for="BrandId" asp-items="ViewBag.Brands" class="form-control">
+            <option value="">-- Wybierz --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="BodyId">Nadwozie</label>
+        <select asp-for="BodyId" asp-items="ViewBag.BodyTypes" class="form-control">
+            <option value="">-- Wybierz --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FuelId">Rodzaj paliwa</label>
+        <select asp-for="FuelId" asp-items="ViewBag.FuelTypes" class="form-control">
+            <option value="">-- Wybierz --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GearboxId">Skrzynia biegów</label>
+        <select asp-for="GearboxId" asp-items="ViewBag.Gearboxes" class="form-control">
+            <option value="">-- Wybierz --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Year">Rok produkcji</label>
+        <input asp-for="Year" type="number" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Mileage">Przebieg</label>
+        <input asp-for="Mileage" type="number" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="VIN">Numer VIN</label>
+        <input asp-for="VIN" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="NewPrice">Cena</label>
+        <input asp-for="NewPrice" type="number" class="form-control" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Dodaj auto</button>
+</form>
