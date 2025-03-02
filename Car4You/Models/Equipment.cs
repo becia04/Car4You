@@ -9,7 +9,6 @@ namespace Car4You.Models
         [Required(ErrorMessage = "Nazwa jest wymagana")]
         [StringLength(100, ErrorMessage = "Nazwa nie może mieć więcej niż 100 znaków")]
         public string Name { get; set; }
-        [Required(ErrorMessage = "Obrazek jest wymagany")]
         public string Icon { get; set; }
         [Required(ErrorMessage = "Wybierz typ wyposażenia")]
         public int EquipmentTypeId { get; set; }

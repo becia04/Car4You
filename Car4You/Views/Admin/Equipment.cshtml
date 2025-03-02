@@ -1,0 +1,217 @@
+﻿@model List<Equipment>
+
+@{
+    ViewData["Title"] = "Manage Equipment";
+}
+
+<!-- Dodanie Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<h1>Manage Equipment</h1>
+
+<!-- Przycisk do rozwijania formularza -->
+<button id="toggleAddFormBtn" class="btn btn-primary">
+    <i class="fa fa-plus"></i> Add New
+</button>
+
+<!-- Ukryty formularz dodawania -->
+<div id="addEquipmentFormContainer" style="display: none; margin-top: 20px;">
+    <form id="addEquipmentForm">
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="newName" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>Equipment Type</label>
+            <select id="newEquipmentType" class="form-control">
+                @foreach (var type in ViewBag.EquipmentTypes)
+                {
+                    <option value="@type.Id">@type.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Upload Icon</label>
+            <input type="file" id="newImageFile" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-success">
+            <i class="fa fa-check"></i> Add
+        </button>
+    </form>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Icon</th>
+            <th>Equipment Type</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="equipmentTable">
+        @foreach (var equipment in Model)
+        {
+            <tr data-id="@equipment.Id">
+                <td>
+                    <span class="name-text">@equipment.Name</span>
+                    <input type="text" class="form-control name-input d-none" value="@equipment.Name" />
+                </td>
+                <td>
+                    <img src="@equipment.Icon" alt="@equipment.Name" class="icon-preview" style="width: 50px; height: 50px;" />
+                    <input type="file" class="form-control image-input d-none" />
+                </td>
+                <td>
+                    <span class="type-text">@equipment.EquipmentType.Name</span>
+                    <select class="form-control equipment-type d-none">
+                        @foreach (var type in ViewBag.EquipmentTypes)
+                        {
+                            <option value="@type.Id" selected="@(type.Id == equipment.EquipmentTypeId)">
+                                @type.Name
+                            </option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-warning edit-btn">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn btn-success save-btn d-none">
+                        <i class="fa fa-save"></i>
+                    </button>
+                    <button class="btn btn-secondary cancel-btn d-none">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <button class="btn btn-danger delete-btn">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Pokazanie/ukrycie formularza
+        $("#toggleAddFormBtn").click(function () {
+            $("#addEquipmentFormContainer").slideToggle();
+        });
+
+        // Edycja istniejącego rekordu
+        $(".edit-btn").click(function () {
+            var row = $(this).closest("tr");
+
+            // Zapamiętanie oryginalnych wartości
+            row.data("original-name", row.find(".name-input").val());
+            row.data("original-type", row.find(".equipment-type").val());
+
+            row.find(".name-text, .type-text").addClass("d-none");
+            row.find(".name-input, .equipment-type, .image-input").removeClass("d-none");
+            row.find(".edit-btn, .delete-btn").addClass("d-none");
+            row.find(".save-btn, .cancel-btn").removeClass("d-none");
+    });
+        // Zapisanie zmian
+        $(".save-btn").click(function () {
+            var row = $(this).closest("tr");
+            var id = row.data("id");
+            var name = row.find(".name-input").val();
+            var typeId = row.find(".equipment-type").val();
+            var file = row.find(".image-input")[0].files[0];
+
+            var formData = new FormData();
+            formData.append("Id", id);
+            formData.append("Name", name);
+            formData.append("EquipmentTypeId", typeId);
+            if (file) {
+                formData.append("ImageFile", file);
+            }
+
+            $.ajax({
+                url: "/Admin/EditEquipment",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Updated successfully!");
+                    location.reload();
+                },
+                error: function () {
+                    alert("Error updating equipment.");
+                }
+            });
+        });
+
+        // Anulowanie edycji
+        $(".cancel-btn").click(function () {
+            var row = $(this).closest("tr");
+
+            // Przywrócenie oryginalnych wartości
+            row.find(".name-input").val(row.data("original-name"));
+            row.find(".equipment-type").val(row.data("original-type"));
+
+            row.find(".name-text, .type-text").removeClass("d-none");
+            row.find(".name-input, .equipment-type, .image-input").addClass("d-none");
+            row.find(".edit-btn, .delete-btn").removeClass("d-none");
+            row.find(".save-btn, .cancel-btn").addClass("d-none");
+        });
+
+        // Usuwanie elementu
+            $(".delete-btn").click(function () {
+        var row = $(this).closest("tr");
+        var id = row.data("id");
+
+        if (confirm("Are you sure you want to delete this?")) {
+            $.ajax({
+                url: "/Admin/DeleteEquipment/" + id,
+                type: "POST",
+                success: function () {
+                    row.remove();
+                    alert("Deleted successfully!");
+                },
+                error: function (xhr) {
+                    alert(xhr.responseText || "Error deleting equipment.");
+                }
+            });
+        }
+    });
+
+        // Dodawanie nowego rekordu
+    $("#addEquipmentForm").submit(function (e) {
+        e.preventDefault();
+
+        var name = $("#newName").val();
+        var typeId = $("#newEquipmentType").val();
+        var file = $("#newImageFile")[0].files[0];
+
+        if (!name || !typeId || !file) {
+            alert("Please fill in all fields!");
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append("Name", name);
+        formData.append("EquipmentTypeId", typeId);
+        formData.append("ImageFile", file);
+
+        $.ajax({
+            url: "/Admin/CreateEquipment",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                alert("Added successfully!");
+                location.reload();
+            },
+            error: function (xhr) {
+                console.error("Error:", xhr.responseText);
+                alert("Error adding equipment. Check the console for details.");
+            }
+        });
+    });
+    });
+</script>

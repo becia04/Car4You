@@ -7,35 +7,3 @@
 <h1>@ViewData["Title"]</h1>
 <a asp-action="Create" class="btn btn-success">Dodaj nowe auto</a>
 <a asp-action="CreateEquipment" class="btn btn-success">Dodaj nowe wyposażenie</a>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Icon</th>
-            <th>Equipment Type</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var equipment in Model)
-        {
-            <tr>
-                <td>@equipment.Name</td>
-                <td>
-                    @if (!string.IsNullOrEmpty(equipment.Icon))
-                    {
-                        <img src="@equipment.Icon" alt="@equipment.Name" style="width: 50px; height: 50px;" />
-                    }
-                    else
-                    {
-                        <span>No icon available</span>
-                    }
-                </td>
-                <td>@equipment.EquipmentType.Name</td> <!-- Załóżmy, że masz już powiązanie z EquipmentType -->
-            </tr>
-        }
-    </tbody>
-</table>
-
-
-
