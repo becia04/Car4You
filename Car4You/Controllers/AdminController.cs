@@ -18,6 +18,11 @@ namespace Car4You.Controllers
             _environment = environment;
         }
 
+        public IActionResult Index()
+        {
+            return View();
+        }
+
         public IActionResult Equipment()
         {
             var equipments = _context.Equipments
