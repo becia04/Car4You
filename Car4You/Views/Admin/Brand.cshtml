@@ -1,0 +1,240 @@
+﻿@model List<Brand>
+
+@{
+    ViewData["Title"] = "Marki samochodowe";
+}
+
+<!-- Dodanie Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<h1>Marki samochodowe</h1>
+
+<!-- Przycisk do rozwijania formularza -->
+<button id="toggleAddFormBtn" class="btn btn-primary">
+    <i class="fa fa-plus"></i> Add New
+</button>
+
+<!-- Ukryty formularz dodawania -->
+<div id="addBrandFormContainer" style="display: none; margin-top: 20px;">
+    <form id="addBrandForm">
+        <div class="form-group">
+            <label>Nazwa</label>
+            <input type="text" id="newName" class="form-control"/>
+            <div id="errorName" class="alert alert-danger d-none"></div>
+
+        </div>
+        <div class="form-group">
+            <label>Logo</label>
+            <input type="file" id="newImageFile" class="form-control"/>
+        </div>
+        <button type="submit" class="btn btn-success">
+            <i class="fa fa-check"></i> Add
+        </button>
+    </form>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nazwa</th>
+            <th>Logo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="brandTable">
+        @foreach (var brand in Model)
+        {
+            <tr data-id="@brand.Id">
+                <td>
+                    <span class="name-text">@brand.Name</span>
+                    <input type="text" class="form-control name-input d-none" value="@brand.Name" />
+                    <div id="errorNameTable" class="alert alert-danger d-none"></div>
+                </td>
+                <td>
+                    <img src="@brand.Icon" alt="@brand.Name" class="icon-preview" style="width: 50px; height: 50px;" />
+                    <input type="file" class="form-control image-input d-none" />
+                    <div id="errorIconTable" class="alert alert-danger d-none"></div>
+                </td>
+                <td>
+                    <button class="btn btn-warning edit-btn">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn btn-success save-btn d-none">
+                        <i class="fa fa-save"></i>
+                    </button>
+                    <button class="btn btn-secondary cancel-btn d-none">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <button class="btn btn-danger delete-btn">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+       var existingBrands = [];
+
+    $(document).ready(function () {
+        // Pobranie listy marek do tablicy
+        $(".name-text").each(function () {
+            existingBrands.push($(this).text().trim().toLowerCase());
+        });
+
+        // Pokazanie/ukrycie formularza
+        $("#toggleAddFormBtn").click(function () {
+            $("#addBrandFormContainer").slideToggle();
+        });
+
+        // ✅ Dodawanie nowej marki
+        $("#addBrandForm").submit(function (e) {
+            e.preventDefault();
+
+            var name = $("#newName").val().trim();
+            var file = $("#newImageFile")[0].files[0];
+            //Walidacja danych
+            var state=0;
+            if (existingBrands.includes(name.toLowerCase())) {
+                $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
+                state++;
+            }
+            else if(!name){
+                $("#errorName").text("Nazwa musi być podana").removeClass("d-none");
+                state++;
+            }
+            else{
+                $("#errorName").addClass("d-none");
+            }
+            if(!file){
+                $("#errorIcon").text("Wymagane logo").removeClass("d-none");
+                state++;
+            }
+            else{
+                $("#errorIcon").addClass("d-none");
+            }
+            if(state>0)
+            {
+                return;
+            }
+            var formData = new FormData();
+            formData.append("Name", name);
+            formData.append("ImageFile", file);
+
+            $.ajax({
+                url: "/Admin/CreateBrand",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Marka dodana pomyślnie");
+                    location.reload();
+                },
+                error: function (xhr) {
+                    var errorMessage = xhr.responseText || "Błąd dodawania";
+                    $("#errorMessage").text(errorMessage).removeClass("d-none");
+                }
+            });
+        });
+
+        // ✅ Edycja marki
+        $(".edit-btn").click(function () {
+            var row = $(this).closest("tr");
+
+            // Zapamiętanie oryginalnych wartości
+            row.data("original-name", row.find(".name-input").val());
+
+            row.find(".name-text").addClass("d-none");
+            row.find(".name-input, .image-input").removeClass("d-none");
+            row.find(".edit-btn, .delete-btn").addClass("d-none");
+            row.find(".save-btn, .cancel-btn").removeClass("d-none");
+        });
+
+        // ✅ Zapisywanie zmian
+        $(".save-btn").click(function () {
+            var row = $(this).closest("tr");
+            var id = row.data("id");
+            var name = row.find(".name-input").val().trim();
+            var file = row.find(".image-input")[0].files[0];
+            var errorContainer = row.find("#errorNameTable");
+            var state=0;
+            if(!name){
+                errorContainer.text("Nazwa jest wymagana").removeClass("d-none");
+                state++;
+            }
+            // Sprawdzenie czy nazwa marki już istnieje (z wyjątkiem edytowanej)
+            else if (existingBrands.includes(name.toLowerCase()) && name.toLowerCase() !== row.data("original-name").toLowerCase()) {
+                 errorContainer.text("Podana marka już istnieje").removeClass("d-none");
+                state++;
+            }
+            else{
+                errorContainer.addClass("d-none");
+            }
+            if(state>0)
+            {
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("Id", id);
+            formData.append("Name", name);
+            if (file) {
+                formData.append("ImageFile", file);
+            }
+
+            $.ajax({
+                url: "/Admin/EditBrand",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Zaktualizowano pomyślnie");
+                    location.reload();
+                },
+                error: function () {
+                    alert("Błąd aktualizacji");
+                }
+            });
+        });
+
+        // ✅ Anulowanie edycji
+        $(".cancel-btn").click(function () {
+            var row = $(this).closest("tr");
+
+            // Przywrócenie oryginalnych wartości
+            row.find(".name-input").val(row.data("original-name"));
+
+            row.find(".name-text").removeClass("d-none");
+            row.find(".name-input, .image-input").addClass("d-none");
+            row.find(".edit-btn, .delete-btn").removeClass("d-none");
+            row.find(".save-btn, .cancel-btn").addClass("d-none");
+            $("#errorName").addClass("d-none");
+        });
+
+        // ✅ Usuwanie marki
+        $(".delete-btn").click(function () {
+            var row = $(this).closest("tr");
+            var id = row.data("id");
+
+            if (confirm("Jesteś pewny, że chcesz usunąć podaną markę?")) {
+                $.ajax({
+                    url: "/Admin/DeleteBrand/" + id,
+                    type: "POST",
+                    success: function () {
+                        row.remove();
+                        alert("Usunięto pomyślnie");
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseText || "Błąd usuwania");
+                    }
+                });
+            }
+        });
+    });
+
+</script>

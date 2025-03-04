@@ -37,9 +37,12 @@ namespace Car4You.Controllers
             {
                 return BadRequest("Equipment name is required.");
             }
-            if (_context.Equipments.Any(e => e.Name == equipment.Name))
+            else
             {
-                return BadRequest("This name already exists.");
+                if (_context.Equipments.Any(e => e.Name == equipment.Name))
+                {
+                    return BadRequest("This name already exists.");
+                }
             }
             if (imageFile == null || imageFile.Length == 0)
             {
@@ -162,7 +165,7 @@ namespace Car4You.Controllers
 
             // Sprawdzamy, czy wyposażenie jest przypisane do jakiegoś auta
             var carsUsingEquipment = _context.CarEquipments
-                .Include(c=>c.Car)
+                .Include(c => c.Car)
                 .Where(c => c.EquipmentId == id)
                 .Select(c => c.Car.Name)
                 .ToList();
@@ -188,6 +191,157 @@ namespace Car4You.Controllers
             return Ok();
         }
 
+        public IActionResult Brand()
+        {
+            var brands = _context.Brands
+                 .Include(a => a.Car)
+                 .OrderBy(a => a.Name)
+                 .ToList();
+            return View(brands);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateBrand(Brand brand, IFormFile ImageFile)
+        {
+            try
+            {
+                brand.Icon = "default.png"; // Tymczasowe ustawienie ikony
+                _context.Brands.Add(brand);
+                await _context.SaveChangesAsync(); // Teraz mamy ID
+
+                // Tworzenie nazwy pliku
+                string normalizedFileName = FileHelper.NormalizeFileName(brand.Name);
+                string fileExtension = Path.GetExtension(ImageFile.FileName);
+                string finalFileName = $"{brand.Id}_{normalizedFileName}{fileExtension}";
+                string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+
+                if (!Directory.Exists(uploadDir))
+                {
+                    Directory.CreateDirectory(uploadDir);
+                }
+
+                string filePath = Path.Combine(uploadDir, finalFileName);
+
+                // Zapisywanie pliku
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(fileStream);
+                }
+
+                // Aktualizacja ścieżki do ikony
+                brand.Icon = "/brand/" + finalFileName;
+                _context.Brands.Update(brand);
+                await _context.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditBrand(int Id, string Name, IFormFile ImageFile)
+        {
+            var brand = await _context.Brands.FindAsync(Id);
+            if (brand == null) return NotFound();
+
+
+            string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+            string normalizedFileName = FileHelper.NormalizeFileName(Name);
+            string fileExtension = Path.GetExtension(brand.Icon);
+            string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
+            string newFilePath = Path.Combine(uploadDir, newFileName);
+
+            try
+            {
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    // Usuwanie starego pliku jeśli istnieje
+                    if (!string.IsNullOrEmpty(brand.Icon))
+                    {
+                        string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
+                    // Zapis nowego pliku
+                    using (var fileStream = new FileStream(newFilePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(fileStream);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(brand.Icon) && !brand.Icon.EndsWith(newFileName))
+                {
+                    // Jeśli zmieniono nazwę wyposażenia, zmieniamy też nazwę pliku
+                    string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Move(oldFilePath, newFilePath);
+                    }
+                }
+
+                // Aktualizacja rekordu
+                brand.Name = Name;
+                brand.Icon = "/brand/" + newFileName;
+
+                _context.Brands.Update(brand);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteBrand(int id)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null)
+            {
+                return NotFound("Nie znaleziono");
+            }
+            // Sprawdzamy, czy wyposażenie jest przypisane do jakiegoś auta
+            var carsBrand = _context.Cars
+                .Include(c => c.Brand)
+                .Where(c => c.BrandId == id)
+                .Select(c => c.Name)
+                .ToList();
+
+            if (carsBrand.Any())
+            {
+                return BadRequest($"Nie można usunąć ze względu na powiązanie z danymi autami: {string.Join(", ", carsBrand)}");
+            }
+
+            try
+            {
+                // Sprawdzenie, czy marka ma przypisany obrazek i nie jest to domyślny plik
+                if (!string.IsNullOrEmpty(brand.Icon) && brand.Icon != "/brand/default.png")
+                {
+                    string filePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath); // Usunięcie pliku
+                    }
+                }
+
+                _context.Brands.Remove(brand);
+                await _context.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
 
     }
 }
