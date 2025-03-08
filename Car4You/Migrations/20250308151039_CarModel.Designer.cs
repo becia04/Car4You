@@ -4,6 +4,7 @@ using Car4You.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Car4You.Migrations
 {
     [DbContext(typeof(CarDbContext))]
-    partial class CarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250308151039_CarModel")]
+    partial class CarModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,7 +43,7 @@ namespace Car4You.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BodyTypes", (string)null);
+                    b.ToTable("BodyTypes");
                 });
 
             modelBuilder.Entity("Car4You.Models.Brand", b =>
@@ -61,7 +64,7 @@ namespace Car4You.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Brands", (string)null);
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("Car4You.Models.Car", b =>
@@ -75,10 +78,7 @@ namespace Car4You.Migrations
                     b.Property<int>("BodyId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("BrandId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CarModelId")
+                    b.Property<int>("BrandId")
                         .HasColumnType("int");
 
                     b.Property<string>("Color")
@@ -166,13 +166,11 @@ namespace Car4You.Migrations
 
                     b.HasIndex("BrandId");
 
-                    b.HasIndex("CarModelId");
-
                     b.HasIndex("FuelId");
 
                     b.HasIndex("GearboxId");
 
-                    b.ToTable("Cars", (string)null);
+                    b.ToTable("Cars");
                 });
 
             modelBuilder.Entity("Car4You.Models.CarEquipment", b =>
@@ -190,7 +188,7 @@ namespace Car4You.Migrations
 
                     b.HasIndex("EquipmentId");
 
-                    b.ToTable("CarEquipments", (string)null);
+                    b.ToTable("CarEquipments");
                 });
 
             modelBuilder.Entity("Car4You.Models.CarModel", b =>
@@ -212,7 +210,7 @@ namespace Car4You.Migrations
 
                     b.HasIndex("BrandId");
 
-                    b.ToTable("CarModels", (string)null);
+                    b.ToTable("CarModels");
                 });
 
             modelBuilder.Entity("Car4You.Models.Equipment", b =>
@@ -239,7 +237,7 @@ namespace Car4You.Migrations
 
                     b.HasIndex("EquipmentTypeId");
 
-                    b.ToTable("Equipments", (string)null);
+                    b.ToTable("Equipments");
                 });
 
             modelBuilder.Entity("Car4You.Models.EquipmentType", b =>
@@ -256,7 +254,7 @@ namespace Car4You.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EquipmentTypes", (string)null);
+                    b.ToTable("EquipmentTypes");
                 });
 
             modelBuilder.Entity("Car4You.Models.FuelType", b =>
@@ -273,7 +271,7 @@ namespace Car4You.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FuelTypes", (string)null);
+                    b.ToTable("FuelTypes");
                 });
 
             modelBuilder.Entity("Car4You.Models.Gearbox", b =>
@@ -290,7 +288,7 @@ namespace Car4You.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Gearboxes", (string)null);
+                    b.ToTable("Gearboxes");
                 });
 
             modelBuilder.Entity("Car4You.Models.Photo", b =>
@@ -315,7 +313,7 @@ namespace Car4You.Migrations
 
                     b.HasIndex("CarId");
 
-                    b.ToTable("Photos", (string)null);
+                    b.ToTable("Photos");
                 });
 
             modelBuilder.Entity("Car4You.Models.Car", b =>
@@ -326,13 +324,11 @@ namespace Car4You.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Car4You.Models.Brand", null)
+                    b.HasOne("Car4You.Models.Brand", "Brand")
                         .WithMany("Car")
-                        .HasForeignKey("BrandId");
-
-                    b.HasOne("Car4You.Models.CarModel", null)
-                        .WithMany("Car")
-                        .HasForeignKey("CarModelId");
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Car4You.Models.FuelType", "FuelType")
                         .WithMany("Car")
@@ -347,6 +343,8 @@ namespace Car4You.Migrations
                         .IsRequired();
 
                     b.Navigation("BodyType");
+
+                    b.Navigation("Brand");
 
                     b.Navigation("FuelType");
 
@@ -420,11 +418,6 @@ namespace Car4You.Migrations
             modelBuilder.Entity("Car4You.Models.Car", b =>
                 {
                     b.Navigation("CarEquipment");
-                });
-
-            modelBuilder.Entity("Car4You.Models.CarModel", b =>
-                {
-                    b.Navigation("Car");
                 });
 
             modelBuilder.Entity("Car4You.Models.Equipment", b =>

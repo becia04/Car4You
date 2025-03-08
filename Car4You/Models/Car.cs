@@ -10,8 +10,9 @@ namespace Car4You.Models
         public string Description { get; set; } //Opis
         public int Year { get; set; } //Rok produkcji
         public int Mileage { get; set; } //Przebieg
-        public int BrandId { get; set; }
-        public Brand Brand { get; set; }
+        public int CarModelId { get; set; }
+        [ForeignKey("CarModelId")]
+        public CarModel CarModel { get; set; }
         public int FuelId { get; set; } //Paliwo
         [ForeignKey("FuelId")]
         public FuelType FuelType { get; set; }

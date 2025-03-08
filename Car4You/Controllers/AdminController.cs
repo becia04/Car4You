@@ -23,6 +23,7 @@ namespace Car4You.Controllers
             return View();
         }
 
+
         public IActionResult Equipment()
         {
             var equipments = _context.Equipments
@@ -162,6 +163,7 @@ namespace Car4You.Controllers
             return Ok();
         }
 
+
         public IActionResult Brand()
         {
             var brands = _context.Brands
@@ -278,18 +280,18 @@ namespace Car4You.Controllers
             {
                 return NotFound("Nie znaleziono");
             }
-            // Sprawdzamy, czy wyposażenie jest przypisane do jakiegoś auta
-            var carsBrand = _context.Cars
+            // Sprawdzamy, czy marka jest przypisane do jakiegoś modelu
+            var modelBrand = _context.CarModels
                 .Include(c => c.Brand)
                 .Where(c => c.BrandId == id)
                 .Select(c => c.Name)
                 .ToList();
 
-            if (carsBrand.Any())
+            if (modelBrand.Any())
             {
-                return BadRequest($"Nie można usunąć ze względu na powiązanie z danymi autami: {string.Join(", ", carsBrand)}");
+                return BadRequest($"Nie można usunąć ze względu na powiązanie z danymi modelami aut: {string.Join(", ", modelBrand)}");
             }
-
+            
             try
             {
                 // Sprawdzenie, czy marka ma przypisany obrazek i nie jest to domyślny plik
@@ -314,5 +316,77 @@ namespace Car4You.Controllers
             }
         }
 
+
+        public IActionResult CarModel()
+        {
+            var carModels = _context.CarModels
+                 .Include(a => a.Brand)
+                 .OrderBy(a => a.Name)
+                 .ToList();
+            var brand = _context.Brands.ToList();
+
+            ViewBag.Brand = brand;
+            return View(carModels);
+        }
+
+        [HttpPost]
+        public IActionResult CreateModel(CarModel carModel)
+        {
+            try
+            {
+                _context.CarModels.Add(carModel);
+                _context.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditModel(int Id, string Name, int BrandId)
+        {
+            var carModel = await _context.CarModels.FindAsync(Id);
+            if (carModel == null) return NotFound();
+            try
+            {
+                // Aktualizacja rekordu
+                carModel.Name = Name;
+                carModel.BrandId = BrandId;
+
+                _context.CarModels.Update(carModel);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteModel(int id)
+        {
+            var carModel = await _context.CarModels.FindAsync(id);
+            if (carModel == null) return NotFound();
+
+            // Sprawdzamy, czy model jest przypisany do auta
+            var carsUsingModel = _context.Cars
+                .Include(c => c.CarModel)
+                .Where(c => c.CarModelId == id)
+                .Select(c => c.Name)
+                .ToList();
+
+            if (carsUsingModel.Any())
+            {
+                return BadRequest($"Nie można usunąć modelu ze względu na powiązanie z podanymi autami: {string.Join(", ", carsUsingModel)}");
+            }
+
+            // Usuwamy rekord z bazy
+            _context.CarModels.Remove(carModel);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

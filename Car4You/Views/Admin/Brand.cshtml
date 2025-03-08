@@ -162,19 +162,18 @@
             var id = row.data("id");
             var name = row.find(".name-input").val().trim();
             var file = row.find(".image-input")[0].files[0];
-            var errorContainer = row.find("#errorNameTable");
             var state=0;
             if(!name){
-                errorContainer.text("Nazwa jest wymagana").removeClass("d-none");
+                row.find("#errorNameTable").text("Nazwa jest wymagana").removeClass("d-none");
                 state++;
             }
             // Sprawdzenie czy nazwa marki już istnieje (z wyjątkiem edytowanej)
-            else if (existingBrands.includes(name.toLowerCase()) && name.toLowerCase() !== row.data("original-name").toLowerCase()) {
-                 errorContainer.text("Podana marka już istnieje").removeClass("d-none");
+                         else if (existingBrands.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".name-text").eq(index).closest("tr").data("id"))) {
+        errorContainer.text("Podana marka już istnieje").removeClass("d-none");
                 state++;
             }
             else{
-                errorContainer.addClass("d-none");
+                row.find("#errorNameTable").addClass("d-none");
             }
             if(state>0)
             {
@@ -207,7 +206,7 @@
         // ✅ Anulowanie edycji
         $(".cancel-btn").click(function () {
             var row = $(this).closest("tr");
-
+            
                     // Reset nazwy
         row.find(".name-input").val(row.find(".name-text").text());
 
@@ -218,7 +217,7 @@
             row.find(".name-input, .image-input").addClass("d-none");
             row.find(".edit-btn, .delete-btn").removeClass("d-none");
             row.find(".save-btn, .cancel-btn").addClass("d-none");
-            $("#errorName").addClass("d-none");
+            row.find("#errorNameTable").addClass("d-none");
         });
 
         // ✅ Usuwanie marki

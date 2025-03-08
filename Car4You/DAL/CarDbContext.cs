@@ -16,6 +16,7 @@ namespace Car4You.DAL
         public DbSet<CarEquipment> CarEquipments { get; set; }
         public DbSet<EquipmentType> EquipmentTypes { get; set; }
         public DbSet<Photo> Photos { get; set; }
+        public DbSet<CarModel> CarModels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,7 +1,7 @@
-﻿@model List<Equipment>
+﻿@model List<CarModel>
 
 @{
-    ViewData["Title"] = "Wyposażeniem";
+    ViewData["Title"] = "Modele aut";
 }
 
 <!-- Dodanie Font Awesome -->
@@ -10,7 +10,7 @@
     <i class="fa fa-arrow-left" aria-hidden="true">
     </i>
 </a>
-<h1>Zarządzaj wyposażeniem</h1>
+<h1>Zarządzaj modelami aut</h1>
 
 <!-- Przycisk do rozwijania formularza -->
 <button id="toggleAddFormBtn" class="btn btn-primary">
@@ -18,27 +18,22 @@
 </button>
 
 <!-- Ukryty formularz dodawania -->
-<div id="addEquipmentFormContainer" style="display: none; margin-top: 20px;">
-    <form id="addEquipmentForm">
+<div id="addCarModelFormContainer" style="display: none; margin-top: 20px;">
+    <form id="addCarModelForm">
         <div class="form-group">
             <label>Nazwa:</label>
-            <input type="text" id="newName" class="form-control"/>
+            <input type="text" id="newName" class="form-control" />
             <div id="errorName" class="alert alert-danger d-none"></div>
         </div>
         <div class="form-group">
-            <label>Typ wyposażenia:</label>
-            <select id="newEquipmentType" class="form-control">
-                @foreach (var type in ViewBag.EquipmentTypes)
+            <label>Marka:</label>
+            <select id="newBrand" class="form-control">
+                @foreach (var type in ViewBag.Brand)
                 {
                     <option value="@type.Id">@type.Name</option>
                 }
             </select>
-            <div id="errorType" class="alert alert-danger d-none"></div>
-        </div>
-        <div class="form-group">
-            <label>Ikona:</label>
-            <input type="file" id="newImageFile" class="form-control"/>
-            <div id="errorIcon" class="alert alert-danger d-none"></div>
+            <div id="errorModel" class="alert alert-danger d-none"></div>
         </div>
         <button type="submit" class="btn btn-success">
             <i class="fa fa-check"></i> Add
@@ -50,36 +45,30 @@
     <thead>
         <tr>
             <th>Nazwa</th>
-            <th>Ikona</th>
-            <th>Typ</th>
+            <th>Marka</th>
             <th></th>
         </tr>
     </thead>
-    <tbody id="equipmentTable">
-        @foreach (var equipment in Model)
+    <tbody id="carModelTable">
+        @foreach (var carModel in Model)
         {
-            <tr data-id="@equipment.Id">
+            <tr data-id="@carModel.Id">
                 <td>
-                    <span class="name-text">@equipment.Name</span>
-                    <input type="text" class="form-control name-input d-none" value="@equipment.Name" />
+                    <span class="name-text">@carModel.Name</span>
+                    <input type="text" class="form-control name-input d-none" value="@carModel.Name" />
                     <div id="errorNameTable" class="alert alert-danger d-none"></div>
                 </td>
                 <td>
-                    <img src="@equipment.Icon" alt="@equipment.Name" class="icon-preview" style="width: 50px; height: 50px;" />
-                    <input type="file" class="form-control image-input d-none" />
-                    <div id="errorIconTable" class="alert alert-danger d-none"></div>
-                </td>
-                <td>
-                    <span class="type-text">@equipment.EquipmentType.Name</span>
-                    <select class="form-control equipment-type d-none">
-                        @foreach (var type in ViewBag.EquipmentTypes)
+                    <span class="brand-text">@carModel.Brand.Name</span>
+                    <select class="form-control brand d-none">
+                        @foreach (var brand in ViewBag.Brand)
                         {
-                            <option value="@type.Id" selected="@(type.Id == equipment.EquipmentTypeId)">
-                                @type.Name
+                            <option value="@brand.Id" selected="@(brand.Id == carModel.BrandId)">
+                                @brand.Name
                             </option>
                         }
                     </select>
-                    <div id="errorTypeTable" class="alert alert-danger d-none"></div>
+                    <div id="errorBrandTable" class="alert alert-danger d-none"></div>
                 </td>
                 <td>
                     <button class="btn btn-warning edit-btn">
@@ -100,19 +89,18 @@
     </tbody>
 </table>
 
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    var existingEquipments = [];
+    var existingCarModels = [];
      $(document).ready(function () {
         // Pobranie listy marek do tablicy
         $(".name-text").each(function () {
-            existingEquipments.push($(this).text().trim().toLowerCase());
+            existingCarModels.push($(this).text().trim().toLowerCase());
         });
 
         // Pokazanie/ukrycie formularza
         $("#toggleAddFormBtn").click(function () {
-            $("#addEquipmentFormContainer").slideToggle();
+            $("#addCarModelFormContainer").slideToggle();
         });
 
         // Edycja istniejącego rekordu
@@ -120,8 +108,8 @@
             var row = $(this).closest("tr");
             $(".cancel-btn").not(row.find(".cancel-btn")).click();
 
-            row.find(".name-text, .type-text").addClass("d-none");
-            row.find(".name-input, .equipment-type, .image-input").removeClass("d-none");
+            row.find(".name-text, .brand-text").addClass("d-none");
+            row.find(".name-input, .brand").removeClass("d-none");
             row.find(".edit-btn, .delete-btn").addClass("d-none");
             row.find(".save-btn, .cancel-btn").removeClass("d-none");
             });
@@ -130,36 +118,32 @@
             var row = $(this).closest("tr");
             var id = row.data("id");
             var name = row.find(".name-input").val();
-            var typeId = row.find(".equipment-type").val();
-            var file = row.find(".image-input")[0].files[0];
+            var brandId = row.find(".brand").val();
 
             var formData = new FormData();
             formData.append("Id", id);
             formData.append("Name", name);
-            formData.append("EquipmentTypeId", typeId);
+            formData.append("BrandId", brandId);
             var errorContainer = row.find("#errorNameTable");
             var state=0;
             if(!name){
-                errorContainer.text("Nazwa jest wymagana").removeClass("d-none");
+                row.find("#errorNameTable").text("Nazwa jest wymagana").removeClass("d-none");
                 state++;
             }
             // Sprawdzenie czy nazwa marki już istnieje (z wyjątkiem edytowanej)
-        else if (existingEquipments.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".name-text").eq(index).closest("tr").data("id"))) {
-        errorContainer.text("Podane wyposażenie już istnieje").removeClass("d-none");
+        else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".name-text").eq(index).closest("tr").data("id"))) {
+        errorContainer.text("Podany model już istnieje").removeClass("d-none");
                 state++;
             }
             else{
-                errorContainer.addClass("d-none");
+                row.find("#errorNameTable").addClass("d-none");
             }
             if(state>0)
             {
                 return;
             }
-            if (file) {
-                formData.append("ImageFile", file);
-            }
             $.ajax({
-                url: "/Admin/EditEquipment",
+                url: "/Admin/EditModel",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -178,22 +162,23 @@
             $(".cancel-btn").click(function () {
         var row = $(this).closest("tr");
 
-        // Powrót do oryginalnych wartości
+        // Reset nazwy
         row.find(".name-input").val(row.find(".name-text").text());
-        row.find(".image-input").val("");
-        var originalType = row.find(".type-text").text().trim();
-        row.find(".equipment-type option").each(function () {
-            if ($(this).text().trim() === originalType) {
+
+        // Reset typu wyposażenia (ustawia select na oryginalny tekst)
+        var originalBrand = row.find(".brand-text").text().trim();
+        row.find(".brand option").each(function () {
+            if ($(this).text().trim() === originalBrand) {
                 $(this).prop("selected", true);
             }
         });
-        var errorContainer = row.find("#errorNameTable");
+
         // Przywrócenie UI do stanu początkowego
-        row.find(".name-text, .type-text").removeClass("d-none");
-        row.find(".name-input, .equipment-type, .image-input").addClass("d-none");
+        row.find(".name-text, .brand-text").removeClass("d-none");
+        row.find(".name-input, .brand").addClass("d-none");
         row.find(".edit-btn, .delete-btn").removeClass("d-none");
         row.find(".save-btn, .cancel-btn").addClass("d-none");
-        errorContainer.addClass("d-none");
+    row.find("#errorNameTable").addClass("d-none");
     });
 
         // Usuwanie elementu
@@ -203,7 +188,7 @@
 
         if (confirm("Jesteś pewien, że chcesz usunąć?")) {
             $.ajax({
-                url: "/Admin/DeleteEquipment/" + id,
+                url: "/Admin/DeleteModel/" + id,
                 type: "POST",
                 success: function () {
                     row.remove();
@@ -217,17 +202,16 @@
     });
 
         // Dodawanie nowego rekordu
-    $("#addEquipmentForm").submit(function (e) {
+    $("#addCarModelForm").submit(function (e) {
         e.preventDefault();
 
         var name = $("#newName").val();
-        var typeId = $("#newEquipmentType").val();
-        var file = $("#newImageFile")[0].files[0];
+        var brandId = $("#newBrand").val();
 
         //Walidacja danych
             var state=0;
-            if (existingEquipments.includes(name.toLowerCase())) {
-                $("#errorName").text("Podane wyposażenie już istnieje").removeClass("d-none");
+            if (existingCarModels.includes(name.toLowerCase())) {
+                $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
                 state++;
             }
             else if(!name){
@@ -237,20 +221,13 @@
             else{
                 $("#errorName").addClass("d-none");
             }
-            if(!file){
-                $("#errorIcon").text("Wymagana ikona").removeClass("d-none");
-                state++;
-            }
-            else{
-                $("#errorIcon").addClass("d-none");
-            }
-            if(!typeId)
+            if(!brandId)
             {
-                $("#errorType").text("Wybierz typ").removeClass("d-none");
+                $("#errorBrand").text("Wybierz markę").removeClass("d-none");
                 state++;
             }
             else{
-                $("#errorType").addClass("d-none");
+                $("#errorBrand").addClass("d-none");
             }
             if(state>0)
             {
@@ -259,17 +236,16 @@
 
         var formData = new FormData();
         formData.append("Name", name);
-        formData.append("EquipmentTypeId", typeId);
-        formData.append("ImageFile", file);
+        formData.append("BrandId", brandId);
 
         $.ajax({
-            url: "/Admin/CreateEquipment",
+            url: "/Admin/CreateModel",
             type: "POST",
             data: formData,
             processData: false,
             contentType: false,
             success: function (response) {
-                alert("Added successfully!");
+                alert("Dodano pomyślnie!");
                 location.reload();
             },
             error: function (xhr) {
