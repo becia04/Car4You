@@ -38,26 +38,6 @@ namespace Car4You.Controllers
         [HttpPost]
         public IActionResult CreateEquipment(Equipment equipment, IFormFile imageFile)
         {
-            if (string.IsNullOrWhiteSpace(equipment.Name))
-            {
-                return BadRequest("Equipment name is required.");
-            }
-            else
-            {
-                if (_context.Equipments.Any(e => e.Name == equipment.Name))
-                {
-                    return BadRequest("This name already exists.");
-                }
-            }
-            if (imageFile == null || imageFile.Length == 0)
-            {
-                return BadRequest("Image file is required.");
-            }
-            if (equipment.EquipmentTypeId <= 0)
-            {
-                return BadRequest("Invalid equipment type.");
-            }
-
             try
             {
                 equipment.Icon = "default.png";
@@ -88,7 +68,7 @@ namespace Car4You.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
 
@@ -97,20 +77,6 @@ namespace Car4You.Controllers
         {
             var equipment = await _context.Equipments.FindAsync(Id);
             if (equipment == null) return NotFound();
-
-            if (string.IsNullOrWhiteSpace(Name))
-            {
-                return BadRequest(new { field = "Name", message = "Nazwa jest wymagana." });
-            }
-            if (_context.Equipments.Any(e => e.Id != Id && e.Name == Name))
-            {
-                return BadRequest("This name already exists.");
-            }
-            if (EquipmentTypeId <= 0)
-            {
-                return BadRequest("Invalid equipment type.");
-            }
-
             string uploadDir = Path.Combine(_environment.WebRootPath, "equipment");
             string normalizedFileName = FileHelper.NormalizeFileName(Name);
             string fileExtension = Path.GetExtension(equipment.Icon);
@@ -158,7 +124,7 @@ namespace Car4You.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
 
@@ -177,7 +143,7 @@ namespace Car4You.Controllers
 
             if (carsUsingEquipment.Any())
             {
-                return BadRequest($"Cannot delete this equipment because it is assigned to the following cars: {string.Join(", ", carsUsingEquipment)}");
+                return BadRequest($"Nie można usunąć wyposażenia ze względu na powiązanie z podanymi autami: {string.Join(", ", carsUsingEquipment)}");
             }
 
             // Usunięcie ikony z serwera

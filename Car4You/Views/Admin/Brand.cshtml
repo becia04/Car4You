@@ -6,12 +6,15 @@
 
 <!-- Dodanie Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
+<a asp-action="Index" asp-controller="Admin" class="btn btn-success">
+    <i class="fa fa-arrow-left" aria-hidden="true">
+    </i>
+</a>
 <h1>Marki samochodowe</h1>
 
 <!-- Przycisk do rozwijania formularza -->
 <button id="toggleAddFormBtn" class="btn btn-primary">
-    <i class="fa fa-plus"></i> Add New
+    <i class="fa fa-plus"></i> Dodaj
 </button>
 
 <!-- Ukryty formularz dodawania -->
@@ -145,8 +148,7 @@
         $(".edit-btn").click(function () {
             var row = $(this).closest("tr");
 
-            // Zapamiętanie oryginalnych wartości
-            row.data("original-name", row.find(".name-input").val());
+            $(".cancel-btn").not(row.find(".cancel-btn")).click();
 
             row.find(".name-text").addClass("d-none");
             row.find(".name-input, .image-input").removeClass("d-none");
@@ -206,8 +208,11 @@
         $(".cancel-btn").click(function () {
             var row = $(this).closest("tr");
 
-            // Przywrócenie oryginalnych wartości
-            row.find(".name-input").val(row.data("original-name"));
+                    // Reset nazwy
+        row.find(".name-input").val(row.find(".name-text").text());
+
+        // Reset inputu pliku (usunie wybrany plik)
+        row.find(".image-input").val("");
 
             row.find(".name-text").removeClass("d-none");
             row.find(".name-input, .image-input").addClass("d-none");
@@ -221,7 +226,7 @@
             var row = $(this).closest("tr");
             var id = row.data("id");
 
-            if (confirm("Jesteś pewny, że chcesz usunąć podaną markę?")) {
+            if (confirm("Jesteś pewien, że chcesz usunąć?")) {
                 $.ajax({
                     url: "/Admin/DeleteBrand/" + id,
                     type: "POST",
