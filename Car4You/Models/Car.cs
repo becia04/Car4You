@@ -6,7 +6,6 @@ namespace Car4You.Models
     {
         public int Id { get; set; }
         public string Title { get; set; } //Tytuł
-        public string Name { get; set; } //Model
         public string Description { get; set; } //Opis
         public int Year { get; set; } //Rok produkcji
         public int Mileage { get; set; } //Przebieg
@@ -22,9 +21,11 @@ namespace Car4You.Models
         public int BodyId { get; set; } //Nadwozie
         [ForeignKey("BodyId")]
         public BodyType BodyType { get; set; }
+        public int ?VersionId { get; set; } //Wersja (1.5T 4WD Lifestyle)
+        [ForeignKey("VersionId")]
+        public Version Version { get; set; }
         public int CubicCapacity { get; set; } //Pojemność skokowa
         public int EnginePower { get; set; } //Moc silnika
-        public string Version { get; set; } //Wersja (1.5T 4WD Lifestyle) 
         public string Color { get; set; }
         public string ColorType { get; set; } //Metalik i inne
         public int Door {  get; set; } //Liczba drzwi

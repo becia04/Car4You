@@ -30,7 +30,7 @@ namespace Car4You.Controllers
                  .Include(a => a.EquipmentType)
                  .OrderBy(a => a.Name)
                  .ToList();
-            var equipmentTypes = _context.EquipmentTypes.ToList();
+            var equipmentTypes = _context.EquipmentTypes.OrderBy(c=>c.Name).ToList();
 
             ViewBag.EquipmentTypes = equipmentTypes;
             return View(equipments);
@@ -139,7 +139,7 @@ namespace Car4You.Controllers
             var carsUsingEquipment = _context.CarEquipments
                 .Include(c => c.Car)
                 .Where(c => c.EquipmentId == id)
-                .Select(c => c.Car.Name)
+                .Select(c => c.Car.Title)
                 .ToList();
 
             if (carsUsingEquipment.Any())
@@ -323,7 +323,7 @@ namespace Car4You.Controllers
                  .Include(a => a.Brand)
                  .OrderBy(a => a.Name)
                  .ToList();
-            var brand = _context.Brands.ToList();
+            var brand = _context.Brands.OrderBy(c=>c.Name).ToList();
 
             ViewBag.Brand = brand;
             return View(carModels);
@@ -375,7 +375,7 @@ namespace Car4You.Controllers
             var carsUsingModel = _context.Cars
                 .Include(c => c.CarModel)
                 .Where(c => c.CarModelId == id)
-                .Select(c => c.Name)
+                .Select(c => c.Title)
                 .ToList();
 
             if (carsUsingModel.Any())
@@ -387,6 +387,93 @@ namespace Car4You.Controllers
             _context.CarModels.Remove(carModel);
             await _context.SaveChangesAsync();
             return Ok();
+        }
+
+
+        public IActionResult Version()
+        {
+            var version = _context.Versions
+                 .Include(a => a.CarModel)
+                 .Include(c=>c.CarModel.Brand)
+                 .OrderBy(a => a.CarModel.Brand.Name)
+                 .ThenBy(a=>a.CarModel.Name)
+                 .ThenBy(a=>a.Name)
+                 .ToList();
+
+            ViewBag.Brand = _context.Brands.OrderBy(c=>c.Name).ToList();
+            ViewBag.CarModel = _context.CarModels.OrderBy(c => c.Name).ToList();
+            return View(version);
+        }
+
+        [HttpPost]
+        public IActionResult CreateVersion(Models.Version version)
+        {
+            try
+            {
+                _context.Versions.Add(version);
+                _context.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditVersion(int Id, string Name, int carModelId)
+        {
+            var version = await _context.Versions.FindAsync(Id);
+            if (version == null) return NotFound();
+            try
+            {
+                // Aktualizacja rekordu
+                version.Name = Name;
+                version.CarModelId = carModelId;
+
+                _context.Versions.Update(version);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteVersion(int id)
+        {
+            var version = await _context.Versions.FindAsync(id);
+            if (version == null) return NotFound();
+
+            // Sprawdzamy, czy model jest przypisany do auta
+            var carsUsingVersion = _context.Cars
+                .Include(c => c.Version)
+                .Where(c => c.VersionId == id)
+                .Select(c => c.Title)
+                .ToList();
+
+            if (carsUsingVersion.Any())
+            {
+                return BadRequest($"Nie można usunąć modelu ze względu na powiązanie z podanymi autami: {string.Join(", ", carsUsingVersion)}");
+            }
+
+            // Usuwamy rekord z bazy
+            _context.Versions.Remove(version);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpGet]
+        public JsonResult GetCarModelsByBrand(int brandId)
+        {
+            var carModels = _context.CarModels
+                .Where(cm => cm.BrandId == brandId)
+                .Select(cm => new { cm.Id, cm.Name })
+                .ToList();
+
+            return Json(carModels);
         }
     }
 }

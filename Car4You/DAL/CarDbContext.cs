@@ -15,6 +15,7 @@ namespace Car4You.DAL
         public DbSet<Equipment> Equipments { get; set; }
         public DbSet<CarEquipment> CarEquipments { get; set; }
         public DbSet<EquipmentType> EquipmentTypes { get; set; }
+        public DbSet<Models.Version> Versions { get; set; }
         public DbSet<Photo> Photos { get; set; }
         public DbSet<CarModel> CarModels { get; set; }
 

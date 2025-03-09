@@ -41,6 +41,32 @@
     </form>
 </div>
 
+<!-- Filtrowanie tabeli -->
+<div class="row mb-3">
+    <!-- Pole wyszukiwania z przyciskiem "X" -->
+    <div class="col-md-6 position-relative">
+        <input type="text" id="searchInput" class="form-control" placeholder="Szukaj po nazwie...">
+        <button id="clearSearch" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Filtr marki z przyciskiem "X" -->
+    <div class="col-md-6 position-relative">
+        <select id="brandFilter" class="form-control">
+            <option value="">Wybierz markę...</option>
+            @foreach (var brand in ViewBag.Brand)
+            {
+                <option value="@brand.Name">@brand.Name</option>
+            }
+        </select>
+        <button id="clearBrand" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+</div>
+
+
 <table class="table">
     <thead>
         <tr>
@@ -91,6 +117,44 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    //Filtrowanie tabeli
+            $(document).ready(function () {
+        function filterTable() {
+            var searchText = $("#searchInput").val().toLowerCase();
+            var selectedBrand = $("#brandFilter").val().toLowerCase();
+
+            $("#carModelTable tr").each(function () {
+                var name = $(this).find(".name-text").text().toLowerCase();
+                var brand = $(this).find(".brand-text").text().toLowerCase();
+
+                var matchName = name.includes(searchText);
+                var matchBrand = selectedBrand === "" || brand === selectedBrand;
+
+                $(this).toggle(matchName && matchBrand);
+            });
+
+            // Pokaż/ukryj przyciski "X"
+            $("#clearSearch").toggle(searchText.length > 0);
+            $("#clearBrand").toggle(selectedBrand.length > 0);
+        }
+
+        // Obsługa filtrowania po wpisaniu tekstu lub zmianie marki
+        $("#searchInput, #brandFilter").on("input change", filterTable);
+
+        // Obsługa czyszczenia pola wyszukiwania
+        $("#clearSearch").click(function () {
+            $("#searchInput").val("");
+            filterTable();
+        });
+
+        // Obsługa resetowania filtra marki
+        $("#clearBrand").click(function () {
+            $("#brandFilter").val("");
+            filterTable();
+        });
+    });
+
+
     var existingCarModels = [];
      $(document).ready(function () {
         // Pobranie listy marek do tablicy
