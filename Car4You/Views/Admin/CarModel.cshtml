@@ -195,7 +195,7 @@
                 state++;
             }
             // Sprawdzenie czy nazwa marki już istnieje (z wyjątkiem edytowanej)
-        else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".name-text").eq(index).closest("tr").data("id"))) {
+        else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".carModel-text").eq(index).closest("tr").data("id"))) {
         errorContainer.text("Podany model już istnieje").removeClass("d-none");
                 state++;
             }

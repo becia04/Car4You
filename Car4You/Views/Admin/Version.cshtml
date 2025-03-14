@@ -171,7 +171,6 @@
                 $(this).toggle(matchName && matchBrand && matchModel);
             });
 
-            // Pokaż/ukryj przyciski "X"
             $("#clearSearch").toggle(searchText.length > 0);
             $("#clearBrand").toggle(selectedBrand.length > 0);
             $("#clearModel").toggle(selectedCarModel.length > 0);
@@ -183,52 +182,56 @@
         $("#clearModel").click(function () { $("#modelFilter").val(""); filterTable(); });
 
         // 🔹 Lista istniejących wersji (do sprawdzenia duplikatów)
-        var existingVersions = [];
-        $(".name-text").each(function () {
-            existingVersions.push($(this).text().trim().toLowerCase());
-        });
+            var existingVersions = [];
+    $("#versionTable tr").each(function () {
+        var name = $(this).find(".name-text").text().trim().toLowerCase();
+        var modelId = $(this).find(".car-model option:selected").val(); // Pobierz ID modelu
+
+        existingVersions.push({ name, modelId });
+    });
+
 
         // 🔹 Pokazywanie formularza dodawania wersji
         $("#toggleAddFormBtn").click(function () {
             $("#addVersionFormContainer").slideToggle();
         });
-        //Dynamiczne ładowanie modeli na podstawie marki
-    function loadCarModels(brandSelect, carModelDropdown) {
-        var brandId = brandSelect.val();
 
-        if (brandId) {
-            $.ajax({
-                url: "/Admin/GetCarModelsByBrand",
-                type: "GET",
-                data: { brandId: brandId },
-                success: function (data) {
-                    carModelDropdown.empty(); // Usunięcie domyślnej opcji
-                    data.forEach(function (model) {
-                        carModelDropdown.append(`<option value="${model.id}">${model.name}</option>`);
-                    });
-                    carModelDropdown.prop("disabled", false);
-                },
-                error: function () {
-                    alert("Błąd ładowania modeli aut.");
-                }
-            });
-        } else {
-            carModelDropdown.empty().prop("disabled", true);
+        // 🔹 Dynamiczne ładowanie modeli na podstawie marki
+        function loadCarModels(brandSelect, carModelDropdown) {
+            var brandId = brandSelect.val();
+
+            if (brandId) {
+                $.ajax({
+                    url: "/Admin/GetCarModelsByBrand",
+                    type: "GET",
+                    data: { brandId: brandId },
+                    success: function (data) {
+                        carModelDropdown.empty();
+                        data.forEach(function (model) {
+                            carModelDropdown.append(`<option value="${model.id}">${model.name}</option>`);
+                        });
+                        carModelDropdown.prop("disabled", false);
+                    },
+                    error: function () {
+                        alert("Błąd ładowania modeli aut.");
+                    }
+                });
+            } else {
+                carModelDropdown.empty();
+            }
         }
-    }
 
-    // Obsługa wyboru marki w formularzu dodawania
-    $("#newBrand").change(function () {
-        loadCarModels($(this), $("#newCarModel"));
-    });
+        // 🔹 Obsługa wyboru marki w formularzu dodawania
+        $("#newBrand").change(function () {
+            loadCarModels($(this), $("#newCarModel"));
+        });
 
-    // Obsługa wyboru marki w tabeli przy edycji
-    $(document).on("change", ".brand", function () {
-        var carModelDropdown = $(this).closest("tr").find(".car-model");
-        loadCarModels($(this), carModelDropdown);
-    });
-
-
+        // 🔹 Obsługa wyboru marki w tabeli przy edycji
+        $(document).on("change", ".brand", function () {
+            var row = $(this).closest("tr");
+            var carModelDropdown = row.find(".car-model");
+            loadCarModels($(this), carModelDropdown);
+        });
 
         // 🔹 Dodawanie nowej wersji
         $("#addVersionForm").submit(function (e) {
@@ -241,7 +244,12 @@
             if (!name) {
                 $("#errorName").text("Nazwa jest wymagana").removeClass("d-none");
                 state++;
-            } else {
+            }
+               else if (existingVersions.some(v => v.name === name.toLowerCase() && v.modelId == carModelId))
+            {   
+                $("#errorName").text("Podana wersja dla tego modelu już istnieje").removeClass("d-none");
+                state++;
+            }else {
                 $("#errorName").addClass("d-none");
             }
 
@@ -283,6 +291,10 @@
             row.find(".name-input, .brand, .car-model").removeClass("d-none");
             row.find(".edit-btn, .delete-btn").addClass("d-none");
             row.find(".save-btn, .cancel-btn").removeClass("d-none");
+
+            var brandDropdown = row.find(".brand");
+            var carModelDropdown = row.find(".car-model");
+            loadCarModels(brandDropdown, carModelDropdown);
         });
 
         // 🔹 Zapisywanie zmian
@@ -292,24 +304,33 @@
             var name = row.find(".name-input").val();
             var carModelId = row.find(".car-model").val();
             var errorContainer = row.find("#errorNameTable");
-            var state = 0;
-
+            var errorModel=row.find("#errorCarModelTable");
+            var state=0;
             if (!name) {
                 errorContainer.text("Nazwa jest wymagana").removeClass("d-none");
                 state++;
-                } else if (existingVersions.some((model, index) =>
-        model.name === name.toLowerCase() &&
-        model.modelId === modelId &&
-        row.data("id") != $(".name-text").eq(index).closest("tr").data("id")
-    )) {
-        errorContainer.text("Podana wersja dla tego modelu już istnieje").removeClass("d-none");
-        state++;
-            } else {
+            }
+               else if (existingVersions.some(v => v.name === name.toLowerCase() && v.modelId == carModelId && v.id != id))
+    {
+                errorContainer.text("Podana wersja dla tego modelu już istnieje").removeClass("d-none");
+                state++;
+            }
+            else
+            {
                 errorContainer.addClass("d-none");
             }
-
-            if (state > 0) return;
-
+            if(!carModelId)
+            {
+                errorModel.text("Wybierz model").removeClass("d-none");
+                state++;
+            }
+            else{
+                errorModel.text("Wybierz model").addClass("d-none");
+            }
+            if(state>0)
+            {
+                return;
+            }
             var formData = new FormData();
             formData.append("Id", id);
             formData.append("Name", name);
@@ -335,27 +356,12 @@
         $(".cancel-btn").click(function () {
             var row = $(this).closest("tr");
 
-            row.find(".name-input").val(row.find(".name-text").text());
-
-            var originalBrand = row.find(".brand-text").text().trim();
-            row.find(".brand option").each(function () {
-                if ($(this).text().trim() === originalBrand) {
-                    $(this).prop("selected", true);
-                }
-            });
-
-            var originalModel = row.find(".carModel-text").text().trim();
-            row.find(".car-model option").each(function () {
-                if ($(this).text().trim() === originalModel) {
-                    $(this).prop("selected", true);
-                }
-            });
-
             row.find(".name-text, .brand-text, .carModel-text").removeClass("d-none");
             row.find(".name-input, .brand, .car-model").addClass("d-none");
             row.find(".edit-btn, .delete-btn").removeClass("d-none");
             row.find(".save-btn, .cancel-btn").addClass("d-none");
             row.find("#errorNameTable").addClass("d-none");
+            row.find("#errorCarModelTable").addClass("d-none");
         });
 
         // 🔹 Usuwanie elementu
@@ -379,4 +385,3 @@
         });
     });
 </script>
-

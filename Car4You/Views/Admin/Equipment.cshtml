@@ -46,6 +46,31 @@
     </form>
 </div>
 
+<!-- Filtrowanie tabeli -->
+<div class="row mb-3">
+    <!-- Pole wyszukiwania z przyciskiem "X" -->
+    <div class="col-md-6 position-relative">
+        <input type="text" id="searchInput" class="form-control" placeholder="Szukaj po nazwie...">
+        <button id="clearSearch" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Filtr marki z przyciskiem "X" -->
+    <div class="col-md-6 position-relative">
+        <select id="typeFilter" class="form-control">
+            <option value="">Wybierz typ...</option>
+            @foreach (var type in ViewBag.EquipmentTypes)
+            {
+                <option value="@type.Name">@type.Name</option>
+            }
+        </select>
+        <button id="clearType" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+</div>
+
 <table class="table">
     <thead>
         <tr>
@@ -103,6 +128,43 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    //Filtrowanie tabeli
+            $(document).ready(function () {
+        function filterTable() {
+            var searchText = $("#searchInput").val().toLowerCase();
+            var selectedType = $("#typeFilter").val().toLowerCase();
+
+            $("#equipmentTable tr").each(function () {
+                var name = $(this).find(".name-text").text().toLowerCase();
+                var type = $(this).find(".type-text").text().toLowerCase();
+
+                var matchName = name.includes(searchText);
+                var matchType = selectedType === "" || type === selectedType;
+
+                $(this).toggle(matchName && matchType);
+            });
+
+            // Pokaż/ukryj przyciski "X"
+            $("#clearSearch").toggle(searchText.length > 0);
+            $("#clearType").toggle(selectedType.length > 0);
+        }
+
+        // Obsługa filtrowania po wpisaniu tekstu lub zmianie marki
+        $("#searchInput, #typeFilter").on("input change", filterTable);
+
+        // Obsługa czyszczenia pola wyszukiwania
+        $("#clearSearch").click(function () {
+            $("#searchInput").val("");
+            filterTable();
+        });
+
+        // Obsługa resetowania filtra marki
+        $("#clearType").click(function () {
+            $("#typeFilter").val("");
+            filterTable();
+        });
+    });
+
     var existingEquipments = [];
      $(document).ready(function () {
         // Pobranie listy marek do tablicy
@@ -269,7 +331,7 @@
             processData: false,
             contentType: false,
             success: function (response) {
-                alert("Added successfully!");
+                alert("Pomyślnie dodano!");
                 location.reload();
             },
             error: function (xhr) {
