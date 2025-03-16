@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Car4You.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Diagnostics.Metrics;
+using System.Globalization;
+using Car4You.Migrations;
+using static Car4You.ViewModels.CarViewModel;
 
 namespace Car4You.Controllers
 {
@@ -28,40 +32,72 @@ namespace Car4You.Controllers
 
 
         [HttpGet]
-        public IActionResult AddCar()
+        public async Task<IActionResult> AddCar()
         {
-            var carModels = _context.CarModels.Include(m => m.Brand).ToList();
+            var carModels = await _context.CarModels.Include(m => m.Brand).OrderBy(m=>m.Name).ToListAsync();
+            var equipmentTypes = _context.EquipmentTypes.OrderBy(e=>e.Name).ToList();  // Pobranie typów ekwipunku
+            var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e=>e.Name).ToList(); // Pobranie ekwipunków z ich typami
+
+            // Grupowanie ekwipunków według typu
+            var groupedEquipment = equipmentTypes.Select(equipmentType => new EquipmentGroup
+            {
+                EquipmentType = equipmentType,
+                Equipments = equipmentList.Where(e => e.EquipmentTypeId == equipmentType.Id).ToList()
+            }).ToList();
 
             var viewModel = new CarViewModel
             {
                 Car = new Car(), // Nowy obiekt auta
                 Brands = carModels.Select(m => m.Brand).Distinct().ToList(),
                 CarModels = carModels,
-                FuelTypes = _context.FuelTypes.ToList(),
-                Gearboxes = _context.Gearboxes.ToList(),
-                BodyTypes = _context.BodyTypes.ToList(),
-                Versions = _context.Versions.ToList(),
-                Equipments = _context.Equipments.ToList()
+                FuelTypes = await _context.FuelTypes.OrderBy(f => f.Name).ToListAsync(),
+                Gearboxes = await _context.Gearboxes.OrderBy(g => g.Name).ToListAsync(),
+                BodyTypes = await _context.BodyTypes.OrderBy(b => b.Name).ToListAsync(),
+                Versions = await _context.Versions.ToListAsync(),
+                EquipmentTypes = equipmentTypes,
+                GroupedEquipment = groupedEquipment,
+                MostCommonYear = _context.Cars
+                .GroupBy(c => c.Year)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault(),
+
+                MostCommonEnginePower = _context.Cars
+                .GroupBy(c => c.EnginePower)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault(),
+
+                MostCommonCubicCapacity = _context.Cars
+                .GroupBy(c => c.CubicCapacity)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault()
             };
 
             return View(viewModel);
         }
 
 
+
         [HttpPost]
         [ValidateAntiForgeryToken] // Zapobiega atakom CSRF
         public IActionResult AddCar(CarViewModel model, List<IFormFile> photos, int? mainPhotoIndex)
         {
+            // Sprawdzenie, czy rok produkcji jest w prawidłowym zakresie
+            if (model.Car.Year > DateTime.Now.Year + 1)
+            {
+                ModelState.AddModelError("Car.Year", $"Rok produkcji nie może być większy niż {DateTime.Now.Year + 1}.");
+            }
             if (!ModelState.IsValid)
             {
                 // Jeśli formularz zawiera błędy, ponownie wypełnij ViewModel i zwróć widok
                 model.Brands = _context.Brands.ToList();
                 model.CarModels = _context.CarModels.ToList();
-                model.FuelTypes = _context.FuelTypes.ToList();
-                model.Gearboxes = _context.Gearboxes.ToList();
-                model.BodyTypes = _context.BodyTypes.ToList();
+                model.FuelTypes = _context.FuelTypes.OrderBy(f=>f.Name).ToList();
+                model.Gearboxes = _context.Gearboxes.OrderBy(g=>g.Name).ToList();
+                model.BodyTypes = _context.BodyTypes.OrderBy(b=>b.Name).ToList();
                 model.Versions = _context.Versions.ToList();
-                model.Equipments = _context.Equipments.ToList();
                 return View(model);
             }
 
@@ -100,12 +136,51 @@ namespace Car4You.Controllers
             return Json(new { success = true });
         }
 
+        [HttpGet]
+        public JsonResult GetCarModelsByBrand(int brandId)
+        {
+            var carModels = _context.CarModels
+                .Where(cm => cm.BrandId == brandId)
+                .Select(cm => new { cm.Id, cm.Name })
+                .OrderBy(cm=>cm.Name)
+                .ToList();
+
+            return Json(carModels);
+        }
+
+        [HttpGet]
+        public JsonResult GetVersionsByModel(int modelId)
+        {
+            var versions = _context.Versions
+                                   .Where(v => v.CarModelId == modelId)
+                                   .Select(v => new { id = v.Id, name = v.Name })
+                                   .OrderBy(v=>v.name)
+                                   .ToList();
+            return Json(versions);
+        }
+
         public IActionResult ManageBrand(int id)
         {
             var brand = _context.Brands
-                .Include(b => b.CarModel)
-                    .ThenInclude(m => m.Version)
-                .FirstOrDefault(b => b.Id == id);
+    .Include(b => b.CarModel)
+        .ThenInclude(m => m.Version)
+    .Where(b => b.Id == id)
+    .Select(b => new Brand
+    {
+        Id = b.Id,
+        Name = b.Name,
+        CarModel = b.CarModel
+            .OrderBy(m => m.Name) // Sortowanie modeli alfabetycznie
+            .Select(m => new Models.CarModel
+            {
+                Id = m.Id,
+                Name = m.Name,
+                BrandId = m.BrandId,
+                Version = m.Version.OrderBy(v => v.Name).ToList() // Sortowanie wersji alfabetycznie
+            })
+            .ToList()
+    })
+    .FirstOrDefault();
 
             if (brand == null)
                 return NotFound();
@@ -146,6 +221,53 @@ namespace Car4You.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EditBrandIcon(int Id, IFormFile ImageFile)
+        {
+            Console.WriteLine($"Id marki: {Id}");
+            var brand = await _context.Brands.FindAsync(Id);
+            if (brand == null) return NotFound();
+            var name=await _context.Brands
+                .Where(i=>i.Id==Id)
+                .Select(i=>i.Name)
+                .FirstOrDefaultAsync();
+            string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+            string normalizedFileName = FileHelper.NormalizeFileName(name);
+            string fileExtension = Path.GetExtension(brand.Icon);
+            string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
+            string newFilePath = Path.Combine(uploadDir, newFileName);
+
+            try
+            {
+                    // Usuwanie starego pliku jeśli istnieje
+                    if (!string.IsNullOrEmpty(brand.Icon))
+                    {
+                        string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
+                    // Zapis nowego pliku
+                    using (var fileStream = new FileStream(newFilePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(fileStream);
+                    }
+
+                // Aktualizacja rekordu
+                brand.Icon = "/brand/" + newFileName;
+
+                _context.Brands.Update(brand);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> EditModel(int Id, string Name, int BrandId)
         {
             try
@@ -166,12 +288,24 @@ namespace Car4You.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateModel(CarModel carModel)
+        public IActionResult CreateModel(Models.CarModel carModel)
         {
             try
             {
+                // Sprawdzamy, czy model już istnieje w bazie danych dla danej marki
+                var existingModel = _context.CarModels
+                    .FirstOrDefault(m => m.Name == carModel.Name);
+
+                if (existingModel != null)
+                {
+                    // Jeśli model już istnieje, zwróć odpowiedni komunikat
+                    return BadRequest("Model już istnieje.");
+                }
+
+                // Jeśli model nie istnieje, dodajemy go do bazy
                 _context.CarModels.Add(carModel);
                 _context.SaveChanges();
+
                 return Ok();
             }
             catch (Exception ex)
@@ -285,6 +419,15 @@ namespace Car4You.Controllers
         {
             try
             {
+                // Sprawdzamy, czy generacja już istnieje w bazie danych dla danego modelu
+                var existingVersion = _context.Versions
+                    .FirstOrDefault(m => m.Name == version.Name && m.CarModelId==version.CarModelId);
+
+                if (existingVersion != null)
+                {
+                    // Jeśli generacja już istnieje, zwróć odpowiedni komunikat
+                    return BadRequest("Generacja już istnieje.");
+                }
                 _context.Versions.Add(version);
                 _context.SaveChanges();
                 return Ok();
@@ -490,7 +633,6 @@ namespace Car4You.Controllers
         }
 
 
-
         /*
         public IActionResult CarModel()
         {
@@ -619,27 +761,11 @@ namespace Car4You.Controllers
 
         }
 
-         [HttpGet]
-        public JsonResult GetCarModelsByBrand(int brandId)
-        {
-            var carModels = _context.CarModels
-                .Where(cm => cm.BrandId == brandId)
-                .Select(cm => new { cm.Id, cm.Name })
-                .ToList();
+         
 
-            return Json(carModels);
-        }
-
-        [HttpGet]
-        public JsonResult GetVersionsByModel(int modelId)
-        {
-            var versions = _context.Versions
-                                   .Where(v => v.CarModelId == modelId)
-                                   .Select(v => new { id = v.Id, name = v.Name })
-                                   .ToList();
-            return Json(versions);
-        }
+        
         */
 
     }
+
 }
