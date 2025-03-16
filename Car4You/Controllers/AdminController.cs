@@ -206,8 +206,38 @@ namespace Car4You.Controllers
 
             try
             {
-                // Aktualizacja rekordu
+                string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+                string oldFilePath = null;
+                string newFilePath = null;
+                string newFileName = null;
+
+                // Sprawdzamy, czy marka ma przypisaną ikonę
+                if (!string.IsNullOrEmpty(brand.Icon))
+                {
+                    // Pobieramy stare rozszerzenie pliku
+                    string fileExtension = Path.GetExtension(brand.Icon);
+
+                    // Tworzymy nową nazwę pliku
+                    string normalizedFileName = FileHelper.NormalizeFileName(Name);
+                    newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
+
+                    // Ścieżki do starego i nowego pliku
+                    oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    newFilePath = Path.Combine(uploadDir, newFileName);
+                }
+
+                // Aktualizujemy nazwę marki w bazie
                 brand.Name = Name;
+
+                // Jeśli plik istnieje i nowa nazwa się zmienia
+                if (!string.IsNullOrEmpty(oldFilePath) && System.IO.File.Exists(oldFilePath))
+                {
+                    // Zmieniamy nazwę pliku (przenosimy go)
+                    System.IO.File.Move(oldFilePath, newFilePath);
+
+                    // Aktualizujemy ścieżkę w bazie
+                    brand.Icon = "/brand/" + newFileName;
+                }
 
                 _context.Brands.Update(brand);
                 await _context.SaveChangesAsync();
@@ -217,48 +247,62 @@ namespace Car4You.Controllers
             {
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
-
         }
+
 
         [HttpPost]
         public async Task<IActionResult> EditBrandIcon(int Id, IFormFile ImageFile)
         {
-            Console.WriteLine($"Id marki: {Id}");
+            if (ImageFile == null || ImageFile.Length == 0)
+            {
+                return BadRequest("Nie przesłano pliku.");
+            }
+
             var brand = await _context.Brands.FindAsync(Id);
             if (brand == null) return NotFound();
-            var name=await _context.Brands
-                .Where(i=>i.Id==Id)
-                .Select(i=>i.Name)
+
+            string name = await _context.Brands
+                .Where(i => i.Id == Id)
+                .Select(i => i.Name)
                 .FirstOrDefaultAsync();
+
             string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+
+            // Upewnij się, że katalog istnieje
+            if (!Directory.Exists(uploadDir))
+            {
+                Directory.CreateDirectory(uploadDir);
+            }
+
+            // Pobierz rozszerzenie z nowego pliku
+            string fileExtension = Path.GetExtension(ImageFile.FileName);
             string normalizedFileName = FileHelper.NormalizeFileName(name);
-            string fileExtension = Path.GetExtension(brand.Icon);
             string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
             string newFilePath = Path.Combine(uploadDir, newFileName);
 
             try
             {
-                    // Usuwanie starego pliku jeśli istnieje
-                    if (!string.IsNullOrEmpty(brand.Icon))
+                // Usunięcie starego pliku (jeśli istnieje)
+                if (!string.IsNullOrEmpty(brand.Icon))
+                {
+                    string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath))
                     {
-                        string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
+                        System.IO.File.Delete(oldFilePath);
                     }
+                }
 
-                    // Zapis nowego pliku
-                    using (var fileStream = new FileStream(newFilePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(fileStream);
-                    }
+                // Zapis nowego pliku
+                using (var fileStream = new FileStream(newFilePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(fileStream);
+                }
 
-                // Aktualizacja rekordu
+                // Aktualizacja ścieżki w bazie danych
                 brand.Icon = "/brand/" + newFileName;
-
                 _context.Brands.Update(brand);
                 await _context.SaveChangesAsync();
+
                 return Ok();
             }
             catch (Exception ex)

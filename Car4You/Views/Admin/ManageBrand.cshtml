@@ -124,127 +124,112 @@
 
 @section Scripts {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    // Edycja nazwy marki
-    $(".edit-name-btn").click(function () {
-        $(".cancel-carModel-btn").click();
-        $(".cancel-icon-btn").click();
-        $(".cancel-version-btn").click();
-        $(".name-input").val($(".name-text").text().trim());
-           $(".edit-name-btn, .name-text, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-        $(".save-name-btn, .cancel-name-btn, .name-input").removeClass("d-none");
-    });
+    <script>
+        // Edycja nazwy marki
+        $(".edit-name-btn").click(function () {
+            $(".cancel-carModel-btn").click();
+            $(".cancel-icon-btn").click();
+            $(".cancel-version-btn").click();
+            $(".name-input").val($(".name-text").text().trim());
 
-    // 🔹 Anulowanie edycji nazwy marki
-    $(".cancel-name-btn").click(function () {
-        $(".edit-name-btn, .name-text").removeClass("d-none");
-        $(".save-name-btn, .cancel-name-btn, .name-input, #errorName").addClass("d-none");
-    });
-
-    // ✅ Zapisywanie zmiany nazwy marki
-    $(".save-name-btn").click(async function () {
-        var name = $(".name-input").val().trim();
-        var id = $(".id-label").data("id");
-
-        // Jeśli nazwa nie została zmieniona, anuluj edycję
-        if (name == $(".name-text").text().trim()) {
-            $(".cancel-name-btn").click();
-            return;
-        }
-
-        // Zmienna przechowująca marki
-        let existingBrands = [];
-
-        // Pobieranie danych z serwera
-        try {
-            const response = await fetch("/Admin/GetBrands");
-            const data = await response.json();
-
-            // Mapowanie danych marek
-            existingBrands = data.map(brand => ({
-                id: brand.id,
-                name: brand.name.toLowerCase().trim()  // Używamy .trim() by usunąć ewentualne białe znaki
-            }));
-        } catch (error) {
-            console.log("Błąd podczas pobierania marek:", error);
-        }
-
-        var state = 0;
-
-        // Walidacja, czy nazwa jest pusta
-        if (!name) {
-            $("#errorName").text("Nazwa jest wymagana").removeClass("d-none");
-            state++;
-        }
-
-        // Sprawdzenie, czy nazwa marki już istnieje
-        else if (existingBrands.some(brand => brand.name === name.toLowerCase().trim() && brand.id !== id)) {
-            $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
-            state++;
-        } else {
-            $("#errorName").addClass("d-none");
-        }
-
-        // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-        if (state > 0) {
-            return;
-        }
-
-        // Przygotowanie do wysłania danych
-        var formData = new FormData();
-        formData.append("Id", id);
-        formData.append("Name", name);
-
-        // Wysyłanie danych za pomocą AJAX
-        $.ajax({
-            url: "/Admin/EditBrandName",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function () {
-                alert("Zaktualizowano pomyślnie");
-                location.reload();
-            },
-            error: function () {
-                alert("Błąd aktualizacji");
-            }
+            $(".edit-name-btn, .name-text, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
+            $(".save-name-btn, .cancel-name-btn, .name-input").removeClass("d-none");
         });
-    });
 
-    // Edycja ikony marki
-    $(".edit-icon-btn").click(function () {
-        $(".cancel-name-btn").click();
-        $(".cancel-carModel-btn").click();
-        $(".cancel-version-btn").click();
-           $(".edit-icon-btn, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-        $(".save-icon-btn, .cancel-icon-btn, .icon-input").removeClass("d-none");
-    });
+        // 🔹 Anulowanie edycji nazwy marki
+        $(".cancel-name-btn").click(function () {
+            $(".edit-name-btn, .name-text").removeClass("d-none");
+            $(".save-name-btn, .cancel-name-btn, .name-input, #errorName").addClass("d-none");
+        });
 
-    // 🔹 Anulowanie edycji ikony marki
-    $(".cancel-icon-btn").click(function () {
-        $(".icon-input").val("");
-        $(".edit-icon-btn").removeClass("d-none");
-        $(".save-icon-btn, .cancel-icon-btn, .icon-input").addClass("d-none");
-    });
-
-
-    // ✅ Zapisywanie zmiany ikony marki
-        $(".save-icon-btn").click(async function () {
-               var file = $(".icon-input")[0].files[0];;
+        // ✅ Zapisywanie zmiany nazwy marki
+        $(".save-name-btn").click(async function () {
+            var name = $(".name-input").val().trim();
             var id = $(".id-label").data("id");
-            //Jeśli nie ma pliku, anuluj edycję
-            if(!file){
-                       $(".cancel-icon-btn").click();
-                   return;
-                }
 
-            // Przygotowanie do wysłania danych
+            if (name == $(".name-text").text().trim()) {
+                $(".cancel-name-btn").click();
+                return;
+            }
+
+            let existingBrands = [];
+
+            try {
+                const response = await fetch("/Admin/GetBrands");
+                const data = await response.json();
+                existingBrands = data.map(brand => ({
+                    id: brand.id,
+                    name: brand.name.toLowerCase().trim()
+                }));
+            } catch (error) {
+                console.log("Błąd podczas pobierania marek:", error);
+            }
+
+            var state = 0;
+
+            if (!name) {
+                $("#errorName").text("Nazwa jest wymagana").removeClass("d-none");
+                state++;
+            } else if (existingBrands.some(brand => brand.name === name.toLowerCase().trim() && brand.id !== id)) {
+                $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
+                state++;
+            } else {
+                $("#errorName").addClass("d-none");
+            }
+
+            if (state > 0) return;
+
             var formData = new FormData();
             formData.append("Id", id);
-            formData.append("Icon", file);
+            formData.append("Name", name);
 
-            // Wysyłanie danych za pomocą AJAX
+            $.ajax({
+                url: "/Admin/EditBrandName",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Zaktualizowano pomyślnie");
+                    location.reload();
+                },
+                error: function () {
+                    alert("Błąd aktualizacji");
+                }
+            });
+        });
+
+        // Edycja ikony marki
+        $(".edit-icon-btn").click(function () {
+            $(".cancel-name-btn").click();
+            $(".cancel-carModel-btn").click();
+            $(".cancel-version-btn").click();
+
+            $(".edit-icon-btn, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
+            $(".save-icon-btn, .cancel-icon-btn, .icon-input").removeClass("d-none");
+        });
+
+        // 🔹 Anulowanie edycji ikony marki
+        $(".cancel-icon-btn").click(function () {
+            $(".icon-input").val("");
+            $(".edit-icon-btn").removeClass("d-none");
+            $(".save-icon-btn, .cancel-icon-btn, .icon-input").addClass("d-none");
+        });
+
+        // ✅ Zapisywanie zmiany ikony marki
+        $(".save-icon-btn").click(async function () {
+            var file = $(".icon-input")[0].files[0];
+            var id = $(".id-label").data("id");
+
+            if (!file) {
+                $(".cancel-icon-btn").click();
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("Id", id);
+            formData.append("ImageFile", file);
+
             $.ajax({
                 url: "/Admin/EditBrandIcon",
                 type: "POST",
@@ -261,383 +246,106 @@
             });
         });
 
-    // Edycja modelu
-    $(".edit-carModel-btn").click(function () {
-        var row = $(this).closest("tr");
-        $(".cancel-icon-btn").click();
-        $(".cancel-name-btn").click();
-        $(".cancel-version-btn").click();
-        $(".cancel-carModel-btn").not(row.find(".cancel-carModel-btn")).click();
-        row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
-           row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn, .carModel-input, .save-newModel-btn, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-        $(".save-newModel-btn, .newModel-input").addClass("d-none");
-        row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").removeClass("d-none");
-    });
+        // Edycja modelu
+        $(".edit-carModel-btn").click(function () {
+            var row = $(this).closest("tr");
 
-    // Anulowanie edycji modelu
-    $(".cancel-carModel-btn").click(function () {
-        var row = $(this).closest("tr");
-        row.find("#errorCarModel").addClass("d-none");
-        row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
-        row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn").removeClass("d-none");
-        row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").addClass("d-none");
-    });
+            $(".cancel-icon-btn").click();
+            $(".cancel-name-btn").click();
+            $(".cancel-version-btn").click();
+            $(".cancel-carModel-btn").not(row.find(".cancel-carModel-btn")).click();
 
-    // ✅ Zapisywanie zmiany nazwy modelu
-    $(".save-carModel-btn").click(function () {
-        var row = $(this).closest("tr");
-        var name = row.find(".carModel-input").val().trim();
-        var id = row.data("id");
-        // Jeśli nazwa nie została zmieniona, anuluj edycję
-        if (name == row.find(".carModel-text").text().trim()) {
-            $(".cancel-carModel-btn").click();
-            return;
-        }
+            row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
 
-        // Zmienna przechowująca modele
-        var existingCarModels = [];
-
-        // Pobieranie danych z serwera
-        $(".carModel-text").each(function () {
-            existingCarModels.push($(this).text().trim().toLowerCase());
+            row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn, .carModel-input, .save-newModel-btn, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
+            $(".save-newModel-btn, .newModel-input").addClass("d-none");
+            row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").removeClass("d-none");
         });
 
-        var state = 0;
-        // Walidacja, czy nazwa jest pusta
-        if (!name) {
-            row.find("#errorCarModel").text("Nazwa jest wymagana").removeClass("d-none");
-            state++;
-        }
+        // Anulowanie edycji modelu
+        $(".cancel-carModel-btn").click(function () {
+            var row = $(this).closest("tr");
 
-        // Sprawdzenie, czy nazwa modelu już istnieje
-        else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".carModel-text").eq(index).closest("tr").data("id"))) {
-            row.find("#errorCarModel").text("Podany model już istnieje").removeClass("d-none");
-            state++;
-        } else {
             row.find("#errorCarModel").addClass("d-none");
-        }
+            row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
 
-        // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-        if (state > 0) {
-            return;
-        }
-
-        // Przygotowanie do wysłania danych
-                var formData = new FormData();
-                formData.append("Id", id);
-                formData.append("Name", name);
-
-        // Wysyłanie danych za pomocą AJAX
-        $.ajax({
-            url: "/Admin/EditModel",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function () {
-                alert("Zaktualizowano pomyślnie");
-                location.reload();
-            },
-            error: function () {
-                alert("Błąd aktualizacji");
-            }
+            row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn").removeClass("d-none");
+            row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").addClass("d-none");
         });
-    });
 
-    //Usuwanie modelu
-    $(".delete-carModel-btn").click(function () {
-        var row = $(this).closest("tr");
-        var id = row.data("id");
+        // ✅ Zapisywanie zmiany nazwy modelu
+        $(".save-carModel-btn").click(function () {
+            var row = $(this).closest("tr");
+            var name = row.find(".carModel-input").val().trim();
+            var id = row.data("id");
 
-        if (!confirm("Jesteś pewien, że chcesz usunąć ten model?")) {
-            return;
-        }
-
-        $.ajax({
-            url: "/Admin/DeleteModel/" + id,
-            type: "POST",
-            success: function (response) {
-                if (!response.success) {
-                    // Jeśli model ma powiązane wersje, wyświetl pytanie
-                    if (response.versions) {
-                        var versionsList = response.versions.join(", ");
-                        var confirmDeleteVersions = confirm(
-                            `Model ma powiązane wersje: ${versionsList}.\nCzy chcesz je również usunąć?`
-                        );
-
-                        if (confirmDeleteVersions) {
-                            deleteModelWithVersions(id);
-                        }
-                    } else {
-                        alert(response.message);
-                    }
-                } else {
-                    row.remove();
-                    alert("Pomyślnie usunięto model.");
-                }
-            },
-            error: function (xhr) {
-                alert(xhr.responseText || "Błąd usuwania");
-            }
-        });
-    });
-
-    // Funkcja do usuwania modelu wraz z wersjami
-    function deleteModelWithVersions(id) {
-        $.ajax({
-            url: "/Admin/DeleteModelWithVersions",
-            type: "POST",
-            data: { id: id },
-            success: function () {
-                alert("Model i jego wersje zostały usunięte.");
-                location.reload();
-            },
-            error: function () {
-                alert("Błąd usuwania modelu i wersji.");
-            }
-        });
-    }
-
-    // Dodawanie nowego modelu
-    $(".add-carModel-btn").click(function () { 
-        var row = $(this).closest("tr");
-        $(".cancel-icon-btn").click();
-        $(".cancel-name-btn").click();
-        $(".cancel-carModel-btn").not(row.find(".cancel-carModel-btn")).click();
-        row.find(".save-newModel-btn, .newModel-input").removeClass("d-none");
-    });
-
-    // Dodawanie nowego modelu do bazy
-    $(".save-newModel-btn").click(function () {
-        var name = $(".newModel-input").val();
-        var brandId = $(".id-label").data("id");
-                // Zmienna przechowująca modele
-        var existingCarModels = [];
-
-        // Pobieranie danych z serwera
-        $(".carModel-text").each(function () {
-            existingCarModels.push($(this).text().trim().toLowerCase());
-        });
-        //Walidacja danych
-            var state=0;
-            if (existingCarModels.includes(name.toLowerCase())) {
-                $("#errorNewModel").text("Podana marka już istnieje").removeClass("d-none");
-                state++;
-            }
-            else if(!name){
-                $("#errorNewModel").text("Nazwa musi być podana").removeClass("d-none");
-                state++;
-            }
-            else{
-                $("#errorNewModel").addClass("d-none");
-            }
-            if(state>0)
-            {
+            if (name == row.find(".carModel-text").text().trim()) {
+                $(".cancel-carModel-btn").click();
                 return;
             }
 
-        var formData = new FormData();
-        formData.append("Name", name);
-        formData.append("BrandId", brandId);
+            var existingCarModels = [];
 
-        $.ajax({
-            url: "/Admin/CreateModel",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                alert("Dodano pomyślnie!");
-                location.reload();
-            },
-            error: function (xhr) {
-                console.error("Error:", xhr.responseText);
-                alert("Error adding equipment. Check the console for details.");
+            $(".carModel-text").each(function () {
+                existingCarModels.push($(this).text().trim().toLowerCase());
+            });
+
+            var state = 0;
+
+            if (!name) {
+                row.find("#errorCarModel").text("Nazwa jest wymagana").removeClass("d-none");
+                state++;
+            } else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".carModel-text").eq(index).closest("tr").data("id"))) {
+                row.find("#errorCarModel").text("Podany model już istnieje").removeClass("d-none");
+                state++;
+            } else {
+                row.find("#errorCarModel").addClass("d-none");
             }
-        });
-    });
 
-        // Edycja wersji
-    $(".edit-version-btn").click(function () {
-        var versionRow = $(this).closest("li"); // Pobieramy tylko wersję
-        $(".cancel-icon-btn").click();
-        $(".cancel-name-btn").click();
-        $(".cancel-carModel-btn").click();
-        $(".cancel-version-btn").not(versionRow.closest("li").find(".cancel-version-btn")).click();
-        versionRow.find(".version-input").val(versionRow.find(".version-text").text().trim());
+            if (state > 0) return;
 
-           versionRow.find(".edit-version-btn, .version-text, .delete-version-btn, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-        versionRow.find(".save-version-btn, .cancel-version-btn, .version-input").removeClass("d-none");
-    });
+            var formData = new FormData();
+            formData.append("Id", id);
+            formData.append("Name", name);
 
-
-    // Anulowanie edycji wersji
-    $(".cancel-version-btn").click(function () {
-        var versionRow = $(this).closest("li");
-        versionRow.find("#errorVersion").addClass("d-none");
-        versionRow.find(".version-input").val(versionRow.find(".version-text").text().trim());
-        versionRow.find(".edit-version-btn, .version-text, .delete-version-btn").removeClass("d-none");
-        versionRow.find(".save-version-btn, .cancel-version-btn, .version-input").addClass("d-none");
-    });
-
-        
-    // ✅ Zapisywanie zmiany nazwy wersji
-    $(".save-version-btn").click(function () {
-        var row = $(this).closest("li");
-        var name = row.find(".version-input").val().trim();
-        var id = row.data("version-id");
-        // Jeśli nazwa nie została zmieniona, anuluj edycję
-        if (name == row.find(".version-text").text().trim()) {
-            $(".cancel-version-btn").click();
-            return;
-        }
-                        // Pobieramy model ID z aktualnie edytowanego wiersza
-    var modelId = row.closest("tr").data("id");
-    var existingVersionsByModel = {}; // Obiekt przechowujący wersje dla każdego modelu
-
-    // Pobieramy wszystkie wersje dla każdego modelu
-    $(".carModel-id").each(function () {
-        var id = $(this).data("id"); // Pobranie ID modelu
-        if (!id) return; // Jeśli ID nie istnieje, pomijamy
-
-        existingVersionsByModel[id] = $(this)
-            .closest("tr")
-            .find(".version-text")
-            .map(function () {
-                return $(this).text().trim().toLowerCase();
-            })
-            .get(); // Zamiana na tablicę wartości
-    });
-
-    // Walidacja, czy nazwa jest pusta
-    var state = 0;
-    if (!name) {
-        row.find("#errorVersion").text("Nazwa jest wymagana").removeClass("d-none");
-        state++;
-    }
-    // Sprawdzamy, czy podana wersja już istnieje w tym modelu
-    else if (existingVersionsByModel[modelId]?.includes(name.toLowerCase())) {
-        row.find("#errorVersion").text("Podana wersja już istnieje dla tego modelu").removeClass("d-none");
-        state++;
-    }
- else {
-        row.find("#errorVersion").addClass("d-none");
-    }
-        // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-        if (state > 0) {
-            return;
-        }
-
-        // Przygotowanie do wysłania danych
-                var formData = new FormData();
-                formData.append("Id", id);
-                formData.append("Name", name);
-
-        // Wysyłanie danych za pomocą AJAX
-        $.ajax({
-            url: "/Admin/EditVersion",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function () {
-                alert("Zaktualizowano pomyślnie");
-                location.reload();
-            },
-            error: function () {
-                alert("Błąd aktualizacji");
-            }
-        });
-    });
-
-    // 🔹 Usuwanie wersji
-        $(".delete-version-btn").click(function () {
-            var row = $(this).closest("li");
-            var id = row.data("version-id");
-
-            if (confirm("Jesteś pewien, że chcesz usunąć?")) {
-                $.ajax({
-                    url: "/Admin/DeleteVersion/" + id,
-                    type: "POST",
-                    success: function () {
-                        row.remove();
-                        alert("Pomyślnie usunięto");
-                    },
-                    error: function (xhr) {
-                        alert(xhr.responseText || "Błąd usuwania");
-                    }
-                });
-            }
+            $.ajax({
+                url: "/Admin/EditModel",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Zaktualizowano pomyślnie");
+                    location.reload();
+                },
+                error: function () {
+                    alert("Błąd aktualizacji");
+                }
+            });
         });
 
-          // Dodawanie nowej wersji (poprawka, żeby pole było tylko w jednym wierszu)
-    $(".add-version-btn").click(function () {
-        $(".cancel-icon-btn").click();
-        $(".cancel-name-btn").click();
-        $(".cancel-carModel").click();
-        $(".cancel-version-btn").click();
+        // 🔹 Usuwanie modelu
+        $(".delete-carModel-btn").click(function () {
+            var row = $(this).closest("tr");
+            var id = row.data("id");
 
-        var row = $(this).closest("tr");
-
-        // Ukrywamy inne inputy i pokazujemy tylko ten w klikniętym wierszu
-        $(".newVersion-input, .save-newVersion-btn, #errorNewVersion").addClass("d-none");
-
-        row.find(".newVersion-input").removeClass("d-none").focus();
-        row.find(".save-newVersion-btn").removeClass("d-none");
-    });
-
-    // Dodawanie nowej wersji do bazy
-    $(".save-newVersion-btn").click(function () {
-        var row = $(this).closest("tr");
-        var name = row.find(".newVersion-input").val(); // Pobranie wartości z odpowiedniego inputa
-        var modelId = row.data("id"); // Pobranie ID modelu z atrybutu data-id w <tr>
-
-        if (!modelId) {
-            console.error("❌ Błąd: ModelId jest pusty!");
-            return;
-        }
-
-
-
-        // Pobieramy istniejące wersje dla tego modelu
-        var existingVersions = row.find(".version-text").map(function () {
-            return $(this).text().trim().toLowerCase();
-        }).get();
-
-        // Walidacja, czy nazwa jest pusta
-        if (!name) {
-            row.find("#errorNewVersion").text("Nazwa jest wymagana").removeClass("d-none");
-            return;
-        }
-
-        // Sprawdzenie, czy wersja już istnieje
-        if (existingVersions.includes(name.toLowerCase())) {
-            row.find("#errorNewVersion").text("Podana wersja już istnieje dla tego modelu").removeClass("d-none");
-            return;
-        } else {
-            row.find("#errorNewVersion").addClass("d-none");
-        }
-
-        var formData = new FormData();
-        formData.append("Name", name);
-        formData.append("CarModelId", modelId);
-
-        $.ajax({
-            url: "/Admin/CreateVersion",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                alert("✅ Dodano pomyślnie!");
-                location.reload();
-            },
-            error: function (xhr) {
-                console.error("❌ Error:", xhr.responseText);
-                alert("❌ Wystąpił błąd. Sprawdź konsolę.");
+            if (!confirm("Jesteś pewien, że chcesz usunąć ten model?")) {
+                return;
             }
-        });
-    });
 
-</script>
+            $.ajax({
+                url: "/Admin/DeleteModel/" + id,
+                type: "POST",
+                success: function () {
+                    row.remove();
+                    alert("Pomyślnie usunięto model.");
+                },
+                error: function () {
+                    alert("Błąd usuwania");
+                }
+            });
+        });
+
+    </script>
+
 }
