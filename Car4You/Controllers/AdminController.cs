@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Diagnostics.Metrics;
 using System.Globalization;
-using Car4You.Migrations;
 using static Car4You.ViewModels.CarViewModel;
+using Microsoft.VisualBasic;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
 
 namespace Car4You.Controllers
 {
@@ -18,11 +20,13 @@ namespace Car4You.Controllers
     {
         private readonly CarDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(CarDbContext context, IWebHostEnvironment environment)
+        public AdminController(CarDbContext context, IWebHostEnvironment environment, ILogger<AdminController> logger)
         {
             _context = context;
             _environment = environment;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -34,7 +38,6 @@ namespace Car4You.Controllers
         [HttpGet]
         public async Task<IActionResult> AddCar()
         {
-            var carModels = await _context.CarModels.Include(m => m.Brand).OrderBy(m=>m.Name).ToListAsync();
             var equipmentTypes = _context.EquipmentTypes.OrderBy(e=>e.Name).ToList();  // Pobranie typów ekwipunku
             var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e=>e.Name).ToList(); // Pobranie ekwipunków z ich typami
 
@@ -48,92 +51,210 @@ namespace Car4You.Controllers
             var viewModel = new CarViewModel
             {
                 Car = new Car(), // Nowy obiekt auta
-                Brands = carModels.Select(m => m.Brand).Distinct().ToList(),
-                CarModels = carModels,
-                FuelTypes = await _context.FuelTypes.OrderBy(f => f.Name).ToListAsync(),
-                Gearboxes = await _context.Gearboxes.OrderBy(g => g.Name).ToListAsync(),
+                Brands = await _context.Brands.OrderBy(b=>b.Name).ToListAsync(),
+                CarModels = new List<Models.CarModel>(),
                 BodyTypes = await _context.BodyTypes.OrderBy(b => b.Name).ToListAsync(),
-                Versions = await _context.Versions.ToListAsync(),
+                Versions= new List<Models.Version>(),
                 EquipmentTypes = equipmentTypes,
                 GroupedEquipment = groupedEquipment,
-                MostCommonYear = _context.Cars
-                .GroupBy(c => c.Year)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefault(),
-
-                MostCommonEnginePower = _context.Cars
-                .GroupBy(c => c.EnginePower)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefault(),
-
-                MostCommonCubicCapacity = _context.Cars
-                .GroupBy(c => c.CubicCapacity)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefault()
             };
 
             return View(viewModel);
         }
 
-
-
         [HttpPost]
         [ValidateAntiForgeryToken] // Zapobiega atakom CSRF
-        public IActionResult AddCar(CarViewModel model, List<IFormFile> photos, int? mainPhotoIndex)
+        public async Task<IActionResult>AddCar(CarViewModel model, int MainPhotoIndex)
         {
-            // Sprawdzenie, czy rok produkcji jest w prawidłowym zakresie
-            if (model.Car.Year > DateTime.Now.Year + 1)
+            //Rok
+            if (model.Car.Year < 1900)
             {
-                ModelState.AddModelError("Car.Year", $"Rok produkcji nie może być większy niż {DateTime.Now.Year + 1}.");
+                ModelState.AddModelError("Car.Year", "Rok produkcji musi być większy od 1900");
             }
-            if (!ModelState.IsValid)
+            else if (model.Car.Year > DateTime.Now.Year)
             {
-                // Jeśli formularz zawiera błędy, ponownie wypełnij ViewModel i zwróć widok
-                model.Brands = _context.Brands.ToList();
-                model.CarModels = _context.CarModels.ToList();
-                model.FuelTypes = _context.FuelTypes.OrderBy(f=>f.Name).ToList();
-                model.Gearboxes = _context.Gearboxes.OrderBy(g=>g.Name).ToList();
-                model.BodyTypes = _context.BodyTypes.OrderBy(b=>b.Name).ToList();
-                model.Versions = _context.Versions.ToList();
-                return View(model);
+                ModelState.AddModelError("Car.Year", $"Rok produkcji musi być mniejszy od {DateTime.Now.Year}");
             }
 
-            // Przypisz aktualną datę publikacji
-            model.Car.PublishDate = DateTime.Now;
-
-            // Zapisz auto do bazy danych
-            _context.Cars.Add(model.Car);
-            _context.SaveChanges();
-            // Obsługa zdjęć
-            string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-            int index = 0;
-
-            foreach (var photo in photos)
+            //Przebieg
+            if (model.Car.Mileage <= 0)
             {
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + photo.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                ModelState.AddModelError("Car.Mileage", "Przebieg musi być większy od 0 km");
+            }
+            else if (model.Car.Mileage > 999999)
+            {
+                ModelState.AddModelError("Car.Mileage", "Przebieg musi być mniejszy od 999 999 km");
+            }
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+            //Pojemność skokowa
+            if (model.Car.CubicCapacity <= 100)
+            {
+                ModelState.AddModelError("Car.CubicCapacity", "Pojemność skokowa musi być większa od 100 cm³");
+            }
+            else if (model.Car.CubicCapacity > 8000)
+            {
+                ModelState.AddModelError("Car.CubicCapacity", "Pojemność skokowa musi być mniejsza od 8000 cm³");
+            }
+
+            //Moc silnika
+            if (model.Car.EnginePower <= 0)
+            {
+                ModelState.AddModelError("Car.EnginePower", "Moc silnika musi być większa od 0 KM");
+            }
+            else if (model.Car.EnginePower > 2000)
+            {
+                ModelState.AddModelError("Car.EnginePower", "Moc silnika musi być mniejsza od 2000 KM");
+            }
+
+            //Drzwi
+            if(model.Car.Door<2)
+            {
+                ModelState.AddModelError("Car.Door", "Liczba drzwi musi być większa od 1");
+            }
+            else if (model.Car.Door > 5)
+            {
+                ModelState.AddModelError("Car.Door", "Liczba drzwi mniejsza od 5");
+            }
+
+            //Liczba miejsc
+            if(model.Car.Seat<2)
+            {
+                ModelState.AddModelError("Car.Seat", "Ilość miejsc musi być większa od 1");
+            }
+            else if (model.Car.Seat > 9)
+            {
+                ModelState.AddModelError("Car.Seat", "Ilość miejsc musi być mniejsza od 9");
+            }
+
+            //Cena
+            if(model.Car.OldPrice<1)
+            {
+                ModelState.AddModelError("Car.OldPrice", "Cena musi być większa od 0 zł");
+            }
+           else if(model.Car.OldPrice>999999)
+            {
+                ModelState.AddModelError("Car.OldPrice", "Cena musi być mniejsza od 999 999 zł");
+            }
+
+            //Zdjęcia
+            if(model.CarPhotos == null)
+            {
+                ModelState.AddModelError("CarPhotos", "Zdjęcia są wymagane");
+            }
+            else if (model.CarPhotos.Count > 21)
+            {
+                ModelState.AddModelError("CarPhotos", "Liczba zdjęć musi być mniejsza od 21");
+            }
+
+                if (!ModelState.IsValid)
+            {
+
+                var equipmentTypes = _context.EquipmentTypes.OrderBy(e => e.Name).ToList();  // Pobranie typów ekwipunku
+                var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e => e.Name).ToList(); // Pobranie ekwipunków z ich typami
+
+                // Grupowanie ekwipunków według typu
+                var groupedEquipment = equipmentTypes.Select(equipmentType => new EquipmentGroup
                 {
-                    photo.CopyTo(fileStream);
+                    EquipmentType = equipmentType,
+                    Equipments = equipmentList.Where(e => e.EquipmentTypeId == equipmentType.Id).ToList()
+                }).ToList();
+
+                // Przekazanie wypełnionego modelu
+                model.Car = model.Car ?? new Car();
+
+                model.Brands = _context.Brands.OrderBy(m => m.Name).ToList();
+                model.CarModels = new List<Models.CarModel>();
+                model.BodyTypes = await _context.BodyTypes.OrderBy(b => b.Name).ToListAsync();
+                model.Versions = new List<Models.Version>();
+                model.EquipmentTypes = equipmentTypes;
+                model.GroupedEquipment = groupedEquipment;
+
+
+                return View(model);
+
+            }
+            try
+            {
+                // Przypisz aktualną datę publikacji
+                model.Car.PublishDate = DateTime.Now;
+                model.Car.NewPrice = model.Car.OldPrice;
+                model.Car.CarModel = null;
+                // Zapisz auto do bazy danych
+                _context.Cars.Add(model.Car);
+                await _context.SaveChangesAsync(); // Zapisujemy auto do bazy, by mieć jego ID
+
+                // Obsługa wyposażenia
+                if (model.SelectedEquipmentIds != null)
+                {
+                    var carEquipments = model.SelectedEquipmentIds
+                        .Select(equipmentId => new CarEquipment
+                        {
+                            CarId = model.Car.Id,
+                            EquipmentId = equipmentId
+                        }).ToList();
+
+                    _context.CarEquipments.AddRange(carEquipments);
                 }
 
-                _context.Photos.Add(new Photo
+                // Obsługa zdjęć
+                if (model.CarPhotos != null && model.CarPhotos.Count > 0)
                 {
-                    CarId = model.Car.Id,
-                    PhotoPath = "/uploads/" + uniqueFileName,
-                    IsMain = index == mainPhotoIndex
-                });
+                    var photos = new List<Photo>();
 
-                index++;
+                    // Pobieramy markę, model i rok auta
+                    var car = _context.Cars.Include(c => c.CarModel)
+                                            .ThenInclude(m => m.Brand) // Pobieramy markę z modelu
+                                            .FirstOrDefault(c => c.Id == model.Car.Id);
+
+                    if (car == null)
+                    {
+                        _logger.LogError($"Nie znaleziono auta o ID {model.Car.Id}");
+                        return StatusCode(500, "Błąd zapisu zdjęć");
+                    }
+
+                    string brand = car.CarModel?.Brand?.Name ?? "BrakMarki";
+                    string modelName = car.CarModel?.Name ?? "BrakModelu";
+                    string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? ""; // Pobranie pierwszej generacji, jeśli istnieje
+                    string year = car.Year.ToString();
+
+                    int photoIndex = 0;
+
+                    foreach (var file in model.CarPhotos)
+                    {
+                        string fileExtension = Path.GetExtension(file.FileName);
+                        string fileName = $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex+1}{fileExtension}";
+
+                        var filePath = Path.Combine(_environment.WebRootPath, "cars", fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        photos.Add(new Photo
+                        {
+                            CarId = car.Id,
+                            Title = fileName,
+                            PhotoPath = filePath,
+                            IsMain = (photoIndex == MainPhotoIndex)
+                        });
+
+                        photoIndex++;
+                    }
+
+                    _context.Photos.AddRange(photos);
+                }
+
+
+
+                await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
+                return RedirectToAction("Index");
+
             }
-
-            _context.SaveChanges();
-
-            return Json(new { success = true });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet]
@@ -162,21 +283,21 @@ namespace Car4You.Controllers
         public IActionResult ManageBrand(int id)
         {
             var brand = _context.Brands
-    .Include(b => b.CarModel)
-        .ThenInclude(m => m.Version)
+    .Include(b => b.CarModels)
+        .ThenInclude(m => m.Versions)
     .Where(b => b.Id == id)
     .Select(b => new Brand
     {
         Id = b.Id,
         Name = b.Name,
-        CarModel = b.CarModel
+        CarModels = b.CarModels
             .OrderBy(m => m.Name) // Sortowanie modeli alfabetycznie
             .Select(m => new Models.CarModel
             {
                 Id = m.Id,
                 Name = m.Name,
                 BrandId = m.BrandId,
-                Version = m.Version.OrderBy(v => v.Name).ToList() // Sortowanie wersji alfabetycznie
+                Versions = m.Versions.OrderBy(v => v.Name).ToList() // Sortowanie wersji alfabetycznie
             })
             .ToList()
     })
@@ -307,6 +428,9 @@ namespace Car4You.Controllers
             }
             catch (Exception ex)
             {
+                // Logowanie szczegółów błędu
+                Console.WriteLine($"Błąd: {ex.Message}");
+                Console.WriteLine($"Szczegóły błędu: {ex.InnerException?.Message}");
                 return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message });
             }
         }
@@ -350,7 +474,7 @@ namespace Car4You.Controllers
                 _context.CarModels.Add(carModel);
                 _context.SaveChanges();
 
-                return Ok();
+                return Ok(new { id = carModel.Id, name = carModel.Name });
             }
             catch (Exception ex)
             {
@@ -401,14 +525,14 @@ namespace Car4You.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteModelWithVersions(int id)
         {
-            var carModel = await _context.CarModels.Include(m => m.Version).FirstOrDefaultAsync(m => m.Id == id);
+            var carModel = await _context.CarModels.Include(m => m.Versions).FirstOrDefaultAsync(m => m.Id == id);
 
             if (carModel == null)
             {
                 return NotFound("Model nie istnieje.");
             }
 
-            _context.Versions.RemoveRange(carModel.Version);
+            _context.Versions.RemoveRange(carModel.Versions);
             _context.CarModels.Remove(carModel);
             await _context.SaveChangesAsync();
 
@@ -474,7 +598,7 @@ namespace Car4You.Controllers
                 }
                 _context.Versions.Add(version);
                 _context.SaveChanges();
-                return Ok();
+                return Ok(new { id = version.Id, name = version.Name });
             }
             catch (Exception ex)
             {
@@ -626,7 +750,7 @@ namespace Car4You.Controllers
         public IActionResult Brand()
         {
            var brands = _context.Brands
-                 .Include(a => a.Car)
+                 .Include(a => a.Cars)
                  .OrderBy(a => a.Name)
                  .ToList();
             return View(brands);

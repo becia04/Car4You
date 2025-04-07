@@ -21,38 +21,6 @@ namespace Car4You.Controllers
             _logger = logger;
         }
 
-        // GET: Cars/Create
-        public IActionResult Create()
-        {
-            ViewData["Brands"] = new SelectList(_context.Brands, "Id", "Name");
-            ViewData["BodyTypes"] = new SelectList(_context.BodyTypes, "Id", "Name");
-            ViewData["FuelTypes"] = new SelectList(_context.FuelTypes, "Id", "Name");
-            ViewData["Gearboxes"] = new SelectList(_context.Gearboxes, "Id", "Name");
-
-            return View();
-        }
-
-        // POST: Cars/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Car car)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(car);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index)); // Przekierowanie do listy aut
-            }
-
-            // Jeśli są błędy, ponownie wypełniamy listy dla dropdownów
-            ViewData["Brands"] = new SelectList(_context.Brands, "Id", "Name");
-            ViewData["BodyTypes"] = new SelectList(_context.BodyTypes, "Id", "Name");
-            ViewData["FuelTypes"] = new SelectList(_context.FuelTypes, "Id", "Name");
-            ViewData["Gearboxes"] = new SelectList(_context.Gearboxes, "Id", "Name");
-
-            return View(car);
-        }
-
         public IActionResult Index()
         {
             return View();

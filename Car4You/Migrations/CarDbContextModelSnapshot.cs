@@ -89,50 +89,51 @@ namespace Car4You.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CubicCapacity")
+                    b.Property<int?>("CubicCapacity")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Door")
+                    b.Property<int?>("Door")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Drive")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("EnginePower")
+                    b.Property<int?>("EnginePower")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<bool>("FirstOwner")
                         .HasColumnType("bit");
 
-                    b.Property<int>("FuelId")
-                        .HasColumnType("int");
+                    b.Property<string>("FuelType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GearboxId")
-                        .HasColumnType("int");
+                    b.Property<string>("Gearbox")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Generation")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Mileage")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
+                    b.Property<int?>("Mileage")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("NewPrice")
                         .HasColumnType("int");
 
-                    b.Property<int>("OldPrice")
+                    b.Property<int?>("NewPrice")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OldPrice")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Origin")
@@ -142,7 +143,8 @@ namespace Car4You.Migrations
                     b.Property<DateTime>("PublishDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Seat")
+                    b.Property<int?>("Seat")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -150,16 +152,14 @@ namespace Car4You.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VIN")
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
+
+                    b.Property<int?>("VersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Year")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("VarsionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VersionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -170,10 +170,6 @@ namespace Car4You.Migrations
 
                     b.HasIndex("CarModelId");
 
-                    b.HasIndex("FuelId");
-
-                    b.HasIndex("GearboxId");
-
                     b.HasIndex("VersionId");
 
                     b.ToTable("Cars");
@@ -181,16 +177,21 @@ namespace Car4You.Migrations
 
             modelBuilder.Entity("Car4You.Models.CarEquipment", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("CarId")
                         .HasColumnType("int");
 
                     b.Property<int>("EquipmentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
+                    b.HasKey("Id");
 
-                    b.HasKey("CarId", "EquipmentId");
+                    b.HasIndex("CarId");
 
                     b.HasIndex("EquipmentId");
 
@@ -263,40 +264,6 @@ namespace Car4You.Migrations
                     b.ToTable("EquipmentTypes");
                 });
 
-            modelBuilder.Entity("Car4You.Models.FuelType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("FuelTypes");
-                });
-
-            modelBuilder.Entity("Car4You.Models.Gearbox", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Gearboxes");
-                });
-
             modelBuilder.Entity("Car4You.Models.Photo", b =>
                 {
                     b.Property<int>("Id")
@@ -312,6 +279,10 @@ namespace Car4You.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("PhotoPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -341,52 +312,34 @@ namespace Car4You.Migrations
 
                     b.HasIndex("CarModelId");
 
-                    b.ToTable("Version");
+                    b.ToTable("Versions");
                 });
 
             modelBuilder.Entity("Car4You.Models.Car", b =>
                 {
-                    b.HasOne("Car4You.Models.BodyType", "BodyType")
-                        .WithMany("Car")
+                    b.HasOne("Car4You.Models.BodyType", "BodyTypes")
+                        .WithMany("Cars")
                         .HasForeignKey("BodyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Car4You.Models.Brand", null)
-                        .WithMany("Car")
+                        .WithMany("Cars")
                         .HasForeignKey("BrandId");
 
                     b.HasOne("Car4You.Models.CarModel", "CarModel")
-                        .WithMany("Car")
+                        .WithMany("Cars")
                         .HasForeignKey("CarModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Car4You.Models.FuelType", "FuelType")
-                        .WithMany("Car")
-                        .HasForeignKey("FuelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Car4You.Models.Gearbox", "Gearbox")
-                        .WithMany("Car")
-                        .HasForeignKey("GearboxId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Car4You.Models.Version", "Version")
-                        .WithMany("Car")
-                        .HasForeignKey("VersionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("Cars")
+                        .HasForeignKey("VersionId");
 
-                    b.Navigation("BodyType");
+                    b.Navigation("BodyTypes");
 
                     b.Navigation("CarModel");
-
-                    b.Navigation("FuelType");
-
-                    b.Navigation("Gearbox");
 
                     b.Navigation("Version");
                 });
@@ -394,13 +347,13 @@ namespace Car4You.Migrations
             modelBuilder.Entity("Car4You.Models.CarEquipment", b =>
                 {
                     b.HasOne("Car4You.Models.Car", "Car")
-                        .WithMany("CarEquipment")
+                        .WithMany("CarEquipments")
                         .HasForeignKey("CarId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Car4You.Models.Equipment", "Equipment")
-                        .WithMany("CarEquipment")
+                        .WithMany("CarEquipments")
                         .HasForeignKey("EquipmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -413,7 +366,7 @@ namespace Car4You.Migrations
             modelBuilder.Entity("Car4You.Models.CarModel", b =>
                 {
                     b.HasOne("Car4You.Models.Brand", "Brand")
-                        .WithMany("CarModel")
+                        .WithMany("CarModels")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -424,7 +377,7 @@ namespace Car4You.Migrations
             modelBuilder.Entity("Car4You.Models.Equipment", b =>
                 {
                     b.HasOne("Car4You.Models.EquipmentType", "EquipmentType")
-                        .WithMany("Equipment")
+                        .WithMany("Equipments")
                         .HasForeignKey("EquipmentTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -446,7 +399,7 @@ namespace Car4You.Migrations
             modelBuilder.Entity("Car4You.Models.Version", b =>
                 {
                     b.HasOne("Car4You.Models.CarModel", "CarModel")
-                        .WithMany("Version")
+                        .WithMany("Versions")
                         .HasForeignKey("CarModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -456,51 +409,41 @@ namespace Car4You.Migrations
 
             modelBuilder.Entity("Car4You.Models.BodyType", b =>
                 {
-                    b.Navigation("Car");
+                    b.Navigation("Cars");
                 });
 
             modelBuilder.Entity("Car4You.Models.Brand", b =>
                 {
-                    b.Navigation("Car");
+                    b.Navigation("CarModels");
 
-                    b.Navigation("CarModel");
+                    b.Navigation("Cars");
                 });
 
             modelBuilder.Entity("Car4You.Models.Car", b =>
                 {
-                    b.Navigation("CarEquipment");
+                    b.Navigation("CarEquipments");
                 });
 
             modelBuilder.Entity("Car4You.Models.CarModel", b =>
                 {
-                    b.Navigation("Car");
+                    b.Navigation("Cars");
 
-                    b.Navigation("Version");
+                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("Car4You.Models.Equipment", b =>
                 {
-                    b.Navigation("CarEquipment");
+                    b.Navigation("CarEquipments");
                 });
 
             modelBuilder.Entity("Car4You.Models.EquipmentType", b =>
                 {
-                    b.Navigation("Equipment");
-                });
-
-            modelBuilder.Entity("Car4You.Models.FuelType", b =>
-                {
-                    b.Navigation("Car");
-                });
-
-            modelBuilder.Entity("Car4You.Models.Gearbox", b =>
-                {
-                    b.Navigation("Car");
+                    b.Navigation("Equipments");
                 });
 
             modelBuilder.Entity("Car4You.Models.Version", b =>
                 {
-                    b.Navigation("Car");
+                    b.Navigation("Cars");
                 });
 #pragma warning restore 612, 618
         }

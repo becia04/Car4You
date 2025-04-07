@@ -1,4 +1,5 @@
 ﻿using Car4You.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace Car4You.Models
@@ -12,9 +13,10 @@ namespace Car4You.Models
         public string Icon { get; set; }
         [Required(ErrorMessage = "Wybierz typ wyposażenia")]
         public int EquipmentTypeId { get; set; }
+        [ValidateNever]
         public EquipmentType EquipmentType { get; set; }
 
-        public ICollection<CarEquipment> CarEquipment { get; set; }
+        public ICollection<CarEquipment> CarEquipments { get; set; }
     }
 
     }

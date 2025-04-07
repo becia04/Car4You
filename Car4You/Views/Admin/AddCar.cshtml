@@ -10,87 +10,92 @@
 
 <h2>Dodaj nowe auto</h2>
 
-<form asp-action="AddCar" method="post">
+<form asp-action="AddCar" method="post" enctype="multipart/form-data" novalidate>
 
     <!-- Marka -->
     <div class="form-group">
         <label for="BrandId">Marka</label>
-        <select id="BrandId" name="Car.BrandId" class="form-control" asp-for="Car.CarModel.BrandId">
-            <option value="" disabled selected>Wybierz markę</option>
-            @foreach (var brand in Model.Brands)
-            {
-                <option value="@brand.Id" data-name="@brand.Name">@brand.Name</option>
-            }
-        </select>
+        @Html.DropDownListFor(
+                 model => model.Car.CarModel.BrandId,
+                 new SelectList(Model.Brands, "Id", "Name"),
+                 "Wybierz markę",
+                 new { @class = "form-control", id = "BrandId", name = "Car.CarModel.BrandId" })
     </div>
 
     <!-- Model -->
     <div class="form-group">
         <label for="CarModelId">Model</label>
-        <select id="CarModelId" name="Car.CarModelId" class="form-control" asp-for="Car.CarModelId" disabled>
-            <option value="" disabled selected>Wybierz model</option>
-        </select>
+        @Html.DropDownListFor(
+                 model => model.Car.CarModelId,
+                 new SelectList(Model.CarModels, "Id", "Name"),
+                 "Wybierz model",
+                 new { @class = "form-control", id = "CarModelId", name = "Car.CarModelId", disabled = "disabled" })
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal" id="addModelBtn" disabled>
             +
         </button>
+        <input type="hidden" id="SelectedCarModelId" value="@Model.Car.CarModelId" />
     </div>
 
     <!-- Generacja -->
     <div class="form-group">
         <label for="VersionId">Generacja</label>
-        <select id="VersionId" name="Car.VersionId" class="form-control" asp-for="Car.VersionId" disabled>
-            <option value="" disabled selected>Wybierz generację</option>
-        </select>
+        @Html.DropDownListFor(
+                 model => model.Car.VersionId,
+                 new SelectList(Model.Versions, "Id", "Name"),
+                 "Wybierz generację",
+                 new { @class = "form-control", id = "VersionId", name = "Car.VersionId", disabled = "disabled" })
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVersionModal" id="addVersionBtn" disabled>
             +
         </button>
+        <input type="hidden" id="SelectedCarVersionId" value="@Model.Car.VersionId" />
     </div>
 
     <!-- Rok -->
     <div class="form-group">
-        <label for="Car.Year">Rok produkcji</label>
-        <input asp-for="Car.Year" type="number" class="form-control" value="@Model.MostCommonYear" />
+        <label for="Car.Year">Rok produkcji *</label>
+        <input asp-for="Car.Year" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Year == 0 ? null : Model.Car.Year.ToString())" />
         <span asp-validation-for="Car.Year" class="text-danger"></span>
     </div>
 
     <!-- Tytuł -->
     <div class="form-group">
-        <label for="Title">Tytuł</label>
-        <input type="text" id="Title" name="Car.Title" class="form-control" />
+        <label for="Title">Tytuł *</label>
+        <input asp-for="Car.Title" id="Title" name="Car.Title" type="text" class="form-control"/>
+        <span asp-validation-for="Car.Title" class="text-danger"></span>
     </div>
 
     <!-- Przebieg -->
     <div class="form-group">
-        <label for="Car.Mileage">Przebieg (km)</label>
-        <input asp-for="Car.Mileage" type="number" class="form-control" value="150000"/>
+        <label for="Car.Mileage">Przebieg (km) *</label>
+        <input asp-for="Car.Mileage" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Mileage == 0 ? null : Model.Car.Mileage.ToString())" />
         <span asp-validation-for="Car.Mileage" class="text-danger"></span>
     </div>
 
     <!-- Paliwo -->
     <div class="form-group">
-        <label for="FuelId">Typ paliwa:</label>
-        <select id="FuelId" name="Car.FuelId" class="form-control" asp-for="Car.FuelId">
+        <label for="FuelType">Typ paliwa *</label>
+        <select id="FuelType" name="Car.FuelType" class="form-control" asp-for="Car.FuelType">
             @foreach(var fuel in Model.FuelTypes)
             {
-                <option value="@fuel.Id">@fuel.Name</option>
+                <option value="@fuel">@fuel</option>
             }
         </select>
     </div>
 
     <!-- Skrzynia biegów -->
     <div class="form-group">
-        <label for="GearboxId">Typ skrzyni biegów:</label>
-        <select id="GearboxId" name="Car.GearboxId" class="form-control" asp-for="Car.GearboxId">
+        <label for="Gearbox">Rodzaj skrzyni biegów *</label>
+        <select id="Gearbox" name="Car.Gearbox" class="form-control" asp-for="Car.Gearbox">
             @foreach (var gearbox in Model.Gearboxes)
             {
-                <option value="@gearbox.Id">@gearbox.Name</option>
+                <option value="@gearbox">@gearbox</option>
             }
         </select>
     </div>
 
     <!-- Typ nadwozia -->
     <div class="form-group">
-        <label for="BodyId">Typ nadwozia:</label>
+        <label for="BodyId">Typ nadwozia *</label>
         <select id="BodyId" name="Car.BodyId" class="form-control" asp-for="Car.BodyId">
             @foreach (var body in Model.BodyTypes)
             {
@@ -99,24 +104,24 @@
         </select>
     </div>
 
-    <!-- Pojemność skokowa -->
+    <!-- Pojemność skokowa/silnika -->
     <div class="form-group">
-        <label for="Car.CubicCapacity">Pojemność skokowa (cm³)</label>
-        <input asp-for="Car.CubicCapacity" type="number" class="form-control" value="@Model.MostCommonCubicCapacity" />
+        <label for="Car.CubicCapacity">Pojemność silnika (cm³) *</label>
+        <input asp-for="Car.CubicCapacity" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.CubicCapacity == 0 ? "" : Model.Car.CubicCapacity.ToString())" />
         <span asp-validation-for="Car.CubicCapacity" class="text-danger"></span>
     </div>
 
     <!-- Moc silnika -->
     <div class="form-group">
-        <label for="Car.EnginePower">Moc silnika (KM)</label>
-        <input asp-for="Car.EnginePower" type="number" class="form-control" value="@Model.MostCommonEnginePower" />
+        <label for="Car.EnginePower">Moc silnika (KM) *</label>
+        <input asp-for="Car.EnginePower" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.EnginePower == 0 ? "" : Model.Car.EnginePower.ToString())" />
         <span asp-validation-for="Car.EnginePower" class="text-danger"></span>
     </div>
 
     <!-- Kolor -->
     <div class="form-group">
-        <label for="Car.Color">Kolor</label>
-        <select asp-for="SelectedColor" class="form-control">
+        <label for="Car.Color">Kolor *</label>
+        <select asp-for="Car.Color" class="form-control">
             @foreach (var color in Model.Colors)
             {
                 <option value="@color" selected="@(color == Model.SelectedColor ? "selected" : null)">
@@ -128,7 +133,7 @@
 
     <!-- Typ lakieru -->
     <div class="form-group">
-        <label for="Car.ColorType">Typ lakieru</label>
+        <label for="Car.ColorType">Typ lakieru *</label>
         <select asp-for="Car.ColorType" class="form-control">
             <option value="Błyszczący">Błyszczący</option>
             <option value="Chromowany">Chromowany</option>
@@ -143,21 +148,23 @@
 
     <!-- Drzwi -->
     <div class="form-group">
-        <label for="Car.Door">Ilość drzwi</label>
-        <input asp-for="Car.Door" type="number" class="form-control" value="4"/>
+        <label for="Car.Door">Liczba drzwi *</label>
+        <input asp-for="Car.Door" type="number" class="form-control"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+               value="@(Model.Car.Door == 0 ? "" : Model.Car.Door.ToString())" />
         <span asp-validation-for="Car.Door" class="text-danger"></span>
     </div>
 
     <!-- Miejsca -->
     <div class="form-group">
-        <label for="Car.Seat">Ilość miejsc</label>
-        <input asp-for="Car.Seat" type="number" class="form-control" value="5"/>
+        <label for="Car.Seat">Ilość miejsc *</label>
+        <input asp-for="Car.Seat" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Seat == 0 ? "" : Model.Car.Seat.ToString())" />
         <span asp-validation-for="Car.Seat" class="text-danger"></span>
     </div>
 
     <!-- Napęd -->
     <div class="form-group">
-        <label for="Car.Drive">Napęd</label>
+        <label for="Car.Drive">Napęd *</label>
         <select asp-for="Car.Drive" class="form-control">
             <option value="4x4">4x4</option>
             <option value="Na przód">Na przód</option>
@@ -167,11 +174,11 @@
 
     <!-- Kraj pochodzenia -->
     <div class="form-group">
-        <label for="Car.Origin">Kraj pochodzenia</label>
-        <select asp-for="SelectedCountry" class="form-control">
+        <label for="Car.Origin">Kraj pochodzenia *</label>
+        <select asp-for="Car.Origin" class="form-control">
             @foreach (var country in Model.Countries)
             {
-                <option value="@country" selected="@(country == Model.SelectedCountry ? "selected" : null)">
+                <option value="@country">
                     @country
                 </option>
             }
@@ -187,8 +194,8 @@
 
     <!-- Cena -->
     <div class="form-group">
-        <label for="Car.OldPrice">Cena</label>
-        <input asp-for="Car.OldPrice" type="number" class="form-control" value="10000" />
+        <label for="Car.OldPrice">Cena *</label>
+        <input asp-for="Car.OldPrice" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.OldPrice == 0 ? "" : Model.Car.OldPrice.ToString())" />
         <span asp-validation-for="Car.OldPrice" class="text-danger"></span>
     </div>
 
@@ -202,7 +209,7 @@
     <!-- Opis -->
     <div class="form-group">
         <label for="description">Opis</label>
-        <textarea asp-for="Car.Description" class="form-control" rows="3"></textarea>
+        <textarea asp-for="Car.Description" class="form-control" rows="6"></textarea>
     </div>
 
     <!-- Zdjęcia -->
@@ -210,10 +217,12 @@
         <label for="carPhotos">Zdjęcia samochodu</label>
         <input type="file" name="carPhotos" id="carPhotos" class="form-control" multiple accept="image/*" />
         <small class="form-text text-muted">Możesz dodać jedno lub więcej zdjęć.</small>
+        <span asp-validation-for="CarPhotos" class="text-danger"></span>
     </div>
 
-    <!-- Podgląd dodanych zdjęć -->
+    <!-- Wybór głównego zdjęcia -->
     <div id="photoPreview" class="d-flex flex-wrap mt-3"></div>
+    <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
 
     <!-- Wyposażenie -->
     <div class="form-group">
@@ -250,7 +259,7 @@
 
    
 
-    <button type="submit" class="btn btn-primary">Dodaj Auto</button>
+    <button type="submit" class="btn btn-primary" style="margin-bottom:4rem;">Dodaj Auto</button>
 </form>
 
 <!-- Modal do dodawania nowego modelu -->
@@ -287,7 +296,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="addModelForm">
+                <form id="addVersionForm">
                     <div class="form-group">
                         <label for="newVersionName">Nazwa generacji</label>
                         <input type="text" id="newVersionName" class="form-control" required>
@@ -305,279 +314,285 @@
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function updateTitle() {
-                let selectedBrand = document.querySelector("#BrandId option:checked");
-                let brand = (selectedBrand && selectedBrand.value) ? selectedBrand.text : "";
+         let skipNextVersionLoad = false;
+        $(document).ready(function () {
+                    let initialLoad = true;
+        let selectedVersionId = '@Model.Car.VersionId';
 
-                let selectedModel = document.querySelector("#CarModelId option:checked");
-                let model = (selectedModel && selectedModel.value) ? selectedModel.text : "";
-
-                let selectedVersion = document.querySelector("#VersionId option:checked");
-                let version = (selectedVersion && selectedVersion.value) ? selectedVersion.text : "";
-
-                let yearInput = document.getElementById("Car_Year");
-                let year = (yearInput && yearInput.value) ? yearInput.value : "";
-
-                let titleParts = [brand, model, version, year].filter(Boolean);
-                document.getElementById("Title").value = titleParts.join(" ");
+            // Sprawdzenie wybranej marki przy starcie
+                   setTimeout(function () {
+            let selectedBrandId = $('#BrandId').val();
+            if (selectedBrandId) {
+                loadModelsForBrand(selectedBrandId, true);
             }
+            //Sprawdzanie wybranego modelu przy starcie
+            let selectedCarModelId = $('#CarModelId').val();
+            if (selectedCarModelId) {
+                // Ważne: dopiero po załadowaniu modeli
+                        setTimeout(function () {
+            loadVersionsForModel(selectedCarModelId, initialLoad ? selectedVersionId : null);
+            initialLoad = false; // wyłączyć po pierwszym razie
+        }, 300);
 
-            function resetModelsAndVersions() {
-                $("#CarModelId").empty().append('<option value="" disabled selected>Wybierz model</option>').prop('disabled', true);
-                $("#VersionId").empty().append('<option value="" disabled selected>Wybierz generację</option>').prop('disabled', true);
-
-                $("#addModelBtn").prop('disabled', true);
-                $("#addVersionBtn").prop('disabled', true);
-
-                updateTitle();
             }
+        }, 300); // Małe opóźnienie na start
 
-            $("#BrandId").on("change", function () {
+
+            // Event dla zmiany marki
+            $('#BrandId').change(function () {
                 let brandId = $(this).val();
-                resetModelsAndVersions();
+                $('#selectedBrandId').val(brandId);
 
                 if (brandId) {
-                    $("#CarModelId").prop("disabled", false);
-                    $("#addModelBtn").prop("disabled", false);
+                    $('#CarModelId').prop('disabled', false);
+                    $('#addModelBtn').prop('disabled', false);
+                    $('#VersionId').prop('disabled', true).empty().append('<option value="" disabled selected>Wybierz generację</option>');
+                    $('#addVersionBtn').prop('disabled', true);
                     loadModelsForBrand(brandId);
+                } else {
+                    $('#CarModelId, #VersionId').prop('disabled', true).empty();
+                    $('#addModelBtn, #addVersionBtn').prop('disabled', true);
                 }
+
                 updateTitle();
             });
 
-            $("#CarModelId").on("change", function () {
-                let modelId = $(this).val();
-                $("#VersionId").empty().append('<option value="" disabled selected>Wybierz generację</option>').prop("disabled", true);
-                $("#addVersionBtn").prop("disabled", true);
+            // Event dla zmiany modelu
+                $('#CarModelId').change(function () {
+                         if (skipNextVersionLoad) {
+            skipNextVersionLoad = false;
+            return; // Pomiń jednorazowo
+        }
+            let modelId = $(this).val();
+            $('#SelectedCarModelId').val(modelId);
 
-                if (modelId) {
-                    loadVersionsForModel(modelId);
-                    $("#VersionId").prop("disabled", false);
-                    $("#addVersionBtn").prop("disabled", false);
-                }
-                updateTitle();
-            });
+            if (modelId) {
+                loadVersionsForModel(modelId);
 
-            $("#VersionId, #Car_Year").on("change input", updateTitle);
-        });
-
-
-
-        //Obsługa zdjęć
-                document.getElementById("carPhotos").addEventListener("change", function (event) {
-            let previewContainer = document.getElementById("photoPreview");
-            previewContainer.innerHTML = ""; // Czyści poprzednie podglądy
-
-            let files = event.target.files;
-            if (files.length === 0) return;
-
-            for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-                let reader = new FileReader();
-
-                reader.onload = function (e) {
-                    let imageContainer = document.createElement("div");
-                    imageContainer.classList.add("position-relative", "m-2");
-
-                    let img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.classList.add("img-thumbnail");
-                    img.style.width = "150px";
-                    img.style.height = "150px";
-
-                    // Checkbox do wyboru zdjęcia głównego
-                    let mainCheckbox = document.createElement("input");
-                    mainCheckbox.type = "radio";
-                    mainCheckbox.name = "mainPhoto";
-                    mainCheckbox.classList.add("position-absolute");
-                    mainCheckbox.style.top = "5px";
-                    mainCheckbox.style.left = "5px";
-
-                    // Przycisk usuwania zdjęcia
-                    let removeBtn = document.createElement("button");
-                    removeBtn.innerHTML = "✖";
-                    removeBtn.classList.add("btn", "btn-sm", "btn-danger", "position-absolute");
-                    removeBtn.style.top = "5px";
-                    removeBtn.style.right = "5px";
-                    removeBtn.onclick = function () {
-                        imageContainer.remove();
-                    };
-
-                    imageContainer.appendChild(img);
-                    imageContainer.appendChild(mainCheckbox);
-                    imageContainer.appendChild(removeBtn);
-                    previewContainer.appendChild(imageContainer);
-                };
-
-                reader.readAsDataURL(file);
+            } else {
+                $('#VersionId').empty().append('<option value="" disabled selected>Wybierz generację</option>').prop("disabled", true);
+                $('#addVersionBtn').prop("disabled", true);
             }
+
+            updateTitle();
         });
 
-        document.getElementById("BrandId").addEventListener("change", function () {
-            document.getElementById("selectedBrandId").value = this.value;
-            // Usuwamy wywołanie loadModelsForBrand, ponieważ to już masz w zdarzeniu change dla #BrandId
-            $('#BrandId').trigger('change'); // Wywołaj zdarzenie change, aby załadować modele po zmianie marki
-        });
 
-        function addNewModel() {
-            var modelName = document.getElementById("newModelName").value;
-            var brandId = document.getElementById("selectedBrandId").value;
+
+            // Eventy dla generacji i roku
+            $("#VersionId, #Car_Year").on("change input", updateTitle);
+
+            // Obsługa zdjęć
+            document.getElementById('carPhotos').addEventListener('change', function (event) {
+                let previewDiv = document.getElementById('photoPreview');
+                previewDiv.innerHTML = "";
+                Array.from(event.target.files).forEach((file, index) => {
+                    let img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.style.width = '100px';
+                    img.style.margin = '5px';
+
+                    let label = document.createElement('label');
+                    label.innerHTML = `Główne <input type="radio" name="mainPhoto" value="${index}" ${index === 0 ? 'checked' : ''} />`;
+
+                    let container = document.createElement('div');
+                    container.appendChild(img);
+                    container.appendChild(label);
+                    previewDiv.appendChild(container);
+                });
+
+                document.querySelectorAll('input[name="mainPhoto"]').forEach(radio => {
+                    radio.addEventListener('change', function () {
+                        document.getElementById('mainPhotoIndex').value = this.value;
+                    });
+                });
+            });
+
+        // Dodawanie modelu
+        window.addNewModel = function () {
+            var modelName = $("#newModelName").val();
+            var brandId = $("#selectedBrandId").val();
 
             if (!modelName || !brandId) {
                 alert("Podaj nazwę modelu!");
                 return;
             }
 
-        var formData = new FormData();
-                formData.append("Name", modelName);
-                formData.append("BrandId", brandId);
+            var formData = new FormData();
+            formData.append("Name", modelName);
+            formData.append("BrandId", brandId);
 
-                $.ajax({
-                    url: "/Admin/CreateModel",
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        alert("Dodano pomyślnie!");
-                        $('#BrandId').trigger('change');
-            $('#addModelModal').modal('hide');
-                    },
-                    error: function (xhr){
-                    if (xhr.status === 400) {
-                alert("Model już istnieje");
-            }
-                    else {
-                        console.error("Error:", xhr.responseText);
-                        alert("Error adding model. Check the console for details.");
-                    }
-                    }
-                });
-        }
-
-
-        document.getElementById("CarModelId").addEventListener("change", function () {
-            document.getElementById("selectedCarModelId").value = this.value;
-            $('#CarModelId').trigger('change'); // Wywołaj zdarzenie change, aby załadować modele po zmianie marki
-        });
-
-        function addNewVersion() {
-            var versionName = document.getElementById("newVersionName").value;
-            var modelId = document.getElementById("selectedCarModelId").value;
-
-            if (!versionName ) {
-                alert("Podaj nazwę generacji!");
-                return;
-            }
-            else if(!modelId){
-                alert("Wybierz model!");
-                return;
-            }
-
-        var formData = new FormData();
-                formData.append("Name", versionName);
-                formData.append("CarModelId", modelId);
-
-                $.ajax({
-                    url: "/Admin/CreateVersion",
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        alert("Dodano pomyślnie!");
-                        $('#CarModelId').trigger('change');
-                        $('#addVerisonModal').modal('hide');
-                    },
-                    error: function (xhr){
-                    if (xhr.status === 400) {
-                alert("Generacja już istnieje");
-            }
-                    else {
-                        console.error("Error:", xhr.responseText);
-                        alert("Error adding version. Check the console for details.");
-                    }
-                    }
-                });
-        }
-
-        // Funkcja, która włącza dropdown dla modelu po wybraniu marki
-           $('#BrandId').change(function () {
-               var brandId = $(this).val();
-               if (brandId) {
-                   $('#CarModelId').prop('disabled', false);  // Włącz model
-                   $('#addModelBtn').prop('disabled', false);  // Włącz przycisk dodawania modelu
-                   loadModelsForBrand(brandId);
-                   $('#VersionId').prop('disabled', true);   // Wyłącz wersje po zmianie marki
-                   $('#VersionId').empty();  // Wyczyść wersje
-                   $('#addVersionBtn').prop('disabled', true); // Wyłącz przycisk dodawania wersji
-               } else {
-                   $('#CarModelId').prop('disabled', true);  // Wyłącz model
-                   $('#addModelBtn').prop('disabled', true);  // Wyłącz przycisk dodawania modelu
-                   $('#VersionId').prop('disabled', true);   // Wyłącz wersje
-                   $('#addVersionBtn').prop('disabled', true);  // Wyłącz przycisk dodawania wersji
-                   $('#CarModelId').empty();  // Wyczyść modele
-                   $('#VersionId').empty();   // Wyczyść wersje
-               } 
-           });
-
-           // Funkcja, która włącza dropdown dla wersji po wybraniu modelu
-           $('#CarModelId').change(function () {
-               var modelId = $(this).val();
-               if (modelId) {
-                   $('#VersionId').prop('disabled', false);  // Włącz wersje
-                   $('#addVersionBtn').prop('disabled', false); // Włącz przycisk dodawania wersji
-                   loadVersionsForModel(modelId);
-               } else {
-                   $('#VersionId').prop('disabled', true);   // Wyłącz wersje
-                   $('#addVersionBtn').prop('disabled', true); // Wyłącz przycisk dodawania wersji
-                   $('#VersionId').empty();   // Wyczyść wersje
-               }
-           });
-
-        // Funkcja do ładowania modeli na podstawie wybranej marki
-        function loadModelsForBrand(brandId) {
             $.ajax({
-                url: '@Url.Action("GetCarModelsByBrand", "Admin")',
-                data: { brandId: brandId },
-                type: 'GET',
-                success: function (data) {
-                    var modelSelect = $('#CarModelId');
-                    modelSelect.empty();  // Wyczyść poprzednie modele
-                    modelSelect.append('<option value="" disabled selected>Wybierz model</option>'); // Dodaj domyślną opcję
+                url: "/Admin/CreateModel",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    alert("Dodano pomyślnie!");
+                    $('#addModelModal').modal('hide');
 
-                    // Dodaj nowe modele do dropdowna
-                    $.each(data, function (index, item) {
-                        modelSelect.append('<option value="' + item.id + '">' + item.name + '</option>');
-                    });
+                    let modelSelect = $('#CarModelId');
+
+                    // Dodaj nowy model jako wybrany
+                    modelSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
+                    modelSelect.val(response.id).trigger('change');
+
+                    // Ustaw hidden input i aktywuj dropdowny
+                    $('#selectedCarModelId').val(response.id);
+                    $('#CarModelId').prop('disabled', false);
+                    $('#addModelBtn').prop('disabled', false);
+
+                    // Wyczyść i odblokuj dropdown generacji
+                    $('#VersionId')
+                        .empty()
+                        .append('<option value="" disabled selected>Wybierz generację</option>')
+                        .prop('disabled', false);
+
+                    $('#addVersionBtn').prop('disabled', false);
                 },
-                error: function () {
-                    alert('Błąd podczas ładowania modeli.');
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        alert("Model już istnieje");
+                    } else {
+                        alert("Błąd dodawania modelu");
+                    }
                 }
             });
         }
 
-        // Funkcja do ładowania wersji na podstawie wybranego modelu
-         function loadVersionsForModel(modelId) {
-             $.ajax({
-                 url: '@Url.Action("GetVersionsByModel", "Admin")',
-                 data: { modelId: modelId },
-                 type: 'GET',
-                 success: function (data) {
-                     var versionSelect = $('#VersionId');
-                     versionSelect.empty();  // Wyczyść poprzednie wersje
-                     versionSelect.append('<option value="" disabled selected>Wybierz generację</option>'); // Dodaj domyślną opcję
+                 // Dodawanie wersji/generacji
+        window.addNewVersion = function () {
+            var versionName = $("#newVersionName").val();
+            var modelId = $("#CarModelId").val();  // Zakładamy, że model jest już wybrany
 
-                     // Dodaj nowe wersje do dropdowna
-                     $.each(data, function (index, item) {
-                         versionSelect.append('<option value="' + item.id + '">' + item.name + '</option>');
-                     });
-                 },
-                 error: function () {
-                     alert('Błąd podczas ładowania wersji.');
-                 }
-             });
-         }
-        
+            if (!versionName || !modelId) {
+                alert("Podaj nazwę generacji!");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("Name", versionName);
+            formData.append("CarModelId", modelId);
+
+            $.ajax({
+                url: "/Admin/CreateVersion",  // Zmieniamy URL na odpowiedni dla wersji
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    alert("Dodano pomyślnie!");
+                    $('#addVersionModal').modal('hide');
+
+                    let versionSelect = $('#VersionId');
+
+                    // Dodaj nową wersję jako wybraną
+                    versionSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
+                    versionSelect.val(response.id).trigger('change');
+
+                    // Ustaw hidden input (jeśli potrzeba) i aktywuj dropdowny
+                    $('#SelectedCarVersionId').val(response.id);  // Jeśli masz hidden input dla wersji
+                    $('#VersionId').prop('disabled', false);
+                    $('#addVersionBtn').prop('disabled', false);
+
+                    // Możliwe dodatkowe czynności po dodaniu wersji
+                },
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        alert("Generacja już istnieje");
+                    } else {
+                        alert("Błąd dodawania generacji");
+                    }
+                }
+            });
+        }
+
+            // Funkcja aktualizacji tytułu
+            function updateTitle() {
+                clearTimeout(window.updateTitleTimeout);
+                window.updateTitleTimeout = setTimeout(function () {
+                    let brand = $("#BrandId").val() ? $("#BrandId option:selected").text() : "";
+                    let model = $("#CarModelId").val() ? $("#CarModelId option:selected").text() : "";
+                    let version = $("#VersionId").val() ? $("#VersionId option:selected").text() : "";
+                    let year = $("#Car_Year").val() || "";
+
+                    let title = [brand, model, version, year].filter(Boolean).join(" ");
+                    $("#Title").val(title);
+                }, 300);
+            }
+
+            // Funkcja ładowania modeli
+            async function loadModelsForBrand(brandId, selectPrevious = false) {
+                try {
+                    let response = await $.ajax({
+                        url: '/Admin/GetCarModelsByBrand',
+                        data: { brandId: brandId },
+                        type: 'GET'
+                    });
+
+                    let selectedModelId = selectPrevious ? $('#SelectedCarModelId').val() : null;
+                    let modelSelect = $('#CarModelId');
+                    modelSelect.empty().append('<option value="" disabled selected>Wybierz model</option>');
+
+                    $.each(response, function (index, item) {
+                        let selected = (item.id == selectedModelId) ? 'selected' : '';
+                        modelSelect.append(`<option value="${item.id}" ${selected}>${item.name}</option>`);
+                    });
+
+                    modelSelect.prop("disabled", false);
+                    $('#addModelBtn').prop("disabled", false);
+
+                                  if (selectPrevious && selectedModelId) {
+            setTimeout(() => {
+                $('#CarModelId').val(selectedModelId).trigger('change');
+            }, 300);
+        }
+
+
+                } catch (error) {
+                    console.error('Błąd podczas ładowania modeli:', error);
+                }
+            }
+
+          // Funkcja ładowania wersji
+        async function loadVersionsForModel(modelId, selectedVersionId = null) {
+            try {
+                let response = await $.ajax({
+                    url: '@Url.Action("GetVersionsByModel", "Admin")',
+                    data: { modelId: modelId },
+                    type: 'GET'
+                });
+
+                let versionDropdown = $('#VersionId');
+                versionDropdown.empty();
+
+                // Dodaj domyślną opcję
+                versionDropdown.append($('<option>', {
+                    value: '',
+                    text: 'Wybierz generację',
+                    disabled: true,
+                    selected: !selectedVersionId // tylko jeśli nie ma zaznaczonej wersji
+                }));
+
+                response.forEach(function (version) {
+                    versionDropdown.append($('<option>', {
+                        value: version.id,
+                        text: version.name,
+                        selected: selectedVersionId && version.id == selectedVersionId
+                    }));
+                });
+
+                // Odblokuj i zaktualizuj przycisk
+                versionDropdown.prop('disabled', false);
+                $('#addVersionBtn').prop('disabled', false);
+
+            } catch (error) {
+                console.error("Błąd przy ładowaniu wersji:", error);
+            }
+        }
+
+
+        });
     </script>
 }
