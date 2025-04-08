@@ -311,34 +311,27 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script>
-         let skipNextVersionLoad = false;
         $(document).ready(function () {
-                    let initialLoad = true;
-        let selectedVersionId = '@Model.Car.VersionId';
+            let initialLoad = true;
+            let selectedVersionId = '@Model.Car.VersionId';
 
-            // Sprawdzenie wybranej marki przy starcie
-                   setTimeout(function () {
-            let selectedBrandId = $('#BrandId').val();
-            if (selectedBrandId) {
-                loadModelsForBrand(selectedBrandId, true);
-            }
-            //Sprawdzanie wybranego modelu przy starcie
-            let selectedCarModelId = $('#CarModelId').val();
-            if (selectedCarModelId) {
-                // Ważne: dopiero po załadowaniu modeli
-                        setTimeout(function () {
-            loadVersionsForModel(selectedCarModelId, initialLoad ? selectedVersionId : null);
-            initialLoad = false; // wyłączyć po pierwszym razie
-        }, 300);
+            // Inicjalizacja danych po załadowaniu strony
+            setTimeout(function () {
+                let selectedBrandId = $('#BrandId').val();
+                if (selectedBrandId) {
+                    loadModelsForBrand(selectedBrandId, true);
+                }
 
-            }
-        }, 300); // Małe opóźnienie na start
+                let selectedCarModelId = $('#CarModelId').val();
+                if (selectedCarModelId) {
+                    loadVersionsForModel(selectedCarModelId, initialLoad ? selectedVersionId : null);
+                    initialLoad = false;
+                }
+            }, 300);
 
-
-            // Event dla zmiany marki
+            // Zdarzenie: zmiana marki
             $('#BrandId').change(function () {
                 let brandId = $(this).val();
                 $('#selectedBrandId').val(brandId);
@@ -357,32 +350,25 @@
                 updateTitle();
             });
 
-            // Event dla zmiany modelu
-                $('#CarModelId').change(function () {
-                         if (skipNextVersionLoad) {
-            skipNextVersionLoad = false;
-            return; // Pomiń jednorazowo
-        }
-            let modelId = $(this).val();
-            $('#SelectedCarModelId').val(modelId);
+            // Zdarzenie: zmiana modelu
+            $('#CarModelId').change(function () {
+                let modelId = $(this).val();
+                $('#SelectedCarModelId').val(modelId);
 
-            if (modelId) {
-                loadVersionsForModel(modelId);
+                if (modelId) {
+                    loadVersionsForModel(modelId);
+                } else {
+                    $('#VersionId').empty().append('<option value="" disabled selected>Wybierz generację</option>').prop("disabled", true);
+                    $('#addVersionBtn').prop("disabled", true);
+                }
 
-            } else {
-                $('#VersionId').empty().append('<option value="" disabled selected>Wybierz generację</option>').prop("disabled", true);
-                $('#addVersionBtn').prop("disabled", true);
-            }
+                updateTitle();
+            });
 
-            updateTitle();
-        });
-
-
-
-            // Eventy dla generacji i roku
+            // Zdarzenie: zmiana generacji lub roku
             $("#VersionId, #Car_Year").on("change input", updateTitle);
 
-            // Obsługa zdjęć
+            // Obsługa podglądu zdjęć
             document.getElementById('carPhotos').addEventListener('change', function (event) {
                 let previewDiv = document.getElementById('photoPreview');
                 previewDiv.innerHTML = "";
@@ -408,107 +394,98 @@
                 });
             });
 
-        // Dodawanie modelu
-        window.addNewModel = function () {
-            var modelName = $("#newModelName").val();
-            var brandId = $("#selectedBrandId").val();
+            // Dodawanie nowego modelu
+            window.addNewModel = function () {
+                let modelName = $("#newModelName").val();
+                let brandId = $("#selectedBrandId").val();
 
-            if (!modelName || !brandId) {
-                alert("Podaj nazwę modelu!");
-                return;
+                if (!modelName || !brandId) {
+                    alert("Podaj nazwę modelu!");
+                    return;
+                }
+
+                let formData = new FormData();
+                formData.append("Name", modelName);
+                formData.append("BrandId", brandId);
+
+                $.ajax({
+                    url: "/Admin/CreateModel",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        alert("Dodano pomyślnie!");
+                        $('#addModelModal').modal('hide');
+
+                        let modelSelect = $('#CarModelId');
+                        modelSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
+                        modelSelect.val(response.id).trigger('change');
+
+                        $('#selectedCarModelId').val(response.id);
+                        $('#CarModelId').prop('disabled', false);
+                        $('#addModelBtn').prop('disabled', false);
+
+                        $('#VersionId')
+                            .empty()
+                            .append('<option value="" disabled selected>Wybierz generację</option>')
+                            .prop('disabled', false);
+
+                        $('#addVersionBtn').prop('disabled', false);
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            alert("Model już istnieje");
+                        } else {
+                            alert("Błąd dodawania modelu");
+                        }
+                    }
+                });
             }
 
-            var formData = new FormData();
-            formData.append("Name", modelName);
-            formData.append("BrandId", brandId);
+            // Dodawanie nowej generacji
+            window.addNewVersion = function () {
+                let versionName = $("#newVersionName").val();
+                let modelId = $("#CarModelId").val();
 
-            $.ajax({
-                url: "/Admin/CreateModel",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    alert("Dodano pomyślnie!");
-                    $('#addModelModal').modal('hide');
-
-                    let modelSelect = $('#CarModelId');
-
-                    // Dodaj nowy model jako wybrany
-                    modelSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
-                    modelSelect.val(response.id).trigger('change');
-
-                    // Ustaw hidden input i aktywuj dropdowny
-                    $('#selectedCarModelId').val(response.id);
-                    $('#CarModelId').prop('disabled', false);
-                    $('#addModelBtn').prop('disabled', false);
-
-                    // Wyczyść i odblokuj dropdown generacji
-                    $('#VersionId')
-                        .empty()
-                        .append('<option value="" disabled selected>Wybierz generację</option>')
-                        .prop('disabled', false);
-
-                    $('#addVersionBtn').prop('disabled', false);
-                },
-                error: function (xhr) {
-                    if (xhr.status === 400) {
-                        alert("Model już istnieje");
-                    } else {
-                        alert("Błąd dodawania modelu");
-                    }
+                if (!versionName || !modelId) {
+                    alert("Podaj nazwę generacji!");
+                    return;
                 }
-            });
-        }
 
-                 // Dodawanie wersji/generacji
-        window.addNewVersion = function () {
-            var versionName = $("#newVersionName").val();
-            var modelId = $("#CarModelId").val();  // Zakładamy, że model jest już wybrany
+                let formData = new FormData();
+                formData.append("Name", versionName);
+                formData.append("CarModelId", modelId);
 
-            if (!versionName || !modelId) {
-                alert("Podaj nazwę generacji!");
-                return;
+                $.ajax({
+                    url: "/Admin/CreateVersion",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        alert("Dodano pomyślnie!");
+                        $('#addVersionModal').modal('hide');
+
+                        let versionSelect = $('#VersionId');
+                        versionSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
+                        versionSelect.val(response.id).trigger('change');
+
+                        $('#SelectedCarVersionId').val(response.id);
+                        $('#VersionId').prop('disabled', false);
+                        $('#addVersionBtn').prop('disabled', false);
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            alert("Generacja już istnieje");
+                        } else {
+                            alert("Błąd dodawania generacji");
+                        }
+                    }
+                });
             }
 
-            var formData = new FormData();
-            formData.append("Name", versionName);
-            formData.append("CarModelId", modelId);
-
-            $.ajax({
-                url: "/Admin/CreateVersion",  // Zmieniamy URL na odpowiedni dla wersji
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    alert("Dodano pomyślnie!");
-                    $('#addVersionModal').modal('hide');
-
-                    let versionSelect = $('#VersionId');
-
-                    // Dodaj nową wersję jako wybraną
-                    versionSelect.append(`<option value="${response.id}" selected>${response.name}</option>`);
-                    versionSelect.val(response.id).trigger('change');
-
-                    // Ustaw hidden input (jeśli potrzeba) i aktywuj dropdowny
-                    $('#SelectedCarVersionId').val(response.id);  // Jeśli masz hidden input dla wersji
-                    $('#VersionId').prop('disabled', false);
-                    $('#addVersionBtn').prop('disabled', false);
-
-                    // Możliwe dodatkowe czynności po dodaniu wersji
-                },
-                error: function (xhr) {
-                    if (xhr.status === 400) {
-                        alert("Generacja już istnieje");
-                    } else {
-                        alert("Błąd dodawania generacji");
-                    }
-                }
-            });
-        }
-
-            // Funkcja aktualizacji tytułu
+            // Aktualizacja tytułu auta
             function updateTitle() {
                 clearTimeout(window.updateTitleTimeout);
                 window.updateTitleTimeout = setTimeout(function () {
@@ -522,7 +499,7 @@
                 }, 300);
             }
 
-            // Funkcja ładowania modeli
+            // Pobieranie modeli dla danej marki
             async function loadModelsForBrand(brandId, selectPrevious = false) {
                 try {
                     let response = await $.ajax({
@@ -543,56 +520,52 @@
                     modelSelect.prop("disabled", false);
                     $('#addModelBtn').prop("disabled", false);
 
-                                  if (selectPrevious && selectedModelId) {
-            setTimeout(() => {
-                $('#CarModelId').val(selectedModelId).trigger('change');
-            }, 300);
-        }
-
-
+                    if (selectPrevious && selectedModelId) {
+                        setTimeout(() => {
+                            $('#CarModelId').val(selectedModelId).trigger('change');
+                        }, 300);
+                    }
                 } catch (error) {
-                    console.error('Błąd podczas ładowania modeli:', error);
+                    alert("Błąd podczas ładowania modeli.");
+                    console.error(error);
                 }
             }
 
-          // Funkcja ładowania wersji
-        async function loadVersionsForModel(modelId, selectedVersionId = null) {
-            try {
-                let response = await $.ajax({
-                    url: '@Url.Action("GetVersionsByModel", "Admin")',
-                    data: { modelId: modelId },
-                    type: 'GET'
-                });
+            // Pobieranie generacji dla danego modelu
+            async function loadVersionsForModel(modelId, selectedVersionId = null) {
+                try {
+                    let response = await $.ajax({
+                        url: '@Url.Action("GetVersionsByModel", "Admin")',
+                        data: { modelId: modelId },
+                        type: 'GET'
+                    });
 
-                let versionDropdown = $('#VersionId');
-                versionDropdown.empty();
+                    let versionDropdown = $('#VersionId');
+                    versionDropdown.empty();
 
-                // Dodaj domyślną opcję
-                versionDropdown.append($('<option>', {
-                    value: '',
-                    text: 'Wybierz generację',
-                    disabled: true,
-                    selected: !selectedVersionId // tylko jeśli nie ma zaznaczonej wersji
-                }));
-
-                response.forEach(function (version) {
                     versionDropdown.append($('<option>', {
-                        value: version.id,
-                        text: version.name,
-                        selected: selectedVersionId && version.id == selectedVersionId
+                        value: '',
+                        text: 'Wybierz generację',
+                        disabled: true,
+                        selected: !selectedVersionId
                     }));
-                });
 
-                // Odblokuj i zaktualizuj przycisk
-                versionDropdown.prop('disabled', false);
-                $('#addVersionBtn').prop('disabled', false);
+                    response.forEach(function (version) {
+                        versionDropdown.append($('<option>', {
+                            value: version.id,
+                            text: version.name,
+                            selected: selectedVersionId && version.id == selectedVersionId
+                        }));
+                    });
 
-            } catch (error) {
-                console.error("Błąd przy ładowaniu wersji:", error);
+                    versionDropdown.prop('disabled', false);
+                    $('#addVersionBtn').prop('disabled', false);
+                } catch (error) {
+                    alert("Błąd przy ładowaniu generacji.");
+                    console.error(error);
+                }
             }
-        }
-
-
         });
     </script>
 }
+
