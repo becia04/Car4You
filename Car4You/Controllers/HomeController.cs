@@ -23,7 +23,33 @@ namespace Car4You.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var cars = _context.Cars
+    .Include(c => c.Version)
+            .Include(c=>c.Photos)
+            .Include(b=>b.BodyTypes)
+            .Include(m=>m.CarModel)
+            .ThenInclude(b=>b.Brand)
+    .ToList();
+           
+            return View(cars);
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var car = await _context.Cars
+                .Include(c => c.BodyTypes)
+                .Include(c => c.CarModel).ThenInclude(m => m.Brand)
+                .Include(c => c.Version)
+                .Include(c => c.CarEquipments)
+                .Include(c => c.Photos)
+                .FirstOrDefaultAsync(c => c.Id == id && !c.IsHidden);
+
+            if (car == null)
+            {
+                return NotFound();
+            }
+
+            return View(car);
         }
 
         public IActionResult Privacy()

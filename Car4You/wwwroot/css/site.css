@@ -1,188 +1,37 @@
-.main_h {
-    position: fixed;
-    top: 0;
-    z-index: 999;
-    background: none;
-    transition: all 0.3s;
-    opacity: 0;
-    top: -100px;
-    font-family: "Montserrat", sans-serif;
-    width: calc(100% - 10%); /* U¿yj 100% szerokoœci z uwzglêdnieniem marginesów */
-    left: 5%; /* Ustal margines z lewej */
-}
-
-/* Kontener wewnêtrzny navbaru */
-.navbar-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Logo */
-.logo {
-flex: 0 0 20%;
-margin-right: auto;
-margin-left:5%;
-margin-top:1%;
-margin-bottom:1%;
-}
-
-.logo-img {
-    max-height: 100px;
-    width: auto;
-}
-
-/* Nawigacja */
-nav {
-    display: flex; /* Dodajemy flex, aby mo¿na by³o kontrolowaæ rozmieszczenie linków */
-    justify-content: flex-end; /* Przesuwamy elementy w prawo */
-    flex-grow: 1; /* Zajmuje ca³¹ dostêpn¹ przestrzeñ w .navbar-container */
-    margin-right:5%;
-}
-
-    /* Nawigacja */
-    nav ul {
-        display: flex;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        flex-direction: row; /* Ustawiamy domyœlny uk³ad poziomy */
-    }
-
-        nav ul li {
-            padding: 6px 0;
-            margin-right: 35px;
-        }
-
-            nav ul li a {
-                position: relative;
-                display: block;
-                padding: 4px 0;
-                font-family: Lato, sans-serif;
-                color: #7b2e1f;
-                text-decoration: none;
-                text-transform: uppercase;
-                transition: 0.5s;
-                letter-spacing:1px;
-            }
-
-                /* Styl hover i animacja */
-                nav ul li a::after {
-                    position: absolute;
-                    content: "";
-                    top: 100%;
-                    left: 0;
-                    width: 100%;
-                    height: 3px;
-                    background: #24435e;
-                    transform: scaleX(0);
-                    transform-origin: right;
-                    transition: transform 0.5s;
-                }
-
-                nav ul li a:hover {
-                    color: #d8be6d;
-                }
-
-                    nav ul li a:hover::after {
-                        transform: scaleX(1);
-                        transform-origin: left;
-                    }
-
-/* Mobilka */
-@media only screen and (max-width: 766px) {
-    .navbar-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    nav {
-        margin-top: 10px;
-        justify-content: flex-end;
-    }
-
-        nav ul {
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-            nav ul li {
-                margin: 10px 0;
-            }
-}
-
-
-@media only screen and (max-width: 766px) {
-    .main_h {
-        padding-top: 25px;
-    }
-}
-
-.open-nav {
-    max-height: 400px !important;
-}
-
-    .open-nav .mobile-toggle {
-        transform: rotate(-90deg);
-        -webkit-transform: rotate(-90deg);
-    }
-
-.sticky {
-    background-color: rgba(255, 255, 255, 0.93);
-    opacity: 1;
-    top: 0px;
-    border-bottom: 2px solid gainsboro;
-    border-color: rgb(216, 188, 115);
-}
-
-.line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 6px;
-    background: rgb(216, 188, 115);
-    background: linear-gradient(to right, rgb(216, 188, 115), rgba(216, 188, 115, 0) 25%, rgba(216, 188, 115, 0) 75%, rgb(216, 188, 115));
-}
-
-@media only screen and (max-width: 766px) {
-    .logo {
-        float: none;
-    }
-}
-
-
-.mobile-toggle {
-    display: none;
-    cursor: pointer;
-    font-size: 20px;
-    position: absolute;
-    right: 22px;
-    top: 0;
-    width: 30px;
-    -webkit-transition: all 200ms ease-in;
-    -moz-transition: all 200ms ease-in;
-    transition: all 200ms ease-in;
-}
-
-@media only screen and (max-width: 766px) {
-    .mobile-toggle {
-        display: block;
-    }
-}
-
-.mobile-toggle span {
-    width: 30px;
-    height: 4px;
-    margin-bottom: 6px;
-    border-radius: 1000px;
-    background: #8f8f8f;
+ï»¿.btn {
+    position: relative;
     display: block;
+    padding: 4px 0;
+    font-family: Lato, sans-serif;
+    color: #7b2e1f;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: 0.5s;
+    letter-spacing: 1px;
 }
+
+    /* Styl hover i animacja */
+    .btn::after {
+        position: absolute;
+        content: "";
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #24435e;
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.5s;
+    }
+
+    .btn:hover {
+        color: #d8be6d;
+    }
+
+        .btn:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
 
 * {
     box-sizing: border-box;
@@ -215,78 +64,4 @@ p {
 
 .content {
     padding: 50px 2% 250px;
-}
-
-.hero {
-    position: relative;
-    background: url(http://www.philippefercha.com/cd/toggle-menu-bg.jpg) no-repeat center center fixed;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    background-size: cover;
-    text-align: center;
-    color: #fff;
-    padding-top: 110px;
-    min-height: 500px;
-    letter-spacing: 2px;
-    font-family: "Montserrat", sans-serif;
-}
-
-    .hero h1 {
-        font-size: 50px;
-        line-height: 1.3;
-    }
-
-        .hero h1 span {
-            font-size: 25px;
-            color: rgb(216, 188, 115);
-            border-bottom: 2px solid rgb(216, 188, 115);
-            padding-bottom: 12px;
-            line-height: 3;
-        }
-
-@-webkit-keyframes scroll {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 0;
-        -webkit-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-@keyframes scroll {
-    0% {
-        opacity: 1;
-        -webkit-transform: translateY(0);
-        -ms-transform: translateY(0);
-        transform: translateY(0);
-    }
-
-    100% {
-        opacity: 0;
-        -webkit-transform: translateY(20px);
-        -ms-transform: translateY(20px);
-        transform: translateY(20px);
-    }
-}
-
-
-
-
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }

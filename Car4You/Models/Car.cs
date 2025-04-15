@@ -61,6 +61,7 @@ namespace Car4You.Models
         public string Origin { get; set; } //Kraj pochodzenia
 
         public bool FirstOwner { get; set; }
+        public bool? PolishPlate { get; set; }
 
         [Required(ErrorMessage = "Cena jest wymagana")]
         public int? OldPrice { get; set; }
@@ -72,5 +73,7 @@ namespace Car4You.Models
 
         [ValidateNever]
         public ICollection<CarEquipment> CarEquipments { get; set; }
+        [ValidateNever]
+        public ICollection<Photo> Photos { get; set; }
     }
 }

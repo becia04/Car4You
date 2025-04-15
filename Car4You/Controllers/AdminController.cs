@@ -13,6 +13,8 @@ using static Car4You.ViewModels.CarViewModel;
 using Microsoft.VisualBasic;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Car4You.Controllers
 {
@@ -221,12 +223,15 @@ namespace Car4You.Controllers
 
                     foreach (var file in model.CarPhotos)
                     {
-                        string fileExtension = Path.GetExtension(file.FileName);
-                        string fileName = $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex+1}{fileExtension}";
+                        string orignalFileName = $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
 
-                        var filePath = Path.Combine(_environment.WebRootPath, "cars", fileName);
+                        var fileNameWithoutExtension = $"{RemoveDiacritics(orignalFileName.Replace(" ", "_")).ToLower()}";
+                        fileNameWithoutExtension = Regex.Replace(fileNameWithoutExtension, "[^a-zA-Z0-9_]", "");
+                        var fileName = $"{fileNameWithoutExtension}.jpg";
 
-                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        var savePath = Path.Combine(_environment.WebRootPath, "cars", fileName);
+
+                        using (var stream = new FileStream(savePath, FileMode.Create))
                         {
                             await file.CopyToAsync(stream);
                         }
@@ -235,12 +240,13 @@ namespace Car4You.Controllers
                         {
                             CarId = car.Id,
                             Title = fileName,
-                            PhotoPath = filePath,
+                            PhotoPath = Path.Combine("cars", fileName).Replace("\\", "/"), // ✅ to zapisujemy do bazy
                             IsMain = (photoIndex == MainPhotoIndex)
                         });
 
                         photoIndex++;
                     }
+
 
                     _context.Photos.AddRange(photos);
                 }
@@ -255,6 +261,23 @@ namespace Car4You.Controllers
             {
                 return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message });
             }
+        }
+
+        public static string RemoveDiacritics(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            string normalizedString = input.Normalize(NormalizationForm.FormD);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (char c in normalizedString)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    stringBuilder.Append(c);
+            }
+
+            return stringBuilder.ToString();
         }
 
         [HttpGet]
