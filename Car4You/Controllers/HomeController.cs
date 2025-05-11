@@ -30,7 +30,8 @@ namespace Car4You.Controllers
             .Include(m=>m.CarModel)
             .ThenInclude(b=>b.Brand)
     .ToList();
-           
+            ViewData["AnimateMode"] = "scroll-animations"; // dla innych widoków
+
             return View(cars);
         }
 
@@ -40,7 +41,7 @@ namespace Car4You.Controllers
                 .Include(c => c.BodyTypes)
                 .Include(c => c.CarModel).ThenInclude(m => m.Brand)
                 .Include(c => c.Version)
-                .Include(c => c.CarEquipments)
+                .Include(c => c.CarEquipments).ThenInclude(c=>c.Equipment).ThenInclude(c=>c.EquipmentType)
                 .Include(c => c.Photos)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsHidden);
 
@@ -48,6 +49,9 @@ namespace Car4You.Controllers
             {
                 return NotFound();
             }
+
+            double enginePowerKW = car.EnginePower.HasValue ? Math.Round(car.EnginePower.Value * 0.74) : 0;
+            ViewBag.EnginePowerKW = enginePowerKW;
 
             return View(car);
         }

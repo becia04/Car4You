@@ -21,33 +21,10 @@
     height:400px;
     opacity: 1;
     transition: opacity 0.3s ease;
+    margin-bottom:1rem;
+    margin-top:1rem;
 }
 
-.carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 30px;
-    background: white;
-    border: none;
-    padding: 10px;
-    z-index: 10;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    transition: background 0.3s;
-}
-
-    .carousel-btn:hover {
-        background: #f1f1f1;
-    }
-
-    .carousel-btn.prev {
-        left: 10px;
-    }
-
-    .carousel-btn.next {
-        right: 10px;
-    }
 
 .car-card {
     width: 100%;
@@ -70,7 +47,7 @@
 .car-card__info {
     position: absolute;
     bottom: 0;
-    height: 43%;
+    height: 47%;
     width: 100%;
     background: rgba(255, 255, 255, 0.95);
     transform: translateY(50%);
@@ -96,8 +73,8 @@
 }
 
     .car-card__body-type img {
-        width: 30px;
-        height: 30px;
+        width: auto;
+        height: 25px;
     }
 
 .car-card__year {
@@ -213,33 +190,6 @@
     }
 }
 
-.scroll-animate {
-    opacity: 0;
-    transition: all 0.6s ease-out;
-}
-
-    .scroll-animate.animated {
-        opacity: 1;
-    }
-
-/* Animacja: wjazd z dołu */
-.slide-up {
-    transform: translateY(40px);
-}
-
-    .slide-up.animated {
-        transform: translateY(0);
-    }
-
-/* Animacja: wjazd z prawej */
-.slide-in {
-    transform: translateX(40px);
-}
-
-    .slide-in.animated {
-        transform: translateX(0);
-    }
-
 .hero-content {
     display: flex;
     flex-direction: row;
@@ -280,99 +230,7 @@
 }
 
 
-.main_h {
-    position: fixed;
-    top: 0;
-    z-index: 999;
-    background: none;
-    transition: all 0.3s;
-    opacity: 0;
-    top: -100px;
-    font-family: "Montserrat", sans-serif;
-    width: calc(100% - 10%); /* Użyj 100% szerokości z uwzględnieniem marginesów */
-    left: 5%; /* Ustal margines z lewej */
-}
 
-/* Kontener wewnętrzny navbaru */
-.navbar-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Logo */
-.logo {
-flex: 0 0 20%;
-margin-right: auto;
-margin-left:5%;
-margin-top:1%;
-margin-bottom:1%;
-}
-
-.logo-img {
-    max-height: 100px;
-    width: auto;
-}
-
-/* Nawigacja */
-nav {
-    display: flex; /* Dodajemy flex, aby można było kontrolować rozmieszczenie linków */
-    justify-content: flex-end; /* Przesuwamy elementy w prawo */
-    flex-grow: 1; /* Zajmuje całą dostępną przestrzeń w .navbar-container */
-    margin-right:5%;
-}
-
-    /* Nawigacja */
-    nav ul {
-        display: flex;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        flex-direction: row; /* Ustawiamy domyślny układ poziomy */
-    }
-
-        nav ul li {
-            padding: 6px 0;
-            margin-right: 35px;
-        }
-
-            nav ul li a {
-                position: relative;
-                display: block;
-                padding: 4px 0;
-                font-family: Lato, sans-serif;
-                color: #7b2e1f;
-                text-decoration: none;
-                text-transform: uppercase;
-                transition: 0.5s;
-                letter-spacing:1px;
-            }
-
-                /* Styl hover i animacja */
-                nav ul li a::after {
-                    position: absolute;
-                    content: "";
-                    top: 100%;
-                    left: 0;
-                    width: 100%;
-                    height: 3px;
-                    background: #24435e;
-                    transform: scaleX(0);
-                    transform-origin: right;
-                    transition: transform 0.5s;
-                }
-
-                nav ul li a:hover {
-                    color: #d8be6d;
-                }
-
-                    nav ul li a:hover::after {
-                        transform: scaleX(1);
-                        transform-origin: left;
-                    }
 
 /* Mobilka */
 @media only screen and (max-width: 766px) {
@@ -404,32 +262,13 @@ nav {
     }
 }
 
-.open-nav {
-    max-height: 400px !important;
-}
 
     .open-nav .mobile-toggle {
         transform: rotate(-90deg);
         -webkit-transform: rotate(-90deg);
     }
 
-.sticky {
-    background-color: rgba(255, 255, 255, 0.93);
-    opacity: 1;
-    top: 0px;
-    border-bottom: 2px solid gainsboro;
-    border-color: rgb(216, 188, 115);
-}
 
-.line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 6px;
-    background: rgb(216, 188, 115);
-    background: linear-gradient(to right, rgb(216, 188, 115), rgba(216, 188, 115, 0) 25%, rgba(216, 188, 115, 0) 75%, rgb(216, 188, 115));
-}
 
 @media only screen and (max-width: 766px) {
     .logo {
@@ -462,7 +301,7 @@ nav {
     height: 4px;
     margin-bottom: 6px;
     border-radius: 1000px;
-    background: #8f8f8f;
+    background: #4f4f4f;
     display: block;
 }
 

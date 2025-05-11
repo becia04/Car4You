@@ -1,5 +1,398 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Car4You.Models.Car
 @{
+    ViewData["Title"] = Model.Title;
 }
+@{
+    var mainPhoto = Model.Photos.FirstOrDefault(p => p.IsMain) ?? Model.Photos.FirstOrDefault();
+    var photoIndex = 0;
+}
+<link href="~/css/details_site.css" rel="stylesheet" />
+<div class="main_content scroll-animate slide-up">
+    <div>
+        <img src="@Model.BodyTypes.Icon" style="height:40px; width:auto; margin-right:1rem;" />
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">@Model.Title</h1>
+        <div class="line"></div>
+    </div>
+
+    <div class="car-details-container">
+        <!-- Kolumna lewa: Galeria -->
+        <div class="left-gallery scroll-animate slide-in">
+            <div class="main-photo">
+                <img id="mainImage" src="@mainPhoto?.PhotoPath" alt="@Model.Title">
+                <button class="nav-btn prev" onclick="navigateImage(-1)">‹</button>
+                <button class="nav-btn next" onclick="navigateImage(1)">›</button>
+            </div>
+
+            <div class="thumbnails-carousel">
+                <button class="nav-btn prev" onclick="scrollThumbnails(-1)">‹</button>
+
+                <div class="thumbnails-wrapper">
+                    <div class="thumbnails">
+                        <img src="@mainPhoto?.PhotoPath" class="selected" onclick="changeMainImage(this)" alt="@Model.Title"/>
+                        @foreach (var photo in Model.Photos.Where(p => p.PhotoPath != mainPhoto?.PhotoPath))
+                        {
+                            <img src="@photo.PhotoPath" onclick="changeMainImage(this)" alt="@Model.Title"/>
+                        }
+                    </div>
+                </div>
+
+                <button class="nav-btn next" onclick="scrollThumbnails(1)">›</button>
+            </div>
+
+        </div>
+
+        <!-- Kolumna prawa: Informacje o aucie -->
+        <div class="right-info scroll-animate slide-up">
+            <div class="header">
+                @if (!string.IsNullOrEmpty(Model.CarModel?.Brand?.Icon))
+                {
+                    <img src="@Model.CarModel.Brand.Icon"
+                    alt="Logo @Model.CarModel.Brand.Name"
+                    class="brand-logo" />
+                }
+                <div class="title-group">
+                    <h2 class="right-title">@Model.CarModel?.Brand?.Name @Model.CarModel?.Name</h2>
+                    @if (Model.Version != null)
+                    {
+                        <p class="version">@Model.Version.Name</p>
+                    }
+                </div>
+            </div>
+
+            <div class="car-specs">
+                <div class="info-item"><img src="~/icons/year.png" style="width:30px; height:auto;" alt="Rok"/>@Model.Year</div>
+                <div class="info-item"> <img src="~/icons/mileage.png" style="width:30px; height:auto;" alt="Przebieg"/>@($"{Model.Mileage:n0}") km</div>
+                <div class="info-item"> <img src="~/icons/petrol.png" style="width:30px; height:auto;" alt="Paliwo"/>@Model.FuelType</div>
+                <div class="info-item"><img src="~/icons/gearbox.png" style="width:30px; height:auto;" alt="Skrzynia biegów"/>@Model.Gearbox</div>
+                <div class="info-item" style="grid-column: span 2;justify-content: center;">
+                    <img src="@Model.BodyTypes.Icon" style="height:50px; width:auto; margin-right:1rem;" alt="@Model.BodyTypes.Name" />@Model.BodyTypes.Name
+                </div>
+            </div>
+
+            <div class="car-price">
+                @if (Model.OldPrice.HasValue && Model.NewPrice.HasValue && Model.OldPrice > Model.NewPrice)
+                {
+                    <p>
+                        <strong>Poprzednia cena:</strong>
+                        <span style="text-decoration:line-through">@($"{Model.OldPrice:n0}") zł</span>
+                    </p>
+                }
+                <p>
+                    <span class="price-highlight">@($"{Model.NewPrice:n0}") zł</span>
+                </p>
+            </div>
+
+        </div>
+    </div>
+    <!-- Szczegółowe informacje o aucie -->
+    <section class="section scroll-animate slide-up">
+        <h2 class="section-title scroll-animate slide-up">Szczegóły techniczne</h2>
+        <div class="details-grid  scroll-animate slide-in">
+            <div class="details-group">
+                <h3 class="title"><img src="~/icons/engine.png" class="icon"/>Silnik i osiągi</h3>
+                <p><strong>Pojemność:</strong> @($"{Model.CubicCapacity:n0}") cm³</p>
+                <p><strong>Moc silnika:</strong> @Model.EnginePower KM (@ViewBag.EnginePowerKW kW)</p>
+                <p><strong>Skrzynia biegów:</strong> @Model.Gearbox</p>
+                <p><strong>Napęd:</strong> @Model.Drive</p>
+                <p><strong>Paliwo:</strong> @Model.FuelType</p>
+                <p><strong>Przebieg:</strong> @($"{Model.Mileage:n0}") km</p>
+            </div>
+
+            <div class="details-group">
+                <h3 class="title"><img src="~/icons/car.png" class="icon" />Nadwozie i wymiary</h3>
+                <p><strong>Rodzaj nadwozia:</strong> @Model.BodyTypes?.Name</p>
+                <p><strong>Kolor:</strong> @Model.Color @Model.ColorType?.ToLower()</p>
+                <p><strong>Liczba drzwi:</strong> @Model.Door</p>
+                <p><strong>Liczba miejsc:</strong> @Model.Seat</p>
+            </div>
+
+            <div class="details-group">
+                <h3 class="title"><img src="~/icons/origin.png" class="icon" />Pochodzenie i właściciel</h3>
+                <p><strong>Rok produkcji:</strong> @Model.Year</p>
+                <p><strong>Kraj pochodzenia:</strong> @Model.Origin</p>
+                @if (Model.FirstOwner==true)
+                {
+                    <p><strong>Pierwszy właściciel</strong></p>
+                }
+                @if(Model.PolishPlate==true)
+                {
+                    <p><strong>Zarejestrowany w PL</strong></p>
+                }
+                else
+                {
+                    <p><strong>Przygotowany do rejestracji</strong></p>
+                }
+                @if (Model.AccidentFree == true)
+                {
+                    <p><strong>Bezwypadkowy</strong></p>
+                }
+                @if (!string.IsNullOrEmpty(Model.VIN))
+                {
+                    if(Model.VIN!="0")
+                    {
+                        <p><strong>VIN:</strong> @Model.VIN</p>
+                    }
+
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Wyposażenie -->
+    <section class="section  scroll-animate slide-up">
+        <h2 class="section-title  scroll-animate slide-up">Wyposażenie</h2>
+
+        @foreach (var group in Model.CarEquipments
+        .GroupBy(e => e.Equipment.EquipmentType)
+        .OrderBy(g => g.Key.Name))
+        {
+            var equipmentType = group.Key;
+            <div class="equipment-group  scroll-animate slide-up">
+                <h3 class="title">
+                    @if (!string.IsNullOrEmpty(equipmentType.Icon))
+                    {
+                        <img src="@equipmentType.Icon" alt="@equipmentType.Name" class="icon" />
+                    }
+                    @equipmentType.Name
+                </h3>
+                <div class="equipment-grid">
+                    @{
+                        var mergedEquipments = group
+                        .GroupBy(e => e.Equipment.Name.Split(" -")[0]) // "Kurtyny powietrzne"
+                        .Select(g =>
+                        {
+                            var baseName = g.Key;
+                            var suffixes = g.Select(e => e.Equipment.Name.Contains(" -") ? e.Equipment.Name.Split(" -")[1] : null)
+                            .Where(s => s != null)
+                            .ToList();
+                            var fullName = suffixes.Any()
+                            ? $"{baseName} – {string.Join(", ", suffixes)}"
+                            : baseName;
+                            var icon = g.First().Equipment.Icon; // ← ikonka pierwszego wpisu
+                            return new { fullName, icon };
+                        })
+                        .OrderBy(x => x.fullName);
+                    }
+
+                    @foreach (var item in mergedEquipments)
+                    {
+                        <div class="equipment-item">
+                            @if (!string.IsNullOrEmpty(item.icon))
+                            {
+                                <img src="@item.icon" alt="@item.fullName" class="equipment-icon" />
+                            }
+                            <span>@item.fullName</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+
+    @if(!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <!-- Opis -->
+        <section class="section  scroll-animate slide-up">
+            <h3 class="section-title  scroll-animate slide-up">Opis</h3>
+            <p style="white-space: pre-line;" class=" scroll-animate slide-in">@Model.Description</p>
+        </section>
+    }
+    <!-- Udogodnienia dla kupującego -->
+    <section class="section  scroll-animate slide-up">
+        <h3 class="section-title  scroll-animate slide-up">Udogodnienia dla kupującego</h3>
+        <ul class=" scroll-animate slide-in">
+            <li>Możliwość zostawienia swojego auta w rozliczeniu</li>
+            <li>Sprzedaż ratalna w uproszczonej procedurze</li>
+            @if (Model.PolishPlate == true)
+            {
+                <li>Ważne OC i przegląd techniczny pojazdu</li>
+            }
+            <li>Auto możemy dostarczyć bezpośrednio do Ciebie</li>
+            <li>Kupujący zwolniony z opłaty skarbowej</li>
+            <li>Możliwość sprawdzenia na dowolnej stacji diagnostycznej</li>
+        </ul>
+    </section>
+
+    <!-- Uwaga -->
+    <div class="section  scroll-animate slide-up">
+        <h3 class="section-title  scroll-animate slide-up" style="font-size:1.5rem;">Uwaga</h3>
+        <p style="width:80%; margin-left:1rem;">Niniejsze ogłoszenie ma wyłącznie charakter informacyjny i nie stanowi oferty w rozumieniu art. 66 § 1 Kodeksu Cywilnego. Pomimo starań, aby podane informacje były zawsze aktualne i zgodne z rzeczywistością, nie ponosimy odpowiedzialności za ewentualne błędy lub zmiany, które mogą wystąpić po publikacji ogłoszenia. W przypadku jakichkolwiek pytań lub wątpliwości, prosimy o kontakt z nami.</p>
+    </div>
+
+</div>
+<!-- Zdjęcie pełno ekranowe -->
+<div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox(event)">
+    <span class="lightbox-close" onclick="closeLightbox(event)">×</span>
+    <button class="nav-btn prev" onclick="navigateLightbox(-1)">‹</button>
+        <img id="lightboxImage" src="" alt="Zdjęcie powiększone">
+    <button class="nav-btn next" onclick="navigateLightbox(1)">›</button>
+    <div class="lightbox-thumbnails thumbnails"></div>
+</div>
+
+
+@section Scripts{
+    <script>
+        let currentIndex = 0;
+        let thumbnails = [];
+        let thumbScrollAmount = 0;
+
+        const mainImage = document.getElementById("mainImage");
+        const lightboxOverlay = document.getElementById("lightboxOverlay");
+        const lightboxImage = document.getElementById("lightboxImage");
+        const lightboxThumbnailsContainer = document.querySelector(".lightbox-thumbnails");
+
+        // ========================
+        // Miniaturki i główne zdjęcie
+        // ========================
+        function updateMainImage(index) {
+            if (thumbnails.length === 0) return;
+
+            const newSrc = thumbnails[index].src;
+            if (mainImage.src === newSrc) return;
+
+            mainImage.classList.add("fade-out");
+
+            setTimeout(() => {
+                mainImage.src = newSrc;
+                currentIndex = index;
+
+                thumbnails.forEach(img => img.classList.remove("selected"));
+                thumbnails[currentIndex].classList.add("selected");
+
+                mainImage.classList.remove("fade-out");
+                scrollToActiveThumbnail(index);
+            }, 300);
+        }
+
+        function changeMainImage(thumb) {
+            thumbnails = Array.from(document.querySelectorAll(".thumbnails img"));
+            currentIndex = thumbnails.indexOf(thumb);
+            updateMainImage(currentIndex);
+        }
+
+        function navigateImage(direction) {
+            thumbnails = Array.from(document.querySelectorAll(".thumbnails img"));
+            currentIndex += direction;
+
+            if (currentIndex < 0) currentIndex = thumbnails.length - 1;
+            if (currentIndex >= thumbnails.length) currentIndex = 0;
+
+            updateMainImage(currentIndex);
+        }
+
+        function scrollToActiveThumbnail(index) {
+            const wrapper = document.querySelector(".thumbnails-wrapper");
+            const container = document.querySelector(".thumbnails");
+            const activeThumb = thumbnails[index];
+
+            if (wrapper && container && activeThumb) {
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const thumbRect = activeThumb.getBoundingClientRect();
+
+                if (thumbRect.left < wrapperRect.left || thumbRect.right > wrapperRect.right) {
+                    const offset = thumbRect.left - wrapperRect.left - (wrapper.clientWidth / 2) + (thumbRect.width / 2);
+                    const currentTransform = parseFloat(container.style.transform.replace(/[^-0-9.]/g, "")) || 0;
+                    const newTransform = currentTransform - offset;
+                    const maxScroll = container.scrollWidth - wrapper.clientWidth;
+                    const clampedTransform = Math.max(Math.min(newTransform, 0), -maxScroll);
+
+                    container.style.transform = `translateX(${clampedTransform}px)`;
+                }
+            }
+        }
+
+        function scrollThumbnails(direction) {
+            const wrapper = document.querySelector(".thumbnails-wrapper");
+            const container = document.querySelector(".thumbnails");
+
+            const scrollStep = 100;
+            thumbScrollAmount += direction * scrollStep;
+
+            const maxScroll = Math.max(0, container.scrollWidth - wrapper.clientWidth);
+            thumbScrollAmount = Math.max(0, Math.min(thumbScrollAmount, maxScroll));
+
+            container.style.transform = `translateX(-${thumbScrollAmount}px)`;
+        }
+
+        // ========================
+        // Lightbox
+        // ========================
+        function showLightbox(index) {
+            lightboxOverlay.style.display = "flex";
+            document.body.style.overflow = "hidden";
+            showLightboxImage(index);
+            renderLightboxThumbnails();
+        }
+
+        function closeLightbox(event) {
+            if (event.target.id === "lightboxOverlay" || event.target.classList.contains("lightbox-close")) {
+                lightboxOverlay.style.display = "none";
+                document.body.style.overflow = "";
+            }
+        }
+
+                function showLightboxImage(index) {
+            const lightboxImage = document.getElementById("lightboxImage");
+            lightboxImage.classList.add("fade-out");  // Rozpoczynamy fade-out
+
+            setTimeout(() => {
+                lightboxImage.src = thumbnails[index].src;
+                lightboxImage.classList.remove("fade-out");
+                lightboxImage.classList.add("fade-in");  // Fade-in po załadowaniu nowego zdjęcia
+            }, 300); // Czas trwania animacji fade-out
+        }
+
+        function navigateLightbox(direction) {
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = thumbnails.length - 1;
+            if (currentIndex >= thumbnails.length) currentIndex = 0;
+            showLightboxImage(currentIndex);
+        }
+
+        function renderLightboxThumbnails() {
+            lightboxThumbnailsContainer.innerHTML = "";
+            thumbnails.forEach((thumb, index) => {
+                const img = document.createElement("img");
+                img.src = thumb.src;
+                if (index === currentIndex) img.classList.add("selected");
+                img.addEventListener("click", () => {
+                    currentIndex = index;
+                    showLightboxImage(currentIndex);
+                });
+                lightboxThumbnailsContainer.appendChild(img);
+            });
+        }
+
+        function updateLightboxSelected(index) {
+            const thumbs = lightboxThumbnailsContainer.querySelectorAll("img");
+            thumbs.forEach(t => t.classList.remove("selected"));
+            if (thumbs[index]) thumbs[index].classList.add("selected");
+        }
+
+        // ========================
+        // Inicjalizacja
+        // ========================
+        window.addEventListener("DOMContentLoaded", () => {
+            thumbnails = Array.from(document.querySelectorAll(".thumbnails img"));
+
+            if (thumbnails.length > 0) {
+                currentIndex = thumbnails.findIndex(img => img.classList.contains("selected"));
+                if (currentIndex === -1) {
+                    currentIndex = 0;
+                    thumbnails[currentIndex].classList.add("selected");
+                }
+                updateMainImage(currentIndex);
+            }
+        });
+
+        // ========================
+        // Nasłuchiwanie kliknięcia w główne zdjęcie
+        // ========================
+        mainImage.addEventListener("click", function () {
+            if (thumbnails.length === 0) return;
+            showLightbox(currentIndex);
+        });
+    </script>
+
+}
+

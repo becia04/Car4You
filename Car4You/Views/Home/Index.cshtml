@@ -5,39 +5,13 @@
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.9.1.js"></script>
 <link href="~/css/home_site.css" rel="stylesheet" />
 
-<header class="main_h">
-    <div class="navbar-container">
-        <a class="logo" href="#">
-            <img class="logo-img" src="~/logo.png" alt="Logo" />
-        </a>
-
-        <div class="mobile-toggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-
-        <nav>
-            <ul>
-                <li><a href=".sec01">Nasze auta</a></li>
-                <li><a href=".sec02">Wynajem autolawety</a></li>
-                <li><a href=".sec03">Kontakt</a></li>
-                <li><a href=".sec04">O nas</a></li>
-            </ul>
-        </nav>
-    </div>
-    <div class="line">
-
-    </div>
-</header>
-
 
 <div class="hero">
 
     <h1><span>SZUBIN</span><br>AUTO-HANDEL</h1>
 
     <h2>Leszek Bethke</h2>
-    <div class="line"></div>
+    <div class="line" style="height:4px; position:absolute; margin-right:-4rem; margin-left:-4rem; width:100%"></div>
 </div>
 
 <section class="section-hero">
@@ -69,8 +43,8 @@
 
 <h1 class="scroll-animate slide-up">Nasze auta</h1>
 <p class="scroll-animate slide-up">
-    <div class="carousel-container">
-        <button class="carousel-btn prev" type="button">‹</button>
+    <div class="carousel-container scroll-animate slide-up">
+        <button class="carousel-btn nav-btn prev" type="button">‹</button>
         <div class="carousel-track-wrapper">
             <div class="carousel-track">
                 @foreach (var car in Model)
@@ -82,35 +56,35 @@
                             <div class="car-card__info">
                                 <div class="car-card__top">
                                     <div class="car-card__body-type">
-                                        <img src="@Url.Content($"{car.BodyTypes.Icon}")" alt="Typ nadwozia" />
+                                        <img src="@Url.Content($"{car.BodyTypes.Icon}")" alt="@car.BodyTypes.Name" />
                                         <span>@car.BodyTypes.Name</span>
                                     </div>
-                                    <div class="car-card__year">@car.Year</div>
+                                    <div class="car-card__year"> <img src="~/icons/year.png" alt="Year" style="width:20px; height:20px; margin-right:5px;" />@car.Year</div>
                                 </div>
                                 <h2 class="car-card__title">
+                                    <img src="@car.CarModel.Brand.Icon" style="width:auto; height:35px"/>
                                     @($"{car.CarModel?.Brand?.Name} {car.CarModel?.Name}" +
                                         (car.Version != null ? $" {car.Version.Name}" : ""))
                                 </h2>
 
                                 <div class="car-card__details">
                                     <div class="car-card__detail-left">
-                                        <span class="label">Paliwo</span>
-                                        <span class="value">@car.FuelType</span>
+
+                                        <span class="value"> <img src="~/icons/petrol.png" alt="Fuel" style="width:20px; height:20px; margin-right:5px;" />@car.FuelType</span>
                                     </div>
                                     <div class="car-card__detail-right">
-                                        <span class="label">Przebieg</span>
-                                        <span class="value">@car.Mileage</span>
+                                        <span class="value"><img src="~/icons/mileage.png" alt="Mileage" style="width:20px; height:20px; margin-right:5px;" />@string.Format("{0:N0}", car.Mileage) km</span>
                                     </div>
                                 </div>
-                                <div class="car-card__price">@car.OldPrice</div>
-                                <a href="/car/@car.Id" class="car-card__btn btn">Zobacz szczegóły</a>
+                                <div class="car-card__price">@string.Format("{0:N0}", car.OldPrice) PLN</div>
+                                <a href="@Url.Action("Details", "Home", new { id = car.Id })" class="car-card__btn btn">Zobacz szczegóły</a>
                             </div>
                         </div>
                     </div>
                 }
             </div>
         </div>
-        <button class="carousel-btn next" type="button">›</button>
+        <button class="carousel-btn nav-btn next" type="button">›</button>
     </div>
 
 </p>
@@ -130,57 +104,7 @@
 
     @section Scripts{
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // --- Sticky Header przy scrollu
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 100) {
-                    document.querySelector('.main_h').classList.add('sticky');
-                } else {
-                    document.querySelector('.main_h').classList.remove('sticky');
-                }
-            });
-
-            // --- Mobile Navigation toggle
-            document.querySelector('.mobile-toggle')?.addEventListener('click', () => {
-                document.querySelector('.main_h').classList.toggle('open-nav');
-            });
-
-            // --- Zamknięcie mobilnego menu po kliknięciu linku
-            document.querySelectorAll('.main_h li a').forEach(link => {
-                link.addEventListener('click', () => {
-                    document.querySelector('.main_h')?.classList.remove('open-nav');
-                    document.querySelector('.navigation')?.classList.remove('open-nav');
-                });
-            });
-
-            // --- Płynne scrollowanie do sekcji po kliknięciu w link
-            document.querySelectorAll('nav a').forEach(link => {
-                link.addEventListener('click', (event) => {
-                    const id = link.getAttribute("href");
-                    const offset = 70;
-                    const target = document.querySelector(id);
-                    if (target) {
-                        const position = target.offsetTop - offset;
-                        window.scrollTo({ top: position, behavior: 'smooth' });
-                        event.preventDefault();
-                    }
-                });
-            });
-
-            // --- Scroll-animacja elementów z klasą .scroll-animate
-            function onScrollAnimate() {
-                const elements = document.querySelectorAll('.scroll-animate');
-                elements.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.top < window.innerHeight - 100) {
-                        el.classList.add('animated');
-                    }
-                });
-            }
-            window.addEventListener('scroll', onScrollAnimate);
-            window.addEventListener('load', onScrollAnimate);
-
+         document.addEventListener('DOMContentLoaded', () => {
             // --- Karuzela z płynnym zapętleniem
             const track = document.querySelector('.carousel-track');
             const prevBtn = document.querySelector('.carousel-btn.prev');
@@ -247,24 +171,7 @@
                 isTransitioning = false;
             });
 
-            // --- Formatowanie przebiegu (np. "123000 km" → "123 000 km")
-            document.querySelectorAll('.value').forEach(el => {
-                const match = el.textContent.match(/^(\d+)\s?(km)?$/i);
-                if (match) {
-                    const number = parseInt(match[1].replace(/\s/g, ''));
-                    const formatted = number.toLocaleString('pl-PL');
-                    el.textContent = `${formatted} km`;
-                }
-            });
-
-            // --- Formatowanie ceny (np. "99000 PLN" → "99 000 PLN")
-            document.querySelectorAll('.car-card__price').forEach(el => {
-                const text = el.textContent.replace(/\s/g, '');
-                const number = parseInt(text);
-                if (!isNaN(number)) {
-                    el.textContent = number.toLocaleString('pl-PL') + ' PLN';
-                }
-            });
+            
 
         });
 

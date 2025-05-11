@@ -1,0 +1,502 @@
+﻿.link {
+    position: relative;
+    display: inline-block;
+    line-height: 1em;
+}
+
+.link--top {
+    position: absolute;
+    color: #24435e;
+    top: 0;
+    display: inline-block;
+    clip-path: polygon(0% 66%, 0% 0%, 100% 0%, 100% 40%);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s, color 0.5s ease 0.22s;
+}
+
+    .link--top:after {
+        content: "";
+        position: absolute;
+        top: 36%;
+        left: 0;
+        width: 100%;
+        height: 4%;
+        background: #7b2e1f;
+        transform: rotateZ(-2.2deg) scaleX(0%);
+        transform-origin: right top;
+        transition: transform 0.2s ease 0.22s;
+    }
+
+.link--bottom {
+    display: inline-block;
+    clip-path: polygon(0% 65%, 100% 40%, 100% 110%, 0% 110%);
+    color: #24435e;
+    font-size: 2.5rem;
+    font-weight: bold;
+    background-size: 200% 8%;
+    background-position: left bottom;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(to right, #7b2e1f 50%, transparent 50%);
+    transition: color 0.5s ease 0.22s, background-position 0.2s ease 0.22s;
+}
+
+    .link--bottom:after {
+        content: "";
+        position: absolute;
+        top: 40%;
+        left: 0;
+        width: 100%;
+        height: 4%;
+        background: #7b2e1f;
+        transform: rotateZ(-2deg) scaleX(0%);
+        transform-origin: right top;
+        transition: transform 0.2s ease 0.22s;
+    }
+
+.link:hover .link--top {
+    color: #7b2e1f;
+    transform: translateY(-0.5em) rotateZ(-3deg);
+}
+
+.link:hover .link--bottom {
+    color: #7b2e1f;
+    background-position: 100% bottom;
+}
+
+.link:hover .link--top:after {
+    top: 62%;
+    transform-origin: left top;
+    transform: rotateZ(-2.2deg) scaleX(100%);
+}
+
+.link:hover .link--bottom:after {
+    top: 65%;
+    transform-origin: left top;
+    transform: rotateZ(-2.1deg) scaleX(100%);
+}
+
+
+
+
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+    padding: 40px 20px;
+}
+
+    .lightbox-overlay img {
+        max-width: 90vw;
+        max-height: 75vh;
+        border-radius: 10px;
+        object-fit: contain;
+        transition: opacity 0.3s ease; /* Animacja fade */
+    }
+
+        .lightbox-overlay img.fade-out {
+            opacity: 0;
+        }
+
+        .lightbox-overlay img.fade-in {
+            opacity: 1;
+        }
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 2.5rem;
+    cursor: pointer;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 3rem;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 20px;
+    z-index: 10001;
+}
+
+    .lightbox-nav.prev {
+        left: 0;
+    }
+
+    .lightbox-nav.next {
+        right: 0;
+    }
+
+.lightbox-thumbnails {
+    display: flex;
+}
+
+    .lightbox-thumbnails img {
+        height: 60px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        transition: border 0.2s;
+    }
+
+        .lightbox-thumbnails img.selected {
+            border-color: #7b2e1f;
+        }
+
+
+
+.section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left:1rem;
+}
+
+.section li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+    .section li::before {
+        content: '✔';
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #7b2e1f;
+        font-weight: bold;
+    }
+
+.notice {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    font-size: 1rem;
+    color: #333;
+    margin-top: 20px;
+}
+
+    .notice p {
+        margin: 0;
+        font-weight: normal;
+    }
+
+.car-description {
+    background-color: #f7f7f7; /* Delikatne tło */
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: #333; /* Ciemniejszy kolor tekstu */
+    margin-top: 2rem; /* Odstęp od galerii i danych technicznych */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtelny cień */
+}
+
+.icon {
+    width: auto;
+    height: 40px;
+    object-fit: contain;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    margin-left:0.5rem;
+}
+
+.section {
+    margin-top: 3rem;
+    padding: 1rem 0;
+    border-top: 1px solid #ccc;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.equipment-group {
+    margin-bottom: 2.5rem;
+}
+
+.equipment-category-title {
+    font-size: 1.5rem;
+    color: #24435e;
+    font-weight: 550;
+    margin-bottom: 1rem;
+    border-left: 4px solid #d8be6d;
+    padding-left: 0.75rem;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Zmieniamy na grid z auto-fill */
+    gap: 1rem;
+    justify-content: start;
+}
+
+.equipment-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    color: #333;
+    transition: background 0.2s ease;
+}
+
+    .equipment-item:hover {
+        background-color: #f0f0f0;
+    }
+
+.equipment-icon {
+    width: auto;
+    height: 35px;
+    object-fit: contain;
+    margin-right: 0.5rem
+}
+
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #24435e;
+    font-weight: 550;
+    border-left: 4px solid #d8be6d;
+}
+
+.details-group p {
+    margin: 0.25rem 0;
+    color: #444;
+    margin-left:1rem;
+    font-size:1.2rem;
+}
+
+.price-highlight {
+    font-weight: bold;
+    font-size: 1.4rem;
+    color: #7b2e1f;
+}
+
+.details-group p strong{
+    font-weight:600;
+}
+
+
+.car-price {
+    display: inline-block;
+    background-color: #24435e; /* granatowe tło */
+    color: #d8be6d; /* złoty tekst */
+    font-size: 2.5rem; /* większy tekst */
+    font-weight: 700; /* pogrubienie */
+    padding: 0.6rem 1.2rem; /* przestrzeń wokół tekstu */
+    border-radius: 0.75rem; /* zaokrąglone rogi */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* subtelny cień */
+    letter-spacing: 0.5px; /* lekkie rozciągnięcie tekstu */
+}
+
+
+
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    margin-bottom:1rem;
+}
+
+.car-properties {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 1rem;
+    color: #4f4f4f;
+}
+
+    .car-properties h2 {
+        font-size: 1.5rem;
+        color: #24435e;
+        margin-bottom: 1rem;
+    }
+
+    .car-properties ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .car-properties li {
+        margin-bottom: 0.5rem;
+    }
+
+
+
+
+/* ========== Galeria główna ========== */
+
+.main-photo {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 15px;
+    background-color: #f5f5f5;
+    box-shadow: 0 4px 20px rgba(216, 190, 109, 0.3);
+}
+
+    .main-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+        transition: transform 0.3s ease, opacity 0.4s ease;
+        opacity: 1;
+    }
+
+        .main-photo img:hover {
+            transform: scale(1.03);
+        }
+
+        .main-photo img.fade-out {
+            opacity: 0;
+        }
+
+/* ========== Karuzela miniaturek ========== */
+.thumbnails-carousel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.thumbnails-wrapper {
+    overflow: hidden;
+    flex: 1;
+}
+
+.thumbnails {
+    display: flex;
+    gap: 0.5rem;
+    transition: transform 0.3s ease;
+    min-width: max-content;
+}
+
+    .thumbnails img {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 6px;
+        transition: border-color 0.3s, transform 0.3s;
+        margin-top:1rem;
+        margin-bottom:1rem;
+    }
+
+        .thumbnails img.selected,
+        .thumbnails img:hover {
+            border-color: #7b2e1f;
+            transform: scale(1.05);
+        }
+
+/* ========== Sekcja informacji o aucie ========== */
+.right-info {
+    width: 40%;
+    display: inline-block;
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(216, 190, 109, 0.3);
+    margin-top: 2rem;
+}
+
+.car-specs {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    color: #4f4f4f;
+    font-weight: 400;
+}
+
+    .right-info .title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #24435e;
+    }
+
+    .right-info .version {
+        font-size: 1.2rem;
+        color: #7b2e1f;
+        font-style: italic;
+    }
+.car-details-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+    width:100%;
+}
+
+/* Lewa kolumna (galeria) */
+.left-gallery {
+    max-width: 800px;
+    width: 55%;
+    display: inline-block;
+}
+
+/* Prawa kolumna (info) */
+.brand-logo {
+    max-height: 50px;
+    margin-bottom: 1rem;
+    object-fit: contain;
+    display: block;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.brand-logo {
+    max-height: 50px;
+    width: auto;
+    margin-right: 1rem;
+}
+
+.title-group .right-title {
+    font-size: 2rem;
+    color: #24435e;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.title-group .version {
+    font-size: 1.1rem;
+    color: #7b2e1f;
+    font-style: italic;
+}

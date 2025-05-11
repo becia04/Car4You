@@ -6,12 +6,31 @@
     <title>@ViewData["Title"] - Car4You</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="~/css/home_site.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/Car4You.styles.css" asp-append-version="true" />
 
 </head>
 <body>
     <div class="container">
         <main role="main" class="pb-3">
+            <header class="@(ViewData["AnimateMode"] ?? "load-animations") main_h">
+                <div class="navbar-container">
+                    <a class="logo" href="#">
+                        <img class="logo-img" src="~/logo.png" alt="Logo" />
+                    </a>
+
+                    <nav>
+                        <ul>
+                            <li><a href=".sec01">Nasze auta</a></li>
+                            <li><a href=".sec02">Wynajem autolawety</a></li>
+                            <li><a href=".sec03">Kontakt</a></li>
+                            <li><a href=".sec04">O nas</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="line" style="height:6px; margin:0; width:100%">
+                </div>
+            </header>
             @RenderBody()
         </main>
     </div>
@@ -21,3 +40,73 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const header = document.querySelector('.main_h');
+        const elements = document.querySelectorAll('.scroll-animate');
+
+        const isLoadAnimations = header?.classList.contains('load-animations');
+        const isScrollAnimations = header?.classList.contains('scroll-animations');
+
+        // Ustawienie sticky dla load-animations od razu
+        if (isLoadAnimations) {
+            header.classList.add('sticky');
+        }
+
+        // Sticky Header dla scroll-animations
+        if (!isLoadAnimations) {
+            window.addEventListener('scroll', () => {
+                if (!header) return;
+
+                if (window.scrollY > 100) {
+                    header.classList.add('sticky');
+                } else {
+                    header.classList.remove('sticky');
+                }
+            });
+        }
+
+        // Mobile toggle
+        document.querySelector('.mobile-toggle')?.addEventListener('click', () => {
+            header?.classList.toggle('open-nav');
+        });
+
+        document.querySelectorAll('.main_h li a').forEach(link => {
+            link.addEventListener('click', () => {
+                header?.classList.remove('open-nav');
+                document.querySelector('.navigation')?.classList.remove('open-nav');
+            });
+        });
+
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', (event) => {
+                const id = link.getAttribute("href");
+                const target = document.querySelector(id);
+                if (target) {
+                    const position = target.offsetTop - 70;
+                    window.scrollTo({ top: position, behavior: 'smooth' });
+                    event.preventDefault();
+                }
+            });
+        });
+
+        function onScrollAnimate() {
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 150) {
+                    el.classList.add('animated');
+                }
+            });
+        }
+
+        // Działa zarówno dla scroll-animations jak i load-animations
+        if (isScrollAnimations || isLoadAnimations) {
+            onScrollAnimate(); // Na start tylko widoczne elementy
+            window.addEventListener('scroll', onScrollAnimate);
+            window.addEventListener('load', onScrollAnimate);
+        }
+
+    });
+</script>
+
