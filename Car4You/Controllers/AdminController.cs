@@ -240,7 +240,7 @@ namespace Car4You.Controllers
                         {
                             CarId = car.Id,
                             Title = fileName,
-                            PhotoPath = Path.Combine("cars", fileName).Replace("\\", "/"), // ✅ to zapisujemy do bazy
+                            PhotoPath = $"/cars/{fileName}", // ✅ to zapisujemy do bazy
                             IsMain = (photoIndex == MainPhotoIndex)
                         });
 

@@ -192,6 +192,18 @@
         <label class="form-check-label" for="FirstOwner">Pierwszy właściciel</label>
     </div>
 
+    <!-- Zarejstrowany w PL -->
+    <div class="form-group form-check">
+        <input asp-for="Car.PolishPlate" class="form-check-input" type="checkbox" id="PolishPlate" />
+        <label class="form-check-label" for="PolishPlate">Zarejstrowany w PL</label>
+    </div>
+
+    <!-- Bezwypadkowy -->
+    <div class="form-group form-check">
+        <input asp-for="Car.AccidentFree" class="form-check-input" type="checkbox" id="AccidentFree" />
+        <label class="form-check-label" for="AccidentFree">Bezwypadkowy</label>
+    </div>
+
     <!-- Cena -->
     <div class="form-group">
         <label for="Car.OldPrice">Cena *</label>

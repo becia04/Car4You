@@ -61,7 +61,7 @@ namespace Car4You.Models
         public string Origin { get; set; } //Kraj pochodzenia
 
         public bool FirstOwner { get; set; }
-        public bool? PolishPlate { get; set; }
+        public bool PolishPlate { get; set; }
 
         [Required(ErrorMessage = "Cena jest wymagana")]
         public int? OldPrice { get; set; }
@@ -70,7 +70,7 @@ namespace Car4You.Models
         public DateTime PublishDate { get; set; }
         [StringLength(17, ErrorMessage = "Vin nie może mieć więcej niż 17 znaków")]
         public string ?VIN {  get; set; }
-        public bool ?AccidentFree { get; set; }
+        public bool AccidentFree { get; set; }
 
         [ValidateNever]
         public ICollection<CarEquipment> CarEquipments { get; set; }

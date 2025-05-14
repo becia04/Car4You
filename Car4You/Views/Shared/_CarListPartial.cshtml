@@ -1,0 +1,67 @@
+﻿
+
+<div class="car-list">
+    @foreach (var car in Model)
+    {
+        var mainPhoto = (car.Photos as IEnumerable<Photo>)?.FirstOrDefault(p => p.IsMain);
+
+
+        <div class="car-item scroll-animate slide-in">
+
+            <div class="car-photo">
+                @if (mainPhoto != null)
+                {
+                    <img src="@mainPhoto.PhotoPath" alt="@mainPhoto.Title" />
+                }
+                else
+                {
+                    <img src="~/images/no-photo.png" alt="Brak zdjęcia" />
+                }
+            </div>
+
+            <div class="right-info scroll-animate slide-up">
+                <div class="header">
+                    @if (!string.IsNullOrEmpty(car.CarModel?.Brand?.Icon))
+                    {
+                        <img src="@car.CarModel.Brand.Icon"
+                             alt="Logo @car.CarModel.Brand.Name"
+                             class="brand-logo" />
+                    }
+                    <div class="title-group">
+                        <h2 class="right-title">@car.CarModel?.Brand?.Name @car.CarModel?.Name</h2>
+                        @if (car.Version != null)
+                        {
+                            <p class="version">@car.Version.Name</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="car-specs">
+                    <div class="info-item"><img src="~/icons/year.png" style="width:30px; height:auto;" alt="Rok" />@car.Year</div>
+                    <div class="info-item"> <img src="~/icons/mileage.png" style="width:30px; height:auto;" alt="Przebieg" />@($"{car.Mileage:n0}") km</div>
+                    <div class="info-item"> <img src="~/icons/petrol.png" style="width:30px; height:auto;" alt="Paliwo" />@car.FuelType</div>
+                    <div class="info-item"><img src="~/icons/gearbox.png" style="width:30px; height:auto;" alt="Skrzynia biegów" />@car.Gearbox</div>
+                    <div class="info-item" style="grid-column: span 2;justify-content: center;">
+                        <img src="@car.BodyTypes.Icon" style="height:50px; width:auto; margin-right:1rem;" alt="@car.BodyTypes.Name" />@car.BodyTypes.Name
+                    </div>
+                </div>
+
+                <div class="car-price">
+                    @if (car.OldPrice > car.NewPrice)
+                    {
+                        <p>
+                            <strong>Poprzednia cena:</strong>
+                            <span style="text-decoration:line-through">@($"{car.OldPrice:n0}") PLN</span>
+                        </p>
+                    }
+                    <p>
+                        <span class="price-highlight">@($"{car.NewPrice:n0}") PLN</span>
+                    </p>
+                </div>
+
+                <a href="@Url.Action("Details", "Home", new { id = car.Id })" class="btn">Zobacz szczegóły</a>
+            </div>
+
+        </div> <!-- TUTAJ ZAMYKASZ -->
+    }
+</div>

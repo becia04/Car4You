@@ -1,0 +1,81 @@
+﻿@model IEnumerable<Car>
+<link href="~/css/carlist_site.css" rel="stylesheet" />
+<div>
+    <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500; margin-top:200px;">NASZE AUTA</h1>
+    <div class="line" style="margin-bottom:2rem;"></div>
+</div>
+<form id="sortForm" class="sort-form">
+    <label for="sortOrder">Sortuj według:</label>
+    <select id="sortOrder" name="sortOrder">
+        <option value="date">Data dodania</option>
+        <option value="brand_model">Marka i model</option>
+        <option value="year">Rok</option>
+        <option value="price">Cena</option>
+    </select>
+
+    <input type="hidden" id="sortDir" value="desc" />
+    <button id="sortDirToggle" type="button" class="sort-arrow">↓</button>
+
+</form>
+
+<div id="carListContainer">
+    @Html.Partial("_CarListPartial", Model)
+</div>
+
+
+
+
+@section Scripts {
+    <script>
+        function triggerCarListAnimations() {
+            const elements = document.querySelectorAll('.scroll-animate');
+
+            function onScrollAnimate() {
+                elements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top < window.innerHeight - 150) {
+                        el.classList.add('animated');
+                    }
+                });
+            }
+
+            // Wywołaj od razu i dodaj scroll listener
+            onScrollAnimate();
+            window.removeEventListener('scroll', onScrollAnimate);
+            window.addEventListener('scroll', onScrollAnimate);
+        }
+
+        function fetchSortedCars() {
+            const sortOrder = document.getElementById('sortOrder').value;
+            const sortDir = document.getElementById('sortDir').value;
+
+            fetch(`/Home/SortedCars?sortOrder=${sortOrder}&sortDir=${sortDir}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('carListContainer').innerHTML = html;
+                    triggerCarListAnimations(); // <- ważne!
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('#sortForm select').forEach(select => {
+                select.addEventListener('change', fetchSortedCars);
+            });
+
+            document.getElementById('sortDirToggle')?.addEventListener('click', () => {
+                const dirInput = document.getElementById('sortDir');
+                const btn = document.getElementById('sortDirToggle');
+
+                if (dirInput.value === 'desc') {
+                    dirInput.value = 'asc';
+                    btn.classList.add('asc');
+                } else {
+                    dirInput.value = 'desc';
+                    btn.classList.remove('asc');
+                }
+
+                fetchSortedCars();
+            });
+        });
+    </script>
+}

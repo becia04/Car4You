@@ -1,4 +1,79 @@
-﻿.link {
+﻿.right-info {
+    width: 40%;
+    display: inline-block;
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(216, 190, 109, 0.3);
+    margin-top: 2rem;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Prawa kolumna (info) */
+.brand-logo {
+    max-height: 50px;
+    margin-bottom: 1rem;
+    object-fit: contain;
+    display: block;
+}
+
+.brand-logo {
+    max-height: 50px;
+    width: auto;
+    margin-right: 1rem;
+}
+
+
+.title-group .right-title {
+    font-size: 2rem;
+    color: #24435e;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.title-group .version {
+    font-size: 1.1rem;
+    color: #7b2e1f;
+    font-style: italic;
+}
+
+.car-specs {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    color: #4f4f4f;
+    font-weight: 400;
+}
+
+.right-info .title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #24435e;
+}
+
+.right-info .version {
+    font-size: 1.2rem;
+    color: #7b2e1f;
+    font-style: italic;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.link {
     position: relative;
     display: inline-block;
     line-height: 1em;
@@ -317,14 +392,6 @@
 
 
 
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.5rem;
-    margin-bottom:1rem;
-}
-
 .car-properties {
     background-color: #fff;
     border-radius: 10px;
@@ -420,38 +487,6 @@
         }
 
 /* ========== Sekcja informacji o aucie ========== */
-.right-info {
-    width: 40%;
-    display: inline-block;
-    padding: 2rem;
-    background: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(216, 190, 109, 0.3);
-    margin-top: 2rem;
-}
-
-.car-specs {
-    margin-top: 1rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem 1.5rem;
-    font-size: 1.1rem;
-    color: #4f4f4f;
-    font-weight: 400;
-}
-
-    .right-info .title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: #24435e;
-    }
-
-    .right-info .version {
-        font-size: 1.2rem;
-        color: #7b2e1f;
-        font-style: italic;
-    }
 .car-details-container {
     display: flex;
     flex-wrap: wrap;
@@ -468,35 +503,4 @@
     display: inline-block;
 }
 
-/* Prawa kolumna (info) */
-.brand-logo {
-    max-height: 50px;
-    margin-bottom: 1rem;
-    object-fit: contain;
-    display: block;
-}
 
-.header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.brand-logo {
-    max-height: 50px;
-    width: auto;
-    margin-right: 1rem;
-}
-
-.title-group .right-title {
-    font-size: 2rem;
-    color: #24435e;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-}
-
-.title-group .version {
-    font-size: 1.1rem;
-    color: #7b2e1f;
-    font-style: italic;
-}
