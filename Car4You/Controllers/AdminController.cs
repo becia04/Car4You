@@ -1,22 +1,23 @@
 ﻿using Car4You.DAL;
-using Car4You.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Car4You.Helper;
 using Car4You.Helpers;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Car4You.Models;
 using Car4You.ViewModels;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualBasic;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Globalization;
-using static Car4You.ViewModels.CarViewModel;
-using Microsoft.VisualBasic;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Text.RegularExpressions;
 using System.Text;
-using Car4You.Helper;
-using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+using static Car4You.ViewModels.CarViewModel;
 
 namespace Car4You.Controllers
 {
@@ -44,8 +45,8 @@ namespace Car4You.Controllers
         [HttpGet]
         public async Task<IActionResult> AddCar()
         {
-            var equipmentTypes = _context.EquipmentTypes.OrderBy(e=>e.Name).ToList();  // Pobranie typów ekwipunku
-            var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e=>e.Name).ToList(); // Pobranie ekwipunków z ich typami
+            var equipmentTypes = _context.EquipmentTypes.OrderBy(e => e.Name).ToList();  // Pobranie typów ekwipunku
+            var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e => e.Name).ToList(); // Pobranie ekwipunków z ich typami
 
             // Grupowanie ekwipunków według typu
             var groupedEquipment = equipmentTypes.Select(equipmentType => new EquipmentGroup
@@ -57,21 +58,16 @@ namespace Car4You.Controllers
             var viewModel = new CarViewModel
             {
                 Car = new Car(), // Nowy obiekt auta
-                Brands = await _context.Brands.OrderBy(b=>b.Name).ToListAsync(),
+                Brands = await _context.Brands.OrderBy(b => b.Name).ToListAsync(),
                 CarModels = new List<Models.CarModel>(),
                 BodyTypes = await _context.BodyTypes.OrderBy(b => b.Name).ToListAsync(),
-                Versions= new List<Models.Version>(),
+                Versions = new List<Models.Version>(),
                 EquipmentTypes = equipmentTypes,
                 GroupedEquipment = groupedEquipment,
             };
+            TempData.Remove("TempPhotos");
+            _photoHelper.ClearTemp();
 
-            // 🧹 Wyczyść pozostałości po poprzednich przesłaniach
-            if (TempData["TempPhotos"] is string tempPhotosJson)
-            {
-                var tempPhotos = JsonConvert.DeserializeObject<List<TempPhoto>>(tempPhotosJson);
-                _photoHelper.ClearTemporaryFiles(tempPhotos);
-                TempData.Remove("TempPhotos"); // Usuń też z TempData, żeby nie wróciły
-            }
             return View(viewModel);
         }
 
@@ -299,7 +295,8 @@ namespace Car4You.Controllers
 
 
                 // 🧹 Czyszczenie plików tymczasowych
-                _photoHelper.ClearTemporaryFiles(model.SavedPhotoPaths);
+                TempData.Remove("TempPhotos");
+                _photoHelper.ClearTemp();
 
                 // ✅ Przekierowanie lub komunikat sukcesu
                 TempData["Success"] = "Auto zostało dodane.";

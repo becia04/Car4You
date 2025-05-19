@@ -335,115 +335,115 @@
 </div>
 @section Scripts {
     <script>
-              let rawPhotos = @Html.Raw(JsonConvert.SerializeObject(Model.SavedPhotoPaths ?? new List<TempPhoto>(), new JsonSerializerSettings
-        {
-                    ContractResolver = new DefaultContractResolver()
-        }));
+         let rawPhotos = @Html.Raw(JsonConvert.SerializeObject(Model.SavedPhotoPaths ?? new List<TempPhoto>(), new JsonSerializerSettings {
+    ContractResolver = new DefaultContractResolver()
+}));
 
-    let form = document.querySelector("form");
-    let oldPhotos = [];
+let form = document.querySelector("form");
+let oldPhotos = [];
 
-        try {
-            oldPhotos = typeof rawPhotos === "string" ? JSON.parse(rawPhotos) : rawPhotos;
-            console.log("RawPhotos (parsed):", oldPhotos);
+try {
+    oldPhotos = typeof rawPhotos === "string" ? JSON.parse(rawPhotos) : rawPhotos;
+    console.log("RawPhotos (parsed):", oldPhotos);
+} catch (e) {
+    console.error("Błąd parsowania TempPhotos", e);
+}
 
-        } catch (e) {
-            console.error("Błąd parsowania TempPhotos", e);
-        }
+// === 📸 Render starych zdjęć (TempPhotos) ===
+function renderExistingPhotos(photos) {
+    const previewDiv = document.getElementById('photoPreview');
+    previewDiv.innerHTML = "";
 
-        if (Array.isArray(oldPhotos) && oldPhotos.length > 0) {
-            let previewDiv = document.getElementById('photoPreview');
-            previewDiv.innerHTML = "";
+    photos.forEach((photo, index) => {
+        const img = createImage(photo.Src);
+        const radio = createRadio(index, photo.IsMain);
+        const label = createLabelWithRadio(radio);
+        const container = createContainer(img, label);
 
-            oldPhotos.forEach((photo, index) => {
-                //Podgląd zdjęć
-                let img = document.createElement('img');
-                img.src = photo.Src;
-                img.style.width = '100px';
-                img.style.margin = '5px';
+        appendHiddenInputs(photo, index);
+        previewDiv.appendChild(container);
+    });
+}
 
-                //Główne zdjęcie
-                let radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'mainPhoto';
-                radio.value = index;
-                if (photo.IsMain) {
-                    radio.checked = true;
-                    document.getElementById('mainPhotoIndex').value = index;
-                }
-                radio.addEventListener('change', function () {
-                    document.getElementById('mainPhotoIndex').value = this.value;
-                });
-                let label = document.createElement('label');
-                label.textContent = 'Główne ';
-                label.appendChild(radio);
+function createImage(src) {
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.width = '100px';
+    img.style.margin = '5px';
+    return img;
+}
 
-                //Poprawne uzupełnianie SavedPhotoPaths
-                      let inputSrc = document.createElement("input");
-        inputSrc.type = "hidden";
-        inputSrc.name = `SavedPhotoPaths[${index}].Src`;
-        inputSrc.value = photo.Src;
+function createRadio(index, isMain) {
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'mainPhoto';
+    radio.value = index;
+    if (isMain) {
+        radio.checked = true;
+        document.getElementById('mainPhotoIndex').value = index;
+    }
+    radio.addEventListener('change', function () {
+        document.getElementById('mainPhotoIndex').value = this.value;
+    });
+    return radio;
+}
 
-        let inputMain = document.createElement("input");
-        inputMain.type = "hidden";
-        inputMain.name = `SavedPhotoPaths[${index}].IsMain`;
-        inputMain.value = photo.IsMain;
+function createLabelWithRadio(radio) {
+    const label = document.createElement('label');
+    label.textContent = 'Główne ';
+    label.appendChild(radio);
+    return label;
+}
 
-        form.appendChild(inputSrc);
-        form.appendChild(inputMain);
+function createContainer(img, label) {
+    const container = document.createElement('div');
+    container.style.marginBottom = '10px';
+    container.appendChild(img);
+    container.appendChild(label);
+    return container;
+}
 
-                let container = document.createElement('div');
-                container.style.marginBottom = '10px';
-                container.appendChild(img);
-                container.appendChild(label);
+function appendHiddenInputs(photo, index) {
+    const inputSrc = document.createElement("input");
+    inputSrc.type = "hidden";
+    inputSrc.name = `SavedPhotoPaths[${index}].Src`;
+    inputSrc.value = photo.Src;
+
+    const inputMain = document.createElement("input");
+    inputMain.type = "hidden";
+    inputMain.name = `SavedPhotoPaths[${index}].IsMain`;
+    inputMain.value = photo.IsMain;
+
+    form.appendChild(inputSrc);
+    form.appendChild(inputMain);
+}
+
+if (Array.isArray(oldPhotos) && oldPhotos.length > 0) {
+    renderExistingPhotos(oldPhotos);
+}
+
+// === 📤 Obsługa nowych zdjęć ===
+document.getElementById("carPhotos").addEventListener("change", function () {
+    const files = this.files;
+    const previewDiv = document.getElementById('photoPreview');
+    previewDiv.innerHTML = "";
+
+    if (files.length > 0) {
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = createImage(e.target.result);
+                const radio = createRadio(index, index === 0); // domyślnie pierwsze jako główne
+                const label = createLabelWithRadio(radio);
+                const container = createContainer(img, label);
+
                 previewDiv.appendChild(container);
-            });
-        }
-
-                document.getElementById("carPhotos").addEventListener("change", function () {
-            const files = this.files;
-            const previewDiv = document.getElementById('photoPreview');
-            previewDiv.innerHTML = "";
-
-            if (files.length > 0) {
-                Array.from(files).forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        // Obrazek
-                        let img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.width = '100px';
-                        img.style.margin = '5px';
-
-                        // Główne zdjęcie (domyślnie pierwszy)
-                        let radio = document.createElement('input');
-                        radio.type = 'radio';
-                        radio.name = 'mainPhoto';
-                        radio.value = index;
-                        if (index === 0) {
-                            radio.checked = true;
-                            document.getElementById('mainPhotoIndex').value = 0;
-                        }
-
-                        radio.addEventListener('change', function () {
-                            document.getElementById('mainPhotoIndex').value = this.value;
-                        });
-
-                        let label = document.createElement('label');
-                        label.textContent = 'Główne ';
-                        label.appendChild(radio);
-
-                        let container = document.createElement('div');
-                        container.style.marginBottom = '10px';
-                        container.appendChild(img);
-                        container.appendChild(label);
-
-                        previewDiv.appendChild(container);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+            };
+            reader.readAsDataURL(file);
         });
+    }
+});
+
 
 
 

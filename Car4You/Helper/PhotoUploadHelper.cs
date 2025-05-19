@@ -95,37 +95,31 @@ public class PhotoUploadHelper
         tempData["TempPhotos"] = JsonConvert.SerializeObject(photos);
     }
 
-        public void ClearTemporaryFiles(List<TempPhoto> tempPhotos)
+    public void ClearTemp()
+    {
+        // Czyść folder temp (tymczasowe zdjęcia)
+        var tempPath = Path.Combine(_environment.WebRootPath, "temp");
+        ClearingFolder(tempPath);
+        tempPath = Path.Combine(_environment.WebRootPath, "App_TempUploads");
+        ClearingFolder(tempPath);
+        return;
+    }
+
+    private void ClearingFolder(string tempPath)
+    {
+        if (Directory.Exists(tempPath))
         {
-            if (tempPhotos == null || tempPhotos.Count == 0) return;
-
-            var wwwRootPath = _environment.WebRootPath;
-            var contentRootPath = _environment.ContentRootPath;
-
-            foreach (var photo in tempPhotos)
+            foreach (var file in Directory.GetFiles(tempPath))
             {
                 try
                 {
-                    var fileName = Path.GetFileName(photo.Src);
-
-                    var pathInWwwroot = Path.Combine(wwwRootPath, "temp", fileName);
-                    var pathInFallback = Path.Combine(contentRootPath, "App_TempUploads", fileName);
-
-                    if (File.Exists(pathInWwwroot))
-                    {
-                        File.Delete(pathInWwwroot);
-                        continue;
-                    }
-
-                    if (File.Exists(pathInFallback))
-                    {
-                        File.Delete(pathInFallback);
-                    }
+                    System.IO.File.Delete(file);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Błąd usuwania pliku tymczasowego: {photo.Src}");
+                    _logger.LogError(ex, $"Nie udało się usunąć pliku tymczasowego: {file}");
                 }
             }
         }
     }
+}
