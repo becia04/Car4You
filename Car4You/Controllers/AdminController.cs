@@ -15,6 +15,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Text.RegularExpressions;
 using System.Text;
+using Car4You.Helper;
+using Newtonsoft.Json;
 
 namespace Car4You.Controllers
 {
@@ -23,12 +25,14 @@ namespace Car4You.Controllers
         private readonly CarDbContext _context;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<AdminController> _logger;
+        private readonly PhotoUploadHelper _photoHelper;
 
-        public AdminController(CarDbContext context, IWebHostEnvironment environment, ILogger<AdminController> logger)
+        public AdminController(CarDbContext context, IWebHostEnvironment environment, ILogger<AdminController> logger, PhotoUploadHelper photoHelper)
         {
             _context = context;
             _environment = environment;
             _logger = logger;
+            _photoHelper = photoHelper;
         }
 
         public IActionResult Index()
@@ -61,6 +65,13 @@ namespace Car4You.Controllers
                 GroupedEquipment = groupedEquipment,
             };
 
+            // 🧹 Wyczyść pozostałości po poprzednich przesłaniach
+            if (TempData["TempPhotos"] is string tempPhotosJson)
+            {
+                var tempPhotos = JsonConvert.DeserializeObject<List<TempPhoto>>(tempPhotosJson);
+                _photoHelper.ClearTemporaryFiles(tempPhotos);
+                TempData.Remove("TempPhotos"); // Usuń też z TempData, żeby nie wróciły
+            }
             return View(viewModel);
         }
 
@@ -139,17 +150,38 @@ namespace Car4You.Controllers
             }
 
             //Zdjęcia
-            if(model.CarPhotos == null)
+            // 🧩 Obsługa zdjęć
+            if (model.CarPhotos != null && model.CarPhotos.Count > 0)
             {
-                ModelState.AddModelError("CarPhotos", "Zdjęcia są wymagane");
+                var uploaded = await _photoHelper.ProcessUploadedPhotosAsync(model.CarPhotos, MainPhotoIndex);
+                model.SavedPhotoPaths = uploaded;
+                _photoHelper.SaveToTempData(TempData, uploaded);
             }
-            else if (model.CarPhotos.Count > 21)
+            else
             {
-                ModelState.AddModelError("CarPhotos", "Liczba zdjęć musi być mniejsza od 21");
+                var restored = _photoHelper.RestoreFromTempData(TempData);
+                model.SavedPhotoPaths = restored;
             }
 
-                if (!ModelState.IsValid)
+            // 🧠 Walidacja zdjęć
+            int totalCount = model.SavedPhotoPaths?.Count ?? 0;
+
+            if (totalCount == 0)
+                ModelState.AddModelError("CarPhotos", "Zdjęcia są wymagane.");
+            else if (totalCount > 21)
+                ModelState.AddModelError("CarPhotos", "Liczba zdjęć musi być mniejsza lub równa 20.");
+
+            // 🔄 Aktualizacja IsMain
+            for (int i = 0; i < (model.SavedPhotoPaths?.Count ?? 0); i++)
             {
+                model.SavedPhotoPaths[i].IsMain = (i == MainPhotoIndex);
+            }
+            _photoHelper.SaveToTempData(TempData, model.SavedPhotoPaths);
+
+
+            if (!ModelState.IsValid)
+            {
+
 
                 var equipmentTypes = _context.EquipmentTypes.OrderBy(e => e.Name).ToList();  // Pobranie typów ekwipunku
                 var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e => e.Name).ToList(); // Pobranie ekwipunków z ich typami
@@ -199,13 +231,12 @@ namespace Car4You.Controllers
                 }
 
                 // Obsługa zdjęć
-                if (model.CarPhotos != null && model.CarPhotos.Count > 0)
+                if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
                 {
                     var photos = new List<Photo>();
 
-                    // Pobieramy markę, model i rok auta
                     var car = _context.Cars.Include(c => c.CarModel)
-                                            .ThenInclude(m => m.Brand) // Pobieramy markę z modelu
+                                            .ThenInclude(m => m.Brand)
                                             .FirstOrDefault(c => c.Id == model.Car.Id);
 
                     if (car == null)
@@ -216,43 +247,62 @@ namespace Car4You.Controllers
 
                     string brand = car.CarModel?.Brand?.Name ?? "BrakMarki";
                     string modelName = car.CarModel?.Name ?? "BrakModelu";
-                    string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? ""; // Pobranie pierwszej generacji, jeśli istnieje
+                    string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? "";
                     string year = car.Year.ToString();
 
-                    int photoIndex = 0;
+                    string carsFolder = Path.Combine(_environment.WebRootPath, "cars");
+                    if (!Directory.Exists(carsFolder))
+                        Directory.CreateDirectory(carsFolder);
 
-                    foreach (var file in model.CarPhotos)
+                    int photoIndex = 0;
+                    foreach (var tempPhoto in model.SavedPhotoPaths)
                     {
                         string orignalFileName = $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
 
-                        var fileNameWithoutExtension = $"{RemoveDiacritics(orignalFileName.Replace(" ", "_")).ToLower()}";
-                        fileNameWithoutExtension = Regex.Replace(fileNameWithoutExtension, "[^a-zA-Z0-9_]", "");
+                        var fileNameWithoutExtension = FileHelper.NormalizeFileName(orignalFileName);
                         var fileName = $"{fileNameWithoutExtension}.jpg";
 
-                        var savePath = Path.Combine(_environment.WebRootPath, "cars", fileName);
+                        var sourcePath = Path.Combine(_environment.WebRootPath, "temp", Path.GetFileName(tempPhoto.Src));
+                        var targetPath = Path.Combine(carsFolder, fileName);
 
-                        using (var stream = new FileStream(savePath, FileMode.Create))
+                        try
                         {
-                            await file.CopyToAsync(stream);
+                            if (System.IO.File.Exists(sourcePath))
+                            {
+                                System.IO.File.Copy(sourcePath, targetPath, overwrite: true);
+                            }
+                            else
+                            {
+                                _logger.LogWarning($"Nie znaleziono pliku tymczasowego: {sourcePath}");
+                                continue;
+                            }
+
+                            photos.Add(new Photo
+                            {
+                                CarId = car.Id,
+                                Title = fileName,
+                                PhotoPath = $"/cars/{fileName}",
+                                IsMain = tempPhoto.IsMain
+                            });
                         }
-
-                        photos.Add(new Photo
+                        catch (Exception ex)
                         {
-                            CarId = car.Id,
-                            Title = fileName,
-                            PhotoPath = $"/cars/{fileName}", // ✅ to zapisujemy do bazy
-                            IsMain = (photoIndex == MainPhotoIndex)
-                        });
+                            _logger.LogError(ex, $"Błąd podczas kopiowania zdjęcia: {sourcePath} → {targetPath}");
+                        }
 
                         photoIndex++;
                     }
-
 
                     _context.Photos.AddRange(photos);
                 }
 
 
 
+                // 🧹 Czyszczenie plików tymczasowych
+                _photoHelper.ClearTemporaryFiles(model.SavedPhotoPaths);
+
+                // ✅ Przekierowanie lub komunikat sukcesu
+                TempData["Success"] = "Auto zostało dodane.";
                 await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
                 return RedirectToAction("Index");
 
@@ -263,22 +313,19 @@ namespace Car4You.Controllers
             }
         }
 
-        public static string RemoveDiacritics(string input)
+        [HttpGet("/admin/temp-preview")]
+        public IActionResult TempPreview(string file)
         {
-            if (string.IsNullOrEmpty(input))
-                return input;
+            var tempPath = Path.Combine(_environment.ContentRootPath, "App_TempUploads", file);
 
-            string normalizedString = input.Normalize(NormalizationForm.FormD);
-            StringBuilder stringBuilder = new StringBuilder();
+            if (!System.IO.File.Exists(tempPath))
+                return NotFound();
 
-            foreach (char c in normalizedString)
-            {
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                    stringBuilder.Append(c);
-            }
-
-            return stringBuilder.ToString();
+            var contentType = "image/" + Path.GetExtension(file).Trim('.'); // np. image/png
+            return PhysicalFile(tempPath, contentType);
         }
+
+
 
         [HttpGet]
         public JsonResult GetCarModelsByBrand(int brandId)

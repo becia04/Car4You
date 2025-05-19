@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<CarDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DB")));
+builder.Services.AddScoped<PhotoUploadHelper>();
+
 
 
 

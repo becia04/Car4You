@@ -1,4 +1,5 @@
 ﻿using Car4You.Controllers;
+using Car4You.Helper;
 using Car4You.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -29,6 +30,9 @@ namespace Car4You.ViewModels
         public List<string> Colors { get; set; }
         public List<int> SelectedEquipmentIds { get; set; } = new();
         public List<IFormFile>? CarPhotos { get; set; }
+        public List<TempPhoto> SavedPhotoPaths { get; set; } = new();
+
+
         public class EquipmentGroup
         {
             [ValidateNever]

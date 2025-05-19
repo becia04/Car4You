@@ -1,5 +1,7 @@
-﻿@model Car4You.ViewModels.CarViewModel
-
+﻿@using Car4You.Helper
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@model Car4You.ViewModels.CarViewModel
 
 @{
     ViewData["Title"] = "Dodaj nowe auto";
@@ -230,10 +232,18 @@
         <input type="file" name="carPhotos" id="carPhotos" class="form-control" multiple accept="image/*" />
         <small class="form-text text-muted">Możesz dodać jedno lub więcej zdjęć.</small>
         <span asp-validation-for="CarPhotos" class="text-danger"></span>
+        @for (int i = 0; i < Model.SavedPhotoPaths.Count; i++)
+        {
+            <input type="hidden" name="SavedPhotoPaths[@i].Src" value="@Model.SavedPhotoPaths[i].Src" />
+            <input type="hidden" name="SavedPhotoPaths[@i].IsMain" value="@Model.SavedPhotoPaths[i].IsMain.ToString().ToLower()" />
+        }
+
+
     </div>
 
     <!-- Wybór głównego zdjęcia -->
     <div id="photoPreview" class="d-flex flex-wrap mt-3"></div>
+
     <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
 
     <!-- Wyposażenie -->
@@ -325,6 +335,119 @@
 </div>
 @section Scripts {
     <script>
+              let rawPhotos = @Html.Raw(JsonConvert.SerializeObject(Model.SavedPhotoPaths ?? new List<TempPhoto>(), new JsonSerializerSettings
+        {
+                    ContractResolver = new DefaultContractResolver()
+        }));
+
+    let form = document.querySelector("form");
+    let oldPhotos = [];
+
+        try {
+            oldPhotos = typeof rawPhotos === "string" ? JSON.parse(rawPhotos) : rawPhotos;
+            console.log("RawPhotos (parsed):", oldPhotos);
+
+        } catch (e) {
+            console.error("Błąd parsowania TempPhotos", e);
+        }
+
+        if (Array.isArray(oldPhotos) && oldPhotos.length > 0) {
+            let previewDiv = document.getElementById('photoPreview');
+            previewDiv.innerHTML = "";
+
+            oldPhotos.forEach((photo, index) => {
+                //Podgląd zdjęć
+                let img = document.createElement('img');
+                img.src = photo.Src;
+                img.style.width = '100px';
+                img.style.margin = '5px';
+
+                //Główne zdjęcie
+                let radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'mainPhoto';
+                radio.value = index;
+                if (photo.IsMain) {
+                    radio.checked = true;
+                    document.getElementById('mainPhotoIndex').value = index;
+                }
+                radio.addEventListener('change', function () {
+                    document.getElementById('mainPhotoIndex').value = this.value;
+                });
+                let label = document.createElement('label');
+                label.textContent = 'Główne ';
+                label.appendChild(radio);
+
+                //Poprawne uzupełnianie SavedPhotoPaths
+                      let inputSrc = document.createElement("input");
+        inputSrc.type = "hidden";
+        inputSrc.name = `SavedPhotoPaths[${index}].Src`;
+        inputSrc.value = photo.Src;
+
+        let inputMain = document.createElement("input");
+        inputMain.type = "hidden";
+        inputMain.name = `SavedPhotoPaths[${index}].IsMain`;
+        inputMain.value = photo.IsMain;
+
+        form.appendChild(inputSrc);
+        form.appendChild(inputMain);
+
+                let container = document.createElement('div');
+                container.style.marginBottom = '10px';
+                container.appendChild(img);
+                container.appendChild(label);
+                previewDiv.appendChild(container);
+            });
+        }
+
+                document.getElementById("carPhotos").addEventListener("change", function () {
+            const files = this.files;
+            const previewDiv = document.getElementById('photoPreview');
+            previewDiv.innerHTML = "";
+
+            if (files.length > 0) {
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        // Obrazek
+                        let img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = '100px';
+                        img.style.margin = '5px';
+
+                        // Główne zdjęcie (domyślnie pierwszy)
+                        let radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'mainPhoto';
+                        radio.value = index;
+                        if (index === 0) {
+                            radio.checked = true;
+                            document.getElementById('mainPhotoIndex').value = 0;
+                        }
+
+                        radio.addEventListener('change', function () {
+                            document.getElementById('mainPhotoIndex').value = this.value;
+                        });
+
+                        let label = document.createElement('label');
+                        label.textContent = 'Główne ';
+                        label.appendChild(radio);
+
+                        let container = document.createElement('div');
+                        container.style.marginBottom = '10px';
+                        container.appendChild(img);
+                        container.appendChild(label);
+
+                        previewDiv.appendChild(container);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+
+
+
         $(document).ready(function () {
             let initialLoad = true;
             let selectedVersionId = '@Model.Car.VersionId';
@@ -379,32 +502,6 @@
 
             // Zdarzenie: zmiana generacji lub roku
             $("#VersionId, #Car_Year").on("change input", updateTitle);
-
-            // Obsługa podglądu zdjęć
-            document.getElementById('carPhotos').addEventListener('change', function (event) {
-                let previewDiv = document.getElementById('photoPreview');
-                previewDiv.innerHTML = "";
-                Array.from(event.target.files).forEach((file, index) => {
-                    let img = document.createElement('img');
-                    img.src = URL.createObjectURL(file);
-                    img.style.width = '100px';
-                    img.style.margin = '5px';
-
-                    let label = document.createElement('label');
-                    label.innerHTML = `Główne <input type="radio" name="mainPhoto" value="${index}" ${index === 0 ? 'checked' : ''} />`;
-
-                    let container = document.createElement('div');
-                    container.appendChild(img);
-                    container.appendChild(label);
-                    previewDiv.appendChild(container);
-                });
-
-                document.querySelectorAll('input[name="mainPhoto"]').forEach(radio => {
-                    radio.addEventListener('change', function () {
-                        document.getElementById('mainPhotoIndex').value = this.value;
-                    });
-                });
-            });
 
             // Dodawanie nowego modelu
             window.addNewModel = function () {
