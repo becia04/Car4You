@@ -13,7 +13,9 @@
         <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">@Model.Title</h1>
         <div class="line"></div>
     </div>
-
+    <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn">
+        Edytuj
+    </a>
     <div class="car-details-container">
         <!-- Kolumna lewa: Galeria -->
         <div class="left-gallery scroll-animate slide-in">

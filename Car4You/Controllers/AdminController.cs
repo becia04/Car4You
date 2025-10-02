@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
@@ -18,6 +19,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using static Car4You.ViewModels.CarViewModel;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Car4You.Controllers
 {
@@ -68,13 +70,71 @@ namespace Car4You.Controllers
             TempData.Remove("TempPhotos");
             _photoHelper.ClearTemp();
 
-            return View(viewModel);
+            return View("CarForm", viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditCar(int id)
+        {
+            var car = await _context.Cars
+                .Include(c => c.BodyTypes)
+                .Include(c=>c.Photos)
+                .Include(c => c.Version)
+                .Include(c => c.CarEquipments)
+                .Include(c => c.CarModel)
+                    .ThenInclude(cm => cm.Versions)
+                .Include(c => c.CarModel)
+                            .ThenInclude(cm => cm.Brand)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (car == null)
+            {
+                return NotFound();
+            }
+
+            var equipmentTypes = await _context.EquipmentTypes.OrderBy(e => e.Name).ToListAsync();
+            var equipmentList = await _context.Equipments
+                .Include(e => e.EquipmentType)
+                .OrderBy(e => e.Name)
+                .ToListAsync();
+
+            var groupedEquipment = equipmentTypes.Select(equipmentType => new EquipmentGroup
+            {
+                EquipmentType = equipmentType,
+                Equipments = equipmentList.Where(e => e.EquipmentTypeId == equipmentType.Id).ToList()
+            }).ToList();
+
+            var viewModel = new CarViewModel
+            {
+                Car = car,
+                Brands = await _context.Brands.OrderBy(b => b.Name).ToListAsync(),
+                CarModels = await _context.CarModels
+                    .Where(m => m.BrandId == car.CarModel.BrandId)
+                    .OrderBy(m => m.Name)
+                    .ToListAsync(),
+                BodyTypes = await _context.BodyTypes.OrderBy(b => b.Name).ToListAsync(),
+                Versions = await _context.Versions
+                    .Where(v => v.CarModelId == car.CarModelId)
+                    .OrderBy(v => v.Name)
+                    .ToListAsync(),
+                EquipmentTypes = equipmentTypes,
+                GroupedEquipment = groupedEquipment,
+                SelectedEquipmentIds = car.CarEquipments.Select(ce => ce.EquipmentId).ToList(),
+                SavedPhotoPaths = car.Photos.Select(p => new TempPhoto
+                {
+                    Src = p.PhotoPath,
+                    IsMain = p.IsMain
+                }).ToList()
+            };
+
+            return View("CarForm", viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken] // Zapobiega atakom CSRF
-        public async Task<IActionResult>AddCar(CarViewModel model, int MainPhotoIndex)
+        public async Task<IActionResult>SaveCar(CarViewModel model, int MainPhotoIndex)
         {
+            bool isEditing = model.Car.Id > 0;
             //Rok
             if (model.Car.Year < 1900)
             {
@@ -146,7 +206,7 @@ namespace Car4You.Controllers
             }
 
             //Zdjęcia
-            // 🧩 Obsługa zdjęć
+            // Obsługa zdjęć
             if (model.CarPhotos != null && model.CarPhotos.Count > 0)
             {
                 var uploaded = await _photoHelper.ProcessUploadedPhotosAsync(model.CarPhotos, MainPhotoIndex);
@@ -159,7 +219,7 @@ namespace Car4You.Controllers
                 model.SavedPhotoPaths = restored;
             }
 
-            // 🧠 Walidacja zdjęć
+            // Walidacja zdjęć
             int totalCount = model.SavedPhotoPaths?.Count ?? 0;
 
             if (totalCount == 0)
@@ -167,7 +227,7 @@ namespace Car4You.Controllers
             else if (totalCount > 21)
                 ModelState.AddModelError("CarPhotos", "Liczba zdjęć musi być mniejsza lub równa 20.");
 
-            // 🔄 Aktualizacja IsMain
+            // Aktualizacja IsMain
             for (int i = 0; i < (model.SavedPhotoPaths?.Count ?? 0); i++)
             {
                 model.SavedPhotoPaths[i].IsMain = (i == MainPhotoIndex);
@@ -177,8 +237,6 @@ namespace Car4You.Controllers
 
             if (!ModelState.IsValid)
             {
-
-
                 var equipmentTypes = _context.EquipmentTypes.OrderBy(e => e.Name).ToList();  // Pobranie typów ekwipunku
                 var equipmentList = _context.Equipments.Include(e => e.EquipmentType).OrderBy(e => e.Name).ToList(); // Pobranie ekwipunków z ich typami
 
@@ -200,7 +258,7 @@ namespace Car4You.Controllers
                 model.GroupedEquipment = groupedEquipment;
 
 
-                return View(model);
+                return View("CarForm", model);
 
             }
             try
@@ -209,6 +267,7 @@ namespace Car4You.Controllers
                 model.Car.PublishDate = DateTime.Now;
                 model.Car.NewPrice = model.Car.OldPrice;
                 model.Car.CarModel = null;
+
                 // Zapisz auto do bazy danych
                 _context.Cars.Add(model.Car);
                 await _context.SaveChangesAsync(); // Zapisujemy auto do bazy, by mieć jego ID
@@ -221,7 +280,8 @@ namespace Car4You.Controllers
                         {
                             CarId = model.Car.Id,
                             EquipmentId = equipmentId
-                        }).ToList();
+                        })
+                        .ToList();
 
                     _context.CarEquipments.AddRange(carEquipments);
                 }
@@ -231,9 +291,10 @@ namespace Car4You.Controllers
                 {
                     var photos = new List<Photo>();
 
-                    var car = _context.Cars.Include(c => c.CarModel)
-                                            .ThenInclude(m => m.Brand)
-                                            .FirstOrDefault(c => c.Id == model.Car.Id);
+                    var car = _context.Cars
+                        .Include(c => c.CarModel)
+                        .ThenInclude(m => m.Brand)
+                        .FirstOrDefault(c => c.Id == model.Car.Id);
 
                     if (car == null)
                     {
@@ -246,26 +307,34 @@ namespace Car4You.Controllers
                     string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? "";
                     string year = car.Year.ToString();
 
-                    string carsFolder = Path.Combine(_environment.WebRootPath, "cars");
+                    string carsFolder = System.IO.Path.Combine(_environment.WebRootPath, "cars");
                     if (!Directory.Exists(carsFolder))
                         Directory.CreateDirectory(carsFolder);
 
                     int photoIndex = 0;
+
                     foreach (var tempPhoto in model.SavedPhotoPaths)
                     {
-                        string orignalFileName = $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
+                        string orignalFileName =
+                            $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
 
                         var fileNameWithoutExtension = FileHelper.NormalizeFileName(orignalFileName);
                         var fileName = $"{fileNameWithoutExtension}.jpg";
 
-                        var sourcePath = Path.Combine(_environment.WebRootPath, "temp", Path.GetFileName(tempPhoto.Src));
-                        var targetPath = Path.Combine(carsFolder, fileName);
+                        var sourcePath = System.IO.Path.Combine(
+                            _environment.WebRootPath,
+                            "temp",
+                            System.IO.Path.GetFileName(tempPhoto.Src)
+                        );
+
+                        var targetPath = System.IO.Path.Combine(carsFolder, fileName);
 
                         try
                         {
                             if (System.IO.File.Exists(sourcePath))
                             {
-                                System.IO.File.Copy(sourcePath, targetPath, overwrite: true);
+                                var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
+                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
                             }
                             else
                             {
@@ -292,33 +361,33 @@ namespace Car4You.Controllers
                     _context.Photos.AddRange(photos);
                 }
 
-
-
                 // 🧹 Czyszczenie plików tymczasowych
                 TempData.Remove("TempPhotos");
                 _photoHelper.ClearTemp();
 
                 // ✅ Przekierowanie lub komunikat sukcesu
                 TempData["Success"] = "Auto zostało dodane.";
-                await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
-                return RedirectToAction("Index");
 
+                await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
+
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message });
             }
+
         }
 
         [HttpGet("/admin/temp-preview")]
         public IActionResult TempPreview(string file)
         {
-            var tempPath = Path.Combine(_environment.ContentRootPath, "App_TempUploads", file);
+            var tempPath = System.IO.Path.Combine(_environment.ContentRootPath, "App_TempUploads", file);
 
             if (!System.IO.File.Exists(tempPath))
                 return NotFound();
 
-            var contentType = "image/" + Path.GetExtension(file).Trim('.'); // np. image/png
+            var contentType = "image/" + System.IO.Path.GetExtension(file).Trim('.'); // np. image/png
             return PhysicalFile(tempPath, contentType);
         }
 
@@ -340,12 +409,19 @@ namespace Car4You.Controllers
         public JsonResult GetVersionsByModel(int modelId)
         {
             var versions = _context.Versions
-                                   .Where(v => v.CarModelId == modelId)
-                                   .Select(v => new { id = v.Id, name = v.Name })
-                                   .OrderBy(v=>v.name)
-                                   .ToList();
+    .Where(v => v.CarModelId == modelId)
+    .OrderBy(v => v.Name)
+    .Select(v => new { id = v.Id, name = v.Name })
+    .ToList();
+
+            // DEBUG: tymczasowe wypisanie na konsolę serwera
+            foreach (var version in versions)
+            {
+                Console.WriteLine($"[{version.id}] {version.name}");
+            }
             return Json(versions);
         }
+
 
         public IActionResult ManageBrand(int id)
         {
@@ -394,7 +470,7 @@ namespace Car4You.Controllers
 
             try
             {
-                string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+                string uploadDir = System.IO.Path.Combine(_environment.WebRootPath, "brand");
                 string oldFilePath = null;
                 string newFilePath = null;
                 string newFileName = null;
@@ -403,15 +479,15 @@ namespace Car4You.Controllers
                 if (!string.IsNullOrEmpty(brand.Icon))
                 {
                     // Pobieramy stare rozszerzenie pliku
-                    string fileExtension = Path.GetExtension(brand.Icon);
+                    string fileExtension = System.IO.Path.GetExtension(brand.Icon);
 
                     // Tworzymy nową nazwę pliku
                     string normalizedFileName = FileHelper.NormalizeFileName(Name);
                     newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
 
                     // Ścieżki do starego i nowego pliku
-                    oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
-                    newFilePath = Path.Combine(uploadDir, newFileName);
+                    oldFilePath = System.IO.Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    newFilePath = System.IO.Path.Combine(uploadDir, newFileName);
                 }
 
                 // Aktualizujemy nazwę marki w bazie
@@ -454,7 +530,7 @@ namespace Car4You.Controllers
                 .Select(i => i.Name)
                 .FirstOrDefaultAsync();
 
-            string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
+            string uploadDir = System.IO.Path.Combine(_environment.WebRootPath, "brand");
 
             // Upewnij się, że katalog istnieje
             if (!Directory.Exists(uploadDir))
@@ -463,17 +539,17 @@ namespace Car4You.Controllers
             }
 
             // Pobierz rozszerzenie z nowego pliku
-            string fileExtension = Path.GetExtension(ImageFile.FileName);
+            string fileExtension = System.IO.Path.GetExtension(ImageFile.FileName);
             string normalizedFileName = FileHelper.NormalizeFileName(name);
             string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
-            string newFilePath = Path.Combine(uploadDir, newFileName);
+            string newFilePath = System.IO.Path.Combine(uploadDir, newFileName);
 
             try
             {
                 // Usunięcie starego pliku (jeśli istnieje)
                 if (!string.IsNullOrEmpty(brand.Icon))
                 {
-                    string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    string oldFilePath = System.IO.Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
                     if (System.IO.File.Exists(oldFilePath))
                     {
                         System.IO.File.Delete(oldFilePath);
@@ -695,16 +771,16 @@ namespace Car4You.Controllers
                 _context.Equipments.Add(equipment);
                 _context.SaveChanges();
                 string normalizedFileName = FileHelper.NormalizeFileName(equipment.Name);
-                string fileExtension = Path.GetExtension(imageFile.FileName);
+                string fileExtension = System.IO.Path.GetExtension(imageFile.FileName);
                 string finalFileName = $"{equipment.Id}_{normalizedFileName}{fileExtension}";
-                string uploadDir = Path.Combine(_environment.WebRootPath, "equipment");
+                string uploadDir = System.IO.Path.Combine(_environment.WebRootPath, "equipment");
 
                 if (!Directory.Exists(uploadDir))
                 {
                     Directory.CreateDirectory(uploadDir);
                 }
 
-                string filePath = Path.Combine(uploadDir, finalFileName);
+                string filePath = System.IO.Path.Combine(uploadDir, finalFileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
@@ -728,11 +804,11 @@ namespace Car4You.Controllers
         {
             var equipment = await _context.Equipments.FindAsync(Id);
             if (equipment == null) return NotFound();
-            string uploadDir = Path.Combine(_environment.WebRootPath, "equipment");
+            string uploadDir = System.IO.Path.Combine(_environment.WebRootPath, "equipment");
             string normalizedFileName = FileHelper.NormalizeFileName(Name);
-            string fileExtension = Path.GetExtension(equipment.Icon);
+            string fileExtension = System.IO.Path.GetExtension(equipment.Icon);
             string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
-            string newFilePath = Path.Combine(uploadDir, newFileName);
+            string newFilePath = System.IO.Path.Combine(uploadDir, newFileName);
 
             try
             {
@@ -741,7 +817,7 @@ namespace Car4You.Controllers
                     // Usuwanie starego pliku jeśli istnieje
                     if (!string.IsNullOrEmpty(equipment.Icon))
                     {
-                        string oldFilePath = Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
+                        string oldFilePath = System.IO.Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
                         if (System.IO.File.Exists(oldFilePath))
                         {
                             System.IO.File.Delete(oldFilePath);
@@ -757,7 +833,7 @@ namespace Car4You.Controllers
                 else if (!string.IsNullOrEmpty(equipment.Icon) && !equipment.Icon.EndsWith(newFileName))
                 {
                     // Jeśli zmieniono nazwę wyposażenia, zmieniamy też nazwę pliku
-                    string oldFilePath = Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
+                    string oldFilePath = System.IO.Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
                     if (System.IO.File.Exists(oldFilePath))
                     {
                         System.IO.File.Move(oldFilePath, newFilePath);
@@ -800,7 +876,7 @@ namespace Car4You.Controllers
             // Usunięcie ikony z serwera
             if (!string.IsNullOrEmpty(equipment.Icon))
             {
-                string iconPath = Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
+                string iconPath = System.IO.Path.Combine(_environment.WebRootPath, equipment.Icon.TrimStart('/'));
                 if (System.IO.File.Exists(iconPath))
                 {
                     System.IO.File.Delete(iconPath);
@@ -848,7 +924,7 @@ namespace Car4You.Controllers
                 // Sprawdzenie, czy marka ma przypisany obrazek i nie jest to domyślny plik
                 if (!string.IsNullOrEmpty(brand.Icon) && brand.Icon != "/brand/default.png")
                 {
-                    string filePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
+                    string filePath = System.IO.Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
 
                     if (System.IO.File.Exists(filePath))
                     {
@@ -867,139 +943,6 @@ namespace Car4You.Controllers
             }
         }
 
-
-        /*
-        public IActionResult CarModel()
-        {
-            var carModels = _context.CarModels
-                 .Include(a => a.Brand)
-                 .OrderBy(a => a.Name)
-                 .ToList();
-            var brand = _context.Brands.OrderBy(c=>c.Name).ToList();
-
-            ViewBag.Brand = brand;
-            return View(carModels);
-        }
-
-
-        public IActionResult Version()
-        {
-            var version = _context.Versions
-                 .Include(a => a.CarModel)
-                 .Include(c=>c.CarModel.Brand)
-                 .OrderBy(a => a.CarModel.Brand.Name)
-                 .ThenBy(a=>a.CarModel.Name)
-                 .ThenBy(a=>a.Name)
-                 .ToList();
-
-            ViewBag.Brand = _context.Brands.OrderBy(c=>c.Name).ToList();
-            ViewBag.CarModel = _context.CarModels.OrderBy(c => c.Name).ToList();
-            return View(version);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateBrand(Brand brand, IFormFile ImageFile)
-        {
-            try
-            {
-                brand.Icon = "default.png"; // Tymczasowe ustawienie ikony
-                _context.Brands.Add(brand);
-                await _context.SaveChangesAsync(); // Teraz mamy ID
-
-                // Tworzenie nazwy pliku
-                string normalizedFileName = FileHelper.NormalizeFileName(brand.Name);
-                string fileExtension = Path.GetExtension(ImageFile.FileName);
-                string finalFileName = $"{brand.Id}_{normalizedFileName}{fileExtension}";
-                string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
-
-                if (!Directory.Exists(uploadDir))
-                {
-                    Directory.CreateDirectory(uploadDir);
-                }
-
-                string filePath = Path.Combine(uploadDir, finalFileName);
-
-                // Zapisywanie pliku
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await ImageFile.CopyToAsync(fileStream);
-                }
-
-                // Aktualizacja ścieżki do ikony
-                brand.Icon = "/brand/" + finalFileName;
-                _context.Brands.Update(brand);
-                await _context.SaveChangesAsync();
-
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditBrand(int Id, string Name, IFormFile ImageFile)
-        {
-            var brand = await _context.Brands.FindAsync(Id);
-            if (brand == null) return NotFound();
-
-
-            string uploadDir = Path.Combine(_environment.WebRootPath, "brand");
-            string normalizedFileName = FileHelper.NormalizeFileName(Name);
-            string fileExtension = Path.GetExtension(brand.Icon);
-            string newFileName = $"{Id}_{normalizedFileName}{fileExtension}";
-            string newFilePath = Path.Combine(uploadDir, newFileName);
-
-            try
-            {
-                if (ImageFile != null && ImageFile.Length > 0)
-                {
-                    // Usuwanie starego pliku jeśli istnieje
-                    if (!string.IsNullOrEmpty(brand.Icon))
-                    {
-                        string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
-
-                    // Zapis nowego pliku
-                    using (var fileStream = new FileStream(newFilePath, FileMode.Create))
-                    {
-                        await ImageFile.CopyToAsync(fileStream);
-                    }
-                }
-                else if (!string.IsNullOrEmpty(brand.Icon) && !brand.Icon.EndsWith(newFileName))
-                {
-                    // Jeśli zmieniono nazwę wyposażenia, zmieniamy też nazwę pliku
-                    string oldFilePath = Path.Combine(_environment.WebRootPath, brand.Icon.TrimStart('/'));
-                    if (System.IO.File.Exists(oldFilePath))
-                    {
-                        System.IO.File.Move(oldFilePath, newFilePath);
-                    }
-                }
-
-                // Aktualizacja rekordu
-                brand.Name = Name;
-                brand.Icon = "/brand/" + newFileName;
-
-                _context.Brands.Update(brand);
-                await _context.SaveChangesAsync();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
-            }
-
-        }
-
-         
-
-        
-        */
 
     }
 

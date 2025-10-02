@@ -1,14 +1,23 @@
 ﻿using Car4You.Helper;
+using Car4You.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced; // Dodano brakującą dyrektywę using
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing; // ← ważne dla DrawImage z GraphicsOptions
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Car4You.Models;
+
+
 
 public class PhotoUploadHelper
 {
@@ -30,8 +39,8 @@ public class PhotoUploadHelper
         if (uploadedPhotos == null || uploadedPhotos.Count == 0)
             return tempPhotos;
 
-        string tempFolder = Path.Combine(_environment.WebRootPath, "temp");
-        string fallbackFolder = Path.Combine(_environment.ContentRootPath, "App_TempUploads");
+        string tempFolder = System.IO.Path.Combine(_environment.WebRootPath, "temp");
+        string fallbackFolder = System.IO.Path.Combine(_environment.ContentRootPath, "App_TempUploads");
         bool useFallback = false;
 
         try
@@ -52,8 +61,8 @@ public class PhotoUploadHelper
         for (int i = 0; i < uploadedPhotos.Count; i++)
         {
             var file = uploadedPhotos[i];
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var fullPath = Path.Combine(tempFolder, fileName);
+            var fileName = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(file.FileName);
+            var fullPath = System.IO.Path.Combine(tempFolder, fileName);
 
             try
             {
@@ -98,9 +107,9 @@ public class PhotoUploadHelper
     public void ClearTemp()
     {
         // Czyść folder temp (tymczasowe zdjęcia)
-        var tempPath = Path.Combine(_environment.WebRootPath, "temp");
+        var tempPath = System.IO.Path.Combine(_environment.WebRootPath, "temp");
         ClearingFolder(tempPath);
-        tempPath = Path.Combine(_environment.WebRootPath, "App_TempUploads");
+        tempPath = System.IO.Path.Combine(_environment.WebRootPath, "App_TempUploads");
         ClearingFolder(tempPath);
         return;
     }
@@ -122,4 +131,61 @@ public class PhotoUploadHelper
             }
         }
     }
+
+    public static async Task OverlayLogoAsync(string sourcePath, string logoPath, string targetPath)
+    {
+        using var image = await Image.LoadAsync<Rgba32>(sourcePath);
+        using var logo = await Image.LoadAsync<Rgba32>(logoPath);
+
+        // Skaluj logo
+        int logoWidth = image.Width / 5;
+        logo.Mutate(x => x.Resize(logoWidth, 0));
+
+        int x = image.Width - logo.Width - 20;
+        int y = image.Height - logo.Height - 20;
+
+        // Stwórz kontur logo
+        using var outlineLogo = logo.Clone();
+        outlineLogo.ProcessPixelRows(accessor =>
+        {
+            for (int row = 0; row < accessor.Height; row++)
+            {
+                var pixelRow = accessor.GetRowSpan(row);
+                for (int col = 0; col < pixelRow.Length; col++)
+                {
+                    var px = pixelRow[col];
+                    if (px.A > 0)
+                        pixelRow[col] = new Rgba32(0, 0, 0, 180); // ciemny kontur
+                    else
+                        pixelRow[col] = new Rgba32(0, 0, 0, 0);
+                }
+            }
+        });
+
+        // Stwórz poświatę z rozmyciem
+        using var glowLogo = outlineLogo.Clone();
+        glowLogo.Mutate(x => x.GaussianBlur(8f)); // wartość 5 = moc poświaty
+
+        image.Mutate(ctx =>
+        {
+            // Rysuj poświatę pod spodem
+            ctx.DrawImage(glowLogo, new Point(x, y), 0.2f); // lekko przezroczysta
+
+            // Rysuj kontur logo wokół
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    if (offsetX == 0 && offsetY == 0) continue;
+                    ctx.DrawImage(outlineLogo, new Point(x + offsetX, y + offsetY), 1f);
+                }
+            }
+
+            // Nałóż oryginalne logo na środek
+            ctx.DrawImage(logo, new Point(x, y), 1f);
+        });
+
+        await image.SaveAsync(targetPath, new JpegEncoder { Quality = 90 });
+    }
+
 }

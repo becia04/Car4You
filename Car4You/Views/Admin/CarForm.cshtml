@@ -10,9 +10,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<input type="hidden" asp-for="Car.Id" />
+
+
 <h2 style="margin-top:150px">Dodaj nowe auto</h2>
 
-<form asp-action="AddCar" method="post" enctype="multipart/form-data" novalidate>
+<form asp-action="SaveCar" asp-controller="Admin" method="post" enctype="multipart/form-data" novalidate>
 
     <!-- Marka -->
     <div class="form-group">
@@ -243,7 +246,6 @@
 
     <!-- Wybór głównego zdjęcia -->
     <div id="photoPreview" class="d-flex flex-wrap mt-3"></div>
-
     <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
 
     <!-- Wyposażenie -->
@@ -266,7 +268,13 @@
                             @foreach (var equipment in group.Equipments)
                             {
                                 <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="equipment_@equipment.Id" name="SelectedEquipmentIds" value="@equipment.Id">
+                                    <input type="checkbox"
+       class="form-check-input"
+       id="equipment_@equipment.Id"
+       name="SelectedEquipmentIds"
+       value="@equipment.Id"
+       @(Model.SelectedEquipmentIds.Contains(equipment.Id) ? "checked" : "")>
+
                                     <label class="form-check-label" for="equipment_@equipment.Id">
                                         @equipment.Name
                                     </label>
@@ -279,9 +287,10 @@
         </table>
     </div>
 
-   
+    <button type="submit" class="btn btn-primary" style="margin-bottom:4rem;">
+    @(Model.Car?.Id > 0 ? "Zapisz zmiany" : "Dodaj Auto")
+</button>
 
-    <button type="submit" class="btn btn-primary" style="margin-bottom:4rem;">Dodaj Auto</button>
 </form>
 
 <!-- Modal do dodawania nowego modelu -->
@@ -333,6 +342,7 @@
         </div>
     </div>
 </div>
+
 @section Scripts {
     <script>
          let rawPhotos = @Html.Raw(JsonConvert.SerializeObject(Model.SavedPhotoPaths ?? new List<TempPhoto>(), new JsonSerializerSettings {
@@ -344,7 +354,6 @@ let oldPhotos = [];
 
 try {
     oldPhotos = typeof rawPhotos === "string" ? JSON.parse(rawPhotos) : rawPhotos;
-    console.log("RawPhotos (parsed):", oldPhotos);
 } catch (e) {
     console.error("Błąd parsowania TempPhotos", e);
 }
@@ -444,27 +453,19 @@ document.getElementById("carPhotos").addEventListener("change", function () {
     }
 });
 
-
-
-
-
         $(document).ready(function () {
             let initialLoad = true;
             let selectedVersionId = '@Model.Car.VersionId';
 
             // Inicjalizacja danych po załadowaniu strony
             setTimeout(function () {
-                let selectedBrandId = $('#BrandId').val();
-                if (selectedBrandId) {
-                    loadModelsForBrand(selectedBrandId, true);
-                }
+    let selectedBrandId = $('#BrandId').val();
+    if (selectedBrandId) {
+        // Teraz loadModelsForBrand sam wewnętrznie wywoła loadVersionsForModel
+        loadModelsForBrand(selectedBrandId, true);
+    }
+}, 300);
 
-                let selectedCarModelId = $('#CarModelId').val();
-                if (selectedCarModelId) {
-                    loadVersionsForModel(selectedCarModelId, initialLoad ? selectedVersionId : null);
-                    initialLoad = false;
-                }
-            }, 300);
 
             // Zdarzenie: zmiana marki
             $('#BrandId').change(function () {
@@ -506,12 +507,16 @@ document.getElementById("carPhotos").addEventListener("change", function () {
             // Dodawanie nowego modelu
             window.addNewModel = function () {
                 let modelName = $("#newModelName").val();
-                let brandId = $("#selectedBrandId").val();
-
-                if (!modelName || !brandId) {
-                    alert("Podaj nazwę modelu!");
-                    return;
-                }
+                let brandId = $("#BrandId").val();
+                console.log(modelName, brandId)
+if (!modelName) {
+    alert("Podaj nazwę modelu!");
+    return;
+}
+if (!brandId) {
+    alert("Brakuje wybranej marki!");
+    return;
+}
 
                 let formData = new FormData();
                 formData.append("Name", modelName);
@@ -610,35 +615,45 @@ document.getElementById("carPhotos").addEventListener("change", function () {
 
             // Pobieranie modeli dla danej marki
             async function loadModelsForBrand(brandId, selectPrevious = false) {
-                try {
-                    let response = await $.ajax({
-                        url: '/Admin/GetCarModelsByBrand',
-                        data: { brandId: brandId },
-                        type: 'GET'
-                    });
+    try {
+        let response = await $.ajax({
+            url: '/Admin/GetCarModelsByBrand',
+            data: { brandId: brandId },
+            type: 'GET'
+        });
 
-                    let selectedModelId = selectPrevious ? $('#SelectedCarModelId').val() : null;
-                    let modelSelect = $('#CarModelId');
-                    modelSelect.empty().append('<option value="" disabled selected>Wybierz model</option>');
+        // Naturalne sortowanie modeli po nazwie
+        response.sort((a, b) => a.name.localeCompare(b.name, 'pl', { numeric: true, sensitivity: 'base' }));
 
-                    $.each(response, function (index, item) {
-                        let selected = (item.id == selectedModelId) ? 'selected' : '';
-                        modelSelect.append(`<option value="${item.id}" ${selected}>${item.name}</option>`);
-                    });
+        let selectedModelId = selectPrevious ? $('#SelectedCarModelId').val() : null;
+        let modelSelect = $('#CarModelId');
+        modelSelect.empty().append('<option value="" disabled selected>Wybierz model</option>');
 
-                    modelSelect.prop("disabled", false);
-                    $('#addModelBtn').prop("disabled", false);
+        $.each(response, function (index, item) {
+            let selected = (item.id == selectedModelId) ? 'selected' : '';
+            modelSelect.append(`<option value="${item.id}" ${selected}>${item.name}</option>`);
+        });
 
-                    if (selectPrevious && selectedModelId) {
-                        setTimeout(() => {
-                            $('#CarModelId').val(selectedModelId).trigger('change');
-                        }, 300);
-                    }
-                } catch (error) {
-                    alert("Błąd podczas ładowania modeli.");
-                    console.error(error);
+        modelSelect.prop("disabled", false);
+        $('#addModelBtn').prop("disabled", false);
+
+        if (selectPrevious && selectedModelId) {
+            setTimeout(() => {
+                $('#CarModelId').val(selectedModelId).trigger('change');
+
+                const selectedVersionId = $('#SelectedCarVersionId').val();
+                if (selectedVersionId) {
+                    loadVersionsForModel(selectedModelId, selectedVersionId);
                 }
-            }
+            }, 300);
+        }
+
+    } catch (error) {
+        alert("Błąd podczas ładowania modeli.");
+        console.error(error);
+    }
+}
+
 
             // Pobieranie generacji dla danego modelu
             async function loadVersionsForModel(modelId, selectedVersionId = null) {
@@ -659,13 +674,16 @@ document.getElementById("carPhotos").addEventListener("change", function () {
                         selected: !selectedVersionId
                     }));
 
-                    response.forEach(function (version) {
-                        versionDropdown.append($('<option>', {
-                            value: version.id,
-                            text: version.name,
-                            selected: selectedVersionId && version.id == selectedVersionId
-                        }));
-                    });
+                    response
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+    .forEach(function (version) {
+        versionDropdown.append($('<option>', {
+            value: version.id,
+            text: version.name,
+            selected: selectedVersionId && version.id == selectedVersionId
+        }));
+    });
+
 
                     versionDropdown.prop('disabled', false);
                     $('#addVersionBtn').prop('disabled', false);
