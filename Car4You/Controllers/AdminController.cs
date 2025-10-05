@@ -216,16 +216,45 @@ namespace Car4You.Controllers
             else
             {
                 var restored = _photoHelper.RestoreFromTempData(TempData);
-                model.SavedPhotoPaths = restored;
+                if (restored == null || restored.Count == 0)
+                {
+                    if (isEditing)
+                    {
+                        // wczytaj zdjęcia z bazy, jeżeli edytujemy
+                        model.SavedPhotoPaths = _context.Photos
+                            .Where(p => p.CarId == model.Car.Id)
+                            .Select(p => new TempPhoto
+                            {
+                                Src = p.PhotoPath,
+                                IsMain = p.IsMain
+                            })
+                            .ToList();
+                    }
+                    else
+                    {
+                        model.SavedPhotoPaths = restored;
+                    }
+                }
+                else
+                {
+                    model.SavedPhotoPaths = restored;
+                }
             }
+
 
             // Walidacja zdjęć
             int totalCount = model.SavedPhotoPaths?.Count ?? 0;
 
-            if (totalCount == 0)
-                ModelState.AddModelError("CarPhotos", "Zdjęcia są wymagane.");
-            else if (totalCount > 21)
+            if (!isEditing) // tylko przy dodawaniu
+            {
+                if (totalCount == 0)
+                    ModelState.AddModelError("CarPhotos", "Zdjęcia są wymagane.");
+            }
+            if (totalCount > 21)
+            {
                 ModelState.AddModelError("CarPhotos", "Liczba zdjęć musi być mniejsza lub równa 20.");
+            }
+
 
             // Aktualizacja IsMain
             for (int i = 0; i < (model.SavedPhotoPaths?.Count ?? 0); i++)
@@ -263,114 +292,251 @@ namespace Car4You.Controllers
             }
             try
             {
-                // Przypisz aktualną datę publikacji
-                model.Car.PublishDate = DateTime.Now;
-                model.Car.NewPrice = model.Car.OldPrice;
-                model.Car.CarModel = null;
-
-                // Zapisz auto do bazy danych
-                _context.Cars.Add(model.Car);
-                await _context.SaveChangesAsync(); // Zapisujemy auto do bazy, by mieć jego ID
-
-                // Obsługa wyposażenia
-                if (model.SelectedEquipmentIds != null)
+                if (isEditing==false)
                 {
-                    var carEquipments = model.SelectedEquipmentIds
-                        .Select(equipmentId => new CarEquipment
-                        {
-                            CarId = model.Car.Id,
-                            EquipmentId = equipmentId
-                        })
-                        .ToList();
+                    // Przypisz aktualną datę publikacji
+                    model.Car.PublishDate = DateTime.Now;
+                    model.Car.NewPrice = model.Car.OldPrice;
+                    model.Car.CarModel = null;
 
-                    _context.CarEquipments.AddRange(carEquipments);
-                }
+                    // Zapisz auto do bazy danych
+                    _context.Cars.Add(model.Car);
+                    await _context.SaveChangesAsync(); // Zapisujemy auto do bazy, by mieć jego ID
 
-                // Obsługa zdjęć
-                if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
-                {
-                    var photos = new List<Photo>();
-
-                    var car = _context.Cars
-                        .Include(c => c.CarModel)
-                        .ThenInclude(m => m.Brand)
-                        .FirstOrDefault(c => c.Id == model.Car.Id);
-
-                    if (car == null)
+                    // Obsługa wyposażenia
+                    if (model.SelectedEquipmentIds != null)
                     {
-                        _logger.LogError($"Nie znaleziono auta o ID {model.Car.Id}");
-                        return StatusCode(500, "Błąd zapisu zdjęć");
+                        var carEquipments = model.SelectedEquipmentIds
+                            .Select(equipmentId => new CarEquipment
+                            {
+                                CarId = model.Car.Id,
+                                EquipmentId = equipmentId
+                            })
+                            .ToList();
+
+                        _context.CarEquipments.AddRange(carEquipments);
                     }
 
-                    string brand = car.CarModel?.Brand?.Name ?? "BrakMarki";
-                    string modelName = car.CarModel?.Name ?? "BrakModelu";
-                    string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? "";
-                    string year = car.Year.ToString();
-
-                    string carsFolder = System.IO.Path.Combine(_environment.WebRootPath, "cars");
-                    if (!Directory.Exists(carsFolder))
-                        Directory.CreateDirectory(carsFolder);
-
-                    int photoIndex = 0;
-
-                    foreach (var tempPhoto in model.SavedPhotoPaths)
+                    // Obsługa zdjęć
+                    if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
                     {
-                        string orignalFileName =
-                            $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
+                        var photos = new List<Photo>();
 
-                        var fileNameWithoutExtension = FileHelper.NormalizeFileName(orignalFileName);
-                        var fileName = $"{fileNameWithoutExtension}.jpg";
+                        var car = _context.Cars
+                            .Include(c => c.CarModel)
+                            .ThenInclude(m => m.Brand)
+                            .FirstOrDefault(c => c.Id == model.Car.Id);
 
-                        var sourcePath = System.IO.Path.Combine(
-                            _environment.WebRootPath,
-                            "temp",
-                            System.IO.Path.GetFileName(tempPhoto.Src)
-                        );
-
-                        var targetPath = System.IO.Path.Combine(carsFolder, fileName);
-
-                        try
+                        if (car == null)
                         {
-                            if (System.IO.File.Exists(sourcePath))
+                            _logger.LogError($"Nie znaleziono auta o ID {model.Car.Id}");
+                            return StatusCode(500, "Błąd zapisu zdjęć");
+                        }
+
+                        string brand = car.CarModel?.Brand?.Name ?? "BrakMarki";
+                        string modelName = car.CarModel?.Name ?? "BrakModelu";
+                        string generation = car.CarModel?.Versions?.FirstOrDefault()?.Name ?? "";
+                        string year = car.Year.ToString();
+
+                        string carsFolder = System.IO.Path.Combine(_environment.WebRootPath, "cars");
+                        if (!Directory.Exists(carsFolder))
+                            Directory.CreateDirectory(carsFolder);
+
+                        int photoIndex = 0;
+
+                        foreach (var tempPhoto in model.SavedPhotoPaths)
+                        {
+                            string orignalFileName =
+                                $"{car.Id}_{brand}_{modelName}{(string.IsNullOrEmpty(generation) ? "" : $"_{generation}")}_{year}_{photoIndex + 1}";
+
+                            var fileNameWithoutExtension = FileHelper.NormalizeFileName(orignalFileName);
+                            var fileName = $"{fileNameWithoutExtension}.jpg";
+
+                            var sourcePath = System.IO.Path.Combine(
+                                _environment.WebRootPath,
+                                "temp",
+                                System.IO.Path.GetFileName(tempPhoto.Src)
+                            );
+
+                            var targetPath = System.IO.Path.Combine(carsFolder, fileName);
+
+                            try
                             {
-                                var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
-                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
+                                if (System.IO.File.Exists(sourcePath))
+                                {
+                                    var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
+                                    await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning($"Nie znaleziono pliku tymczasowego: {sourcePath}");
+                                    continue;
+                                }
+
+                                photos.Add(new Photo
+                                {
+                                    CarId = car.Id,
+                                    Title = fileName,
+                                    PhotoPath = $"/cars/{fileName}",
+                                    IsMain = tempPhoto.IsMain
+                                });
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                _logger.LogWarning($"Nie znaleziono pliku tymczasowego: {sourcePath}");
+                                _logger.LogError(ex, $"Błąd podczas kopiowania zdjęcia: {sourcePath} → {targetPath}");
+                            }
+
+                            photoIndex++;
+                        }
+
+                        _context.Photos.AddRange(photos);
+                    }
+
+                    // 🧹 Czyszczenie plików tymczasowych
+                    TempData.Remove("TempPhotos");
+                    _photoHelper.ClearTemp();
+
+                    // ✅ Przekierowanie lub komunikat sukcesu
+                    TempData["Success"] = "Auto zostało dodane.";
+
+                    await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
+
+                    return RedirectToAction("Index");
+                }
+
+                //Edycja istniejącego auta
+                else
+                {
+                    var car = await _context.Cars
+     .Include(c => c.CarEquipments)
+     .Include(c => c.Photos)
+     .Include(c => c.CarModel)
+         .ThenInclude(m => m.Brand)
+     .Include(c => c.CarModel)
+         .ThenInclude(m => m.Versions)
+     .FirstOrDefaultAsync(c => c.Id == model.Car.Id);
+
+                    if (car == null)
+                        return NotFound();
+
+                    // 🔹 Kluczowa linijka — nadpisuje tylko proste właściwości (bez relacji)
+                    _context.Entry(car).CurrentValues.SetValues(model.Car);
+
+                    // 🔹 Upewnij się, że EF nie nadpisze relacji
+                    _context.Entry(car).Collection(c => c.CarEquipments).IsModified = false;
+                    _context.Entry(car).Collection(c => c.Photos).IsModified = false;
+                    _context.Entry(car).Reference(c => c.CarModel).IsModified = false;
+
+                    // 🔹 Dodatkowe logiki biznesowe
+                    car.PublishDate = DateTime.Now;
+                    car.NewPrice = model.Car.OldPrice;
+
+                    await _context.SaveChangesAsync();
+
+
+                    // 🔹 Wyposażenie — aktualizujemy tylko różnice
+                    if (model.SelectedEquipmentIds != null)
+                    {
+                        var existingEquipIds = car.CarEquipments.Select(e => e.EquipmentId).ToList();
+                        var toRemove = car.CarEquipments.Where(e => !model.SelectedEquipmentIds.Contains(e.EquipmentId)).ToList();
+                        var toAdd = model.SelectedEquipmentIds
+                            .Where(id => !existingEquipIds.Contains(id))
+                            .Select(id => new CarEquipment { CarId = car.Id, EquipmentId = id })
+                            .ToList();
+
+                        if (toRemove.Any()) _context.CarEquipments.RemoveRange(toRemove);
+                        if (toAdd.Any()) _context.CarEquipments.AddRange(toAdd);
+                    }
+
+
+                    // 🔹 Zdjęcia — tylko różnice, nie kasujemy wszystkich
+                    if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
+                    {
+                        var existingPhotos = car.Photos.ToList();
+                        var incomingNames = model.SavedPhotoPaths.Select(p => Path.GetFileName(p.Src)).ToList();
+
+                        var toRemove = existingPhotos
+                            .Where(p => !incomingNames.Contains(Path.GetFileName(p.PhotoPath)))
+                            .ToList();
+
+                        if (toRemove.Any())
+                            _context.Photos.RemoveRange(toRemove);
+
+                        var existingNames = existingPhotos.Select(p => Path.GetFileName(p.PhotoPath)).ToList();
+                        var photosToAdd = new List<Photo>();
+
+                        string carsFolder = Path.Combine(_environment.WebRootPath, "cars");
+                        if (!Directory.Exists(carsFolder))
+                            Directory.CreateDirectory(carsFolder);
+
+                        int photoIndex = 0;
+                        foreach (var tempPhoto in model.SavedPhotoPaths)
+                        {
+                            string tempFileName = Path.GetFileName(tempPhoto.Src);
+                            if (existingNames.Contains(tempFileName))
+                            {
+                                photoIndex++;
                                 continue;
                             }
 
-                            photos.Add(new Photo
+                            string fileNameBase = $"{car.Id}_{car.CarModel?.Brand?.Name}_{car.CarModel?.Name}_{car.Year}_{photoIndex + 1}";
+                            var fileName = $"{FileHelper.NormalizeFileName(fileNameBase)}.jpg";
+
+                            var sourcePath = Path.Combine(_environment.WebRootPath, "temp", tempFileName);
+                            var targetPath = Path.Combine(carsFolder, fileName);
+
+                            if (System.IO.File.Exists(sourcePath))
                             {
-                                CarId = car.Id,
-                                Title = fileName,
-                                PhotoPath = $"/cars/{fileName}",
-                                IsMain = tempPhoto.IsMain
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"Błąd podczas kopiowania zdjęcia: {sourcePath} → {targetPath}");
+                                var logoPath = Path.Combine(_environment.WebRootPath, "logo.png");
+                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
+
+                                photosToAdd.Add(new Photo
+                                {
+                                    CarId = car.Id,
+                                    Title = fileName,
+                                    PhotoPath = $"/cars/{fileName}",
+                                    IsMain = tempPhoto.IsMain
+                                });
+                            }
+
+                            photoIndex++;
                         }
 
-                        photoIndex++;
+                        // 🔹 Aktualizacja flagi IsMain dla istniejących zdjęć
+                        if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
+                        {
+                            var dbPhotos = await _context.Photos
+                                .Where(p => p.CarId == car.Id)
+                                .ToListAsync();
+
+                            foreach (var dbPhoto in dbPhotos)
+                            {
+                                var updatedPhoto = model.SavedPhotoPaths
+                                    .FirstOrDefault(p => Path.GetFileName(p.Src).Equals(Path.GetFileName(dbPhoto.PhotoPath), StringComparison.OrdinalIgnoreCase));
+
+                                if (updatedPhoto != null && dbPhoto.IsMain != updatedPhoto.IsMain)
+                                {
+                                    dbPhoto.IsMain = updatedPhoto.IsMain;
+                                    _context.Entry(dbPhoto).Property(p => p.IsMain).IsModified = true;
+                                }
+                            }
+                        }
+
+
+                        if (photosToAdd.Any())
+                            _context.Photos.AddRange(photosToAdd);
+
                     }
 
-                    _context.Photos.AddRange(photos);
+                    TempData.Remove("TempPhotos");
+                    _photoHelper.ClearTemp();
+
+                    await _context.SaveChangesAsync();
+
+                    TempData["Success"] = "Auto zostało zaktualizowane.";
+                    return RedirectToAction("Index");
+
                 }
-
-                // 🧹 Czyszczenie plików tymczasowych
-                TempData.Remove("TempPhotos");
-                _photoHelper.ClearTemp();
-
-                // ✅ Przekierowanie lub komunikat sukcesu
-                TempData["Success"] = "Auto zostało dodane.";
-
-                await _context.SaveChangesAsync(); // Zapisujemy wyposażenie i zdjęcia
-
-                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {

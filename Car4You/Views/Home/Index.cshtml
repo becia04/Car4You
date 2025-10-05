@@ -50,6 +50,15 @@
                 @foreach (var car in Model)
                 {
                     var mainPhoto = car.Photos.FirstOrDefault(p => p.IsMain);
+                    if (mainPhoto == null)
+                    {
+                        // możesz np. wstawić placeholder
+                        mainPhoto = new Photo
+                        {
+                            PhotoPath = "/no-photo.png",
+                            IsMain = true
+                        };
+                    }
                     <div class="carousel-card">
                         <div class="car-card">
                             <div class="car-card__background" style="background-image: url('@mainPhoto.PhotoPath');"></div>
