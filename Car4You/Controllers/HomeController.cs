@@ -22,6 +22,11 @@ namespace Car4You.Controllers
             _logger = logger;
         }
 
+        public IActionResult Contact()
+        {
+            return View();
+        }
+
         public IActionResult Index()
         {
             var cars = _context.Cars
