@@ -154,6 +154,59 @@
 
 .car-photo {
     flex: 3; /* większe zdjęcie */
-    max-height:450px;
+    max-height:500px;
     width:auto;
+}
+
+
+@media (max-width: 900px) {
+    .car-item {
+        flex-direction: column; /* jedna kolumna */
+        padding: 1rem;
+    }
+
+    .car-photo {
+        flex: none;
+        max-height: 300px; /* mniejsze zdjęcie na mobile */
+        width: 100%;
+        margin-bottom: 1rem; /* odstęp pod zdjęciem */
+    }
+
+    .right-info {
+        flex: none;
+        width: 100%;
+        padding: 1rem 0;
+        margin-top: 1rem;
+    }
+
+    .title-group .right-title {
+        font-size: 1.5rem; /* mniejszy nagłówek */
+    }
+
+    .title-group .version {
+        font-size: 1rem; /* mniejsza wersja */
+    }
+
+    .car-specs {
+        grid-template-columns: 1fr; /* wszystkie info w jednej kolumnie */
+        gap: 0.5rem;
+        font-size: 1rem;
+        margin-right: 2rem;
+        margin-left: 2rem;
+    }
+
+    .info-item {
+        font-size: 1rem;
+    }
+
+    .car-price p {
+        font-size: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+        width: 100%; /* przycisk na pełną szerokość */
+        text-align: center;
+    }
 }

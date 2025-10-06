@@ -1,4 +1,8 @@
-﻿.right-info {
+﻿.admin-btn{
+    display:none;
+}
+
+.right-info {
     width: 40%;
     display: inline-block;
     padding: 2rem;
@@ -496,3 +500,55 @@
 }
 
 
+@media (max-width: 900px) {
+    .car-details-container {
+        flex-direction: column; /* jedna kolumna: galeria nad info */
+        gap: 1.5rem;
+    }
+
+    .left-gallery {
+        width: 100%; /* galeria na pełną szerokość */
+        max-width: 100%;
+    }
+
+    .main-photo {
+        aspect-ratio: 16 / 9; /* bardziej panoramiczne na mobile */
+    }
+
+    .thumbnails img {
+        width: 60px;
+        height: 45px; /* mniejsze miniaturki */
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .right-info {
+        width: 100%; /* prawa kolumna pod galerią */
+        padding: 1rem;
+    }
+
+    .car-specs {
+        grid-template-columns: 1fr; /* specyfikacja w jednej kolumnie */
+        gap: 0.5rem;
+        font-size: 1rem; /* mniejszy tekst */
+        margin-right: 1rem;
+        margin-left: 1rem;
+    }
+
+    .info-item {
+        font-size: 1rem; /* mniejszy tekst przy ikonach */
+    }
+
+    .title-group .right-title {
+        font-size: 1.5rem; /* nagłówek mniejszy */
+    }
+
+    .title-group .version {
+        font-size: 1rem; /* wersja mniejsza */
+    }
+
+    .car-price span {
+        font-size: 2.5rem !important;
+        ; /* dostosowanie ceny */
+    }
+}

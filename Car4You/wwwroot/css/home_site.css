@@ -307,19 +307,18 @@
 
 .hero {
     position: relative;
-    background: url('../img-20250411-wa0006.jpg') no-repeat center center fixed;
+    background: url('../background.jpg') no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
     text-align: center;
     color: #24435e;
-    padding-top: 50px;
+    padding-top: 25px;
     min-height: 500px;
     letter-spacing: 5px;
     font-family: "Montserrat", sans-serif;
     height: 100vh;
     width: 100%;
-    text-shadow: 0 0 15px white, 0 0 20px white, 0 0 25px white;
     font-weight: 1000;
 }
 
@@ -336,8 +335,10 @@
             line-height: 3;
         }
     .hero h2 {
-        text-shadow: 0 0 15px white, 0 0 20px white, 0 0 25px white;
+        color: rgb(216, 188, 115);
+        text-shadow: 0 3px 5px rgba(0,0,0,0.6);
     }
+
 @-webkit-keyframes scroll {
     0% {
         opacity: 1;

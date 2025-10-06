@@ -18,13 +18,15 @@
                     <a class="logo" href="@Url.Action("Index", "Home")">
                         <img class="logo-img" src="~/logo.png" alt="Logo" />
                     </a>
-
-                    <nav>
+                    <div class="menu-toggle" id="menu-toggle">
+                        ☰
+                    </div>
+                    <nav id="navbar">
                         <ul>
                             <li><a href="@Url.Action("CarList", "Home")">Nasze auta</a></li>
                             <li><a href=".sec02">Wynajem autolawety</a></li>
-                            <li><a href=".sec03">Kontakt</a></li>
-                            <li><a href=".sec04">O nas</a></li>
+                            <li><a href="@Url.Action("Contact", "Home")">Kontakt</a></li>
+                            <li><a href="@Url.Action("About", "Home")">O nas</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -34,6 +36,34 @@
             @RenderBody()
         </main>
     </div>
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section about">
+                <h2>Auto-Handel Szubin</h2>
+                <p>Twoje zaufane miejsce na zakup sprawdzonego auta używanego.</p>
+            </div>
+            <div class="footer-section links">
+                <h3>Szybkie linki</h3>
+                <ul>
+                    <li><a href="@Url.Action("Index", "Home")">Strona główna</a></li>
+                    <li><a href="@Url.Action("CarList", "Home")">Nasze auta</a></li>
+                    <li><a href="#sec02">Wynajem autolawety</a></li>
+                    <li><a href="#sec03">Kontakt</a></li>
+                    <li><a href="#sec04">O nas</a></li>
+                </ul>
+            </div>
+            <div class="footer-section contact">
+                <h3>Kontakt</h3>
+                <p>📍 ul. Konopnickiej 49, 89-200 Szubin</p>
+                <p>📞 +48 505 044 979</p>
+                <p>✉️ kontakt@autoszubin.pl</p>
+            </div>
+        </div>
+        <div class="bottom">
+            © 2025 Auto-Handel Szubin. Wszelkie prawa zastrzeżone.
+        </div>
+    </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -41,6 +71,14 @@
 </body>
 </html>
 <script>
+         const menuToggle = document.getElementById("menu-toggle");
+    const navbar = document.getElementById("navbar");
+
+    if (menuToggle && navbar) {
+        menuToggle.addEventListener("click", () => {
+            navbar.classList.toggle("active");
+        });
+    }
     document.addEventListener('DOMContentLoaded', () => {
 
         const header = document.querySelector('.main_h');
@@ -68,7 +106,7 @@
         }
 
         // Mobile toggle
-        document.querySelector('.mobile-toggle')?.addEventListener('click', () => {
+        document.querySelector('.menu-toggle')?.addEventListener('click', () => {
             header?.classList.toggle('open-nav');
         });
 
