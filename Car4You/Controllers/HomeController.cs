@@ -25,11 +25,12 @@ namespace Car4You.Controllers
         public IActionResult Index()
         {
             var cars = _context.Cars
-    .Include(c => c.Version)
+            .Include(c => c.Version)
             .Include(c=>c.Photos)
             .Include(b=>b.BodyTypes)
             .Include(m=>m.CarModel)
-            .ThenInclude(b=>b.Brand)
+                .ThenInclude(b=>b.Brand)
+            .OrderByDescending(c=>c.PublishDate)
     .ToList();
             ViewData["AnimateMode"] = "scroll-animations"; // dla innych widoków
 

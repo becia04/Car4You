@@ -13,9 +13,15 @@
         <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">@Model.Title</h1>
         <div class="line"></div>
     </div>
-    <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn">
-        Edytuj
-    </a>
+    <div>
+        <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn">
+            Edytuj
+        </a>
+        <form asp-action="DeleteCar" asp-controller="Admin" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
+            <button type="submit" class="btn btn-danger btn-sm btn">Usuń</button>
+        </form>
+
+    </div>
     <div class="car-details-container">
         <!-- Kolumna lewa: Galeria -->
         <div class="left-gallery scroll-animate slide-in">
@@ -71,16 +77,16 @@
                 </div>
             </div>
 
-            <div class="car-price">
+            <div class="car-price" >
                 @if (Model.OldPrice.HasValue && Model.NewPrice.HasValue && Model.OldPrice > Model.NewPrice)
                 {
                     <p>
                         <strong>Poprzednia cena:</strong>
-                        <span style="text-decoration:line-through">@($"{Model.OldPrice:n0}") zł</span>
+                        <span style="text-decoration:line-through">@($"{Model.OldPrice:n0}") PLN</span>
                     </p>
                 }
                 <p>
-                    <span class="price-highlight">@($"{Model.NewPrice:n0}") zł</span>
+                    <span style="font-size:3.5rem;">@($"{Model.NewPrice:n0}") PLN</span>
                 </p>
             </div>
 

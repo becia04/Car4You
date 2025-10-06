@@ -545,6 +545,74 @@ namespace Car4You.Controllers
 
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCar(int id, CancellationToken ct)
+        {
+            // Pobierz auto wraz z powiązaniami
+            var car = await _context.Cars
+                .Include(c => c.Photos)
+                .Include(c => c.CarEquipments)
+                .FirstOrDefaultAsync(c => c.Id == id, ct);
+
+            if (car == null)
+            {
+                TempData["Error"] = "Nie znaleziono auta o podanym ID.";
+                return RedirectToAction("CarList");
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
+            try
+            {
+                // 🔹 1. Usuń pliki zdjęć (SavedPhotoPaths)
+                if (car.Photos != null && car.Photos.Any())
+                {
+                    foreach (var photo in car.Photos.ToList())
+                    {
+                        if (!string.IsNullOrWhiteSpace(photo.PhotoPath))
+                        {
+                            try
+                            {
+                                var physicalPath = Path.Combine(_environment.WebRootPath, photo.PhotoPath.TrimStart('/', '\\'));
+                                if (System.IO.File.Exists(physicalPath))
+                                    System.IO.File.Delete(physicalPath);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Nie udało się usunąć pliku {Path}", photo.PhotoPath);
+                            }
+                        }
+                    }
+
+                    _context.Photos.RemoveRange(car.Photos);
+                }
+
+                // 🔹 2. Usuń powiązane rekordy z CarEquipments
+                if (car.CarEquipments != null && car.CarEquipments.Any())
+                {
+                    _context.CarEquipments.RemoveRange(car.CarEquipments);
+                }
+
+                // 🔹 3. Usuń auto
+                _context.Cars.Remove(car);
+
+                // 🔹 4. Zapisz i zatwierdź transakcję
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+                TempData["Success"] = "Auto oraz powiązane dane zostały usunięte.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(ct);
+                _logger.LogError(ex, "Błąd podczas usuwania auta o ID {Id}", id);
+                TempData["Error"] = "Wystąpił błąd podczas usuwania auta.";
+            }
+
+            return RedirectToAction("CarList");
+        }
+
         [HttpGet("/admin/temp-preview")]
         public IActionResult TempPreview(string file)
         {
@@ -556,6 +624,8 @@ namespace Car4You.Controllers
             var contentType = "image/" + System.IO.Path.GetExtension(file).Trim('.'); // np. image/png
             return PhysicalFile(tempPath, contentType);
         }
+
+
 
 
 
