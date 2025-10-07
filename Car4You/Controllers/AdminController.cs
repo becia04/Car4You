@@ -421,11 +421,16 @@ namespace Car4You.Controllers
 
                     // 🔹 Kluczowa linijka — nadpisuje tylko proste właściwości (bez relacji)
                     _context.Entry(car).CurrentValues.SetValues(model.Car);
+                    if (model.Car.CarModelId != 0 && model.Car.CarModelId != car.CarModelId)
+                    {
+                        car.CarModelId = model.Car.CarModelId;
 
-                    // 🔹 Upewnij się, że EF nie nadpisze relacji
-                    _context.Entry(car).Collection(c => c.CarEquipments).IsModified = false;
-                    _context.Entry(car).Collection(c => c.Photos).IsModified = false;
-                    _context.Entry(car).Reference(c => c.CarModel).IsModified = false;
+                        // opcjonalnie: załaduj nawigację, żeby potem używać Brand/Versions
+                        car.CarModel = await _context.CarModels
+                            .Include(cm => cm.Brand)
+                            .Include(cm => cm.Versions)
+                            .FirstOrDefaultAsync(cm => cm.Id == model.Car.CarModelId);
+                    }
 
                     // 🔹 Dodatkowe logiki biznesowe
                     car.PublishDate = DateTime.Now;
@@ -438,52 +443,74 @@ namespace Car4You.Controllers
                     if (model.SelectedEquipmentIds != null)
                     {
                         var existingEquipIds = car.CarEquipments.Select(e => e.EquipmentId).ToList();
-                        var toRemove = car.CarEquipments.Where(e => !model.SelectedEquipmentIds.Contains(e.EquipmentId)).ToList();
+                        var toRemoveEq = car.CarEquipments.Where(e => !model.SelectedEquipmentIds.Contains(e.EquipmentId)).ToList();
                         var toAdd = model.SelectedEquipmentIds
                             .Where(id => !existingEquipIds.Contains(id))
                             .Select(id => new CarEquipment { CarId = car.Id, EquipmentId = id })
                             .ToList();
 
-                        if (toRemove.Any()) _context.CarEquipments.RemoveRange(toRemove);
+                        if (toRemoveEq.Any()) _context.CarEquipments.RemoveRange(toRemoveEq);
                         if (toAdd.Any()) _context.CarEquipments.AddRange(toAdd);
                     }
 
+                    // --- BEZPIECZNA OBSŁUGA ZDJĘĆ (edycja) ---
 
-                    // 🔹 Zdjęcia — tylko różnice, nie kasujemy wszystkich
-                    if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
+                    // 1. Odśwież CarModel i Brand
+                    car.CarModel = await _context.CarModels
+                        .Include(m => m.Brand)
+                        .Include(m => m.Versions)
+                        .FirstOrDefaultAsync(m => m.Id == car.CarModelId);
+
+                    string newBrand = car.CarModel?.Brand?.Name ?? "BrakMarki";
+                    string newModel = car.CarModel?.Name ?? "BrakModelu";
+                    string newYear = car.Year.ToString();
+
+                    // 2. Existing photos
+                    var existingPhotos = car.Photos.ToList();
+
+                    // 3. Mapowanie po nazwach plików
+                    var existingByFileName = existingPhotos
+                        .ToDictionary(p => Path.GetFileName(p.PhotoPath), p => p, StringComparer.OrdinalIgnoreCase);
+
+                    var photosToAdd = new List<Photo>();
+                    // 4. Kolejność incoming
+                    int index = 1;
+                    foreach (var tempPhoto in model.SavedPhotoPaths)
                     {
-                        var existingPhotos = car.Photos.ToList();
-                        var incomingNames = model.SavedPhotoPaths.Select(p => Path.GetFileName(p.Src)).ToList();
+                        var fileName = Path.GetFileName(tempPhoto.Src);
 
-                        var toRemove = existingPhotos
-                            .Where(p => !incomingNames.Contains(Path.GetFileName(p.PhotoPath)))
-                            .ToList();
-
-                        if (toRemove.Any())
-                            _context.Photos.RemoveRange(toRemove);
-
-                        var existingNames = existingPhotos.Select(p => Path.GetFileName(p.PhotoPath)).ToList();
-                        var photosToAdd = new List<Photo>();
-
-                        string carsFolder = Path.Combine(_environment.WebRootPath, "cars");
-                        if (!Directory.Exists(carsFolder))
-                            Directory.CreateDirectory(carsFolder);
-
-                        int photoIndex = 0;
-                        foreach (var tempPhoto in model.SavedPhotoPaths)
+                        if (existingByFileName.TryGetValue(fileName, out var dbPhoto))
                         {
-                            string tempFileName = Path.GetFileName(tempPhoto.Src);
-                            if (existingNames.Contains(tempFileName))
+                            // Istniejące zdjęcie -> rename jeśli zmieniła się marka/model/rok
+                            string ext = Path.GetExtension(dbPhoto.PhotoPath);
+                            string expectedName = $"{FileHelper.NormalizeFileName($"{car.Id}_{newBrand}_{newModel}_{newYear}_{index}")}{ext}";
+                            if (!Path.GetFileName(dbPhoto.PhotoPath).Equals(expectedName, StringComparison.OrdinalIgnoreCase))
                             {
-                                photoIndex++;
-                                continue;
+                                string oldFull = Path.Combine(_environment.WebRootPath, dbPhoto.PhotoPath.TrimStart('/'));
+                                string newFull = Path.Combine(_environment.WebRootPath, "cars", expectedName);
+
+                                if (System.IO.File.Exists(oldFull))
+                                    System.IO.File.Move(oldFull, newFull);
+
+                                dbPhoto.PhotoPath = $"/cars/{expectedName}";
+                                dbPhoto.Title = expectedName;
+                                _context.Entry(dbPhoto).Property(p => p.PhotoPath).IsModified = true;
+                                _context.Entry(dbPhoto).Property(p => p.Title).IsModified = true;
                             }
 
-                            string fileNameBase = $"{car.Id}_{car.CarModel?.Brand?.Name}_{car.CarModel?.Name}_{car.Year}_{photoIndex + 1}";
-                            var fileName = $"{FileHelper.NormalizeFileName(fileNameBase)}.jpg";
-
-                            var sourcePath = Path.Combine(_environment.WebRootPath, "temp", tempFileName);
-                            var targetPath = Path.Combine(carsFolder, fileName);
+                            // Aktualizacja IsMain
+                            if (dbPhoto.IsMain != tempPhoto.IsMain)
+                            {
+                                dbPhoto.IsMain = tempPhoto.IsMain;
+                                _context.Entry(dbPhoto).Property(p => p.IsMain).IsModified = true;
+                            }
+                        }
+                        else
+                        {
+                            // Nowy plik -> dodaj
+                            string sourcePath = Path.Combine(_environment.WebRootPath, "temp", fileName);
+                            string finalName = $"{FileHelper.NormalizeFileName($"{car.Id}_{newBrand}_{newModel}_{newYear}_{index}")}.jpg";
+                            string targetPath = Path.Combine(_environment.WebRootPath, "cars", finalName);
 
                             if (System.IO.File.Exists(sourcePath))
                             {
@@ -493,40 +520,21 @@ namespace Car4You.Controllers
                                 photosToAdd.Add(new Photo
                                 {
                                     CarId = car.Id,
-                                    Title = fileName,
-                                    PhotoPath = $"/cars/{fileName}",
+                                    Title = finalName,
+                                    PhotoPath = $"/cars/{finalName}",
                                     IsMain = tempPhoto.IsMain
                                 });
                             }
-
-                            photoIndex++;
                         }
 
-                        // 🔹 Aktualizacja flagi IsMain dla istniejących zdjęć
-                        if (model.SavedPhotoPaths != null && model.SavedPhotoPaths.Any())
-                        {
-                            var dbPhotos = await _context.Photos
-                                .Where(p => p.CarId == car.Id)
-                                .ToListAsync();
-
-                            foreach (var dbPhoto in dbPhotos)
-                            {
-                                var updatedPhoto = model.SavedPhotoPaths
-                                    .FirstOrDefault(p => Path.GetFileName(p.Src).Equals(Path.GetFileName(dbPhoto.PhotoPath), StringComparison.OrdinalIgnoreCase));
-
-                                if (updatedPhoto != null && dbPhoto.IsMain != updatedPhoto.IsMain)
-                                {
-                                    dbPhoto.IsMain = updatedPhoto.IsMain;
-                                    _context.Entry(dbPhoto).Property(p => p.IsMain).IsModified = true;
-                                }
-                            }
-                        }
-
-
-                        if (photosToAdd.Any())
-                            _context.Photos.AddRange(photosToAdd);
-
+                        index++;
                     }
+
+                    // 5. Dodaj nowe zdjęcia
+                    if (photosToAdd.Any())
+                        _context.Photos.AddRange(photosToAdd);
+
+
 
                     TempData.Remove("TempPhotos");
                     _photoHelper.ClearTemp();

@@ -1,8 +1,11 @@
-﻿using Car4You.Helper;
+﻿using Car4You.DAL;
+using Car4You.Helper;
+using Car4You.Helpers;
 using Car4You.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp;
@@ -23,11 +26,13 @@ public class PhotoUploadHelper
 {
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<PhotoUploadHelper> _logger;
+    private readonly CarDbContext _context;
 
-    public PhotoUploadHelper(IWebHostEnvironment environment, ILogger<PhotoUploadHelper> logger)
+    public PhotoUploadHelper(IWebHostEnvironment environment, ILogger<PhotoUploadHelper> logger, CarDbContext context)
     {
         _environment = environment;
         _logger = logger;
+        _context = context;
     }
 
     public async Task<List<TempPhoto>> ProcessUploadedPhotosAsync(
