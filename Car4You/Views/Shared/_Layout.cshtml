@@ -15,11 +15,11 @@
         <main role="main" class="pb-3">
             <header class="@(ViewData["AnimateMode"] ?? "load-animations") main_h">
                 <div class="navbar-container">
-                    <a class="logo" href="@Url.Action("Index", "Home")">
-                        <img class="logo-img" src="~/logo.png" alt="Logo" />
-                    </a>
-                    <div class="menu-toggle" id="menu-toggle">
-                        ☰
+                    <div class="navbar-top">
+                        <a class="logo" href="@Url.Action("Index", "Home")">
+                            <img class="logo-img" src="~/logo.png" alt="Logo" />
+                        </a>
+                        <div class="menu-toggle" id="menu-toggle">☰</div>
                     </div>
                     <nav id="navbar">
                         <ul>
