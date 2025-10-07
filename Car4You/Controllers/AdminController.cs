@@ -365,7 +365,13 @@ namespace Car4You.Controllers
                                 if (System.IO.File.Exists(sourcePath))
                                 {
                                     var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
-                                    await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
+                                    // Nowa wersja: najpierw nałożenie logo, potem kompresja do max 140 KB
+                                    string tempPathWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
+
+                                    await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, tempPathWithLogo);
+
+                                    // Kompresja do max 140KB
+                                    await _photoHelper.CompressToMaxSizeAsync(tempPathWithLogo, targetPath, 140 * 1024);
                                 }
                                 else
                                 {
@@ -385,11 +391,17 @@ namespace Car4You.Controllers
                             {
                                 _logger.LogError(ex, $"Błąd podczas kopiowania zdjęcia: {sourcePath} → {targetPath}");
                             }
-
+                            
                             photoIndex++;
                         }
-
+                        string tempWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
+                        if (System.IO.File.Exists(tempWithLogo))
+                        {
+                            try { System.IO.File.Delete(tempWithLogo); }
+                            catch (Exception ex) { _logger.LogWarning(ex, "Nie udało się usunąć pliku tymczasowego: {Path}", tempWithLogo); }
+                        }
                         _context.Photos.AddRange(photos);
+
                     }
 
                     // 🧹 Czyszczenie plików tymczasowych
@@ -514,8 +526,14 @@ namespace Car4You.Controllers
 
                             if (System.IO.File.Exists(sourcePath))
                             {
-                                var logoPath = Path.Combine(_environment.WebRootPath, "logo.png");
-                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, targetPath);
+                                var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
+                                // Nowa wersja: najpierw nałożenie logo, potem kompresja do max 140 KB
+                                string tempPathWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
+
+                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, tempPathWithLogo);
+
+                                // Kompresja do max 140KB
+                                await _photoHelper.CompressToMaxSizeAsync(tempPathWithLogo, targetPath, 140 * 1024);
 
                                 photosToAdd.Add(new Photo
                                 {
@@ -529,7 +547,12 @@ namespace Car4You.Controllers
 
                         index++;
                     }
-
+                    string tempWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
+                    if (System.IO.File.Exists(tempWithLogo))
+                    {
+                        try { System.IO.File.Delete(tempWithLogo); }
+                        catch (Exception ex) { _logger.LogWarning(ex, "Nie udało się usunąć pliku tymczasowego: {Path}", tempWithLogo); }
+                    }
                     // 5. Dodaj nowe zdjęcia
                     if (photosToAdd.Any())
                         _context.Photos.AddRange(photosToAdd);

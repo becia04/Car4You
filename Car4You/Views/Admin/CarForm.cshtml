@@ -248,44 +248,44 @@
     <div id="photoPreview" class="d-flex flex-wrap mt-3"></div>
     <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
 
-    <!-- Wyposażenie -->
-    <div class="form-group">
-        <label>Wybierz wyposażenie</label>
-        <table class="table">
-            <thead>
-                <tr>
-                    @foreach (var equipmentType in Model.EquipmentTypes)
-                    {
-                        <th>@equipmentType.Name</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    @foreach (var group in Model.GroupedEquipment)
-                    {
-                        <td>
-                            @foreach (var equipment in group.Equipments)
-                            {
-                                <div class="form-check">
-                                    <input type="checkbox"
-       class="form-check-input"
-       id="equipment_@equipment.Id"
-       name="SelectedEquipmentIds"
-       value="@equipment.Id"
-       @(Model.SelectedEquipmentIds.Contains(equipment.Id) ? "checked" : "")>
-
-                                    <label class="form-check-label" for="equipment_@equipment.Id">
-                                        @equipment.Name
-                                    </label>
-                                </div>
-                            }
-                        </td>
-                    }
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<!-- Wyposażenie -->
+<div class="form-group">
+    <label>Wybierz wyposażenie</label>
+    <input type="text" id="equipmentSearch" class="form-control mb-2" placeholder="Wpisz nazwę wyposażenia">
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (var equipmentType in Model.EquipmentTypes)
+                {
+                    <th>@equipmentType.Name</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @foreach (var group in Model.GroupedEquipment)
+                {
+                    <td>
+                        @foreach (var equipment in group.Equipments)
+                        {
+                            <div class="form-check equipment-item">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="equipment_@equipment.Id"
+                                       name="SelectedEquipmentIds"
+                                       value="@equipment.Id"
+                                       @(Model.SelectedEquipmentIds.Contains(equipment.Id) ? "checked" : "")>
+                                <label class="form-check-label" for="equipment_@equipment.Id">
+                                    @equipment.Name
+                                </label>
+                            </div>
+                        }
+                    </td>
+                }
+            </tr>
+        </tbody>
+    </table>
+</div>
 
     <button type="submit" class="btn btn-primary" style="margin-bottom:4rem;">
     @(Model.Car?.Id > 0 ? "Zapisz zmiany" : "Dodaj Auto")
@@ -344,6 +344,22 @@
 </div>
 
 @section Scripts {
+    <script>
+    const searchInput = document.getElementById('equipmentSearch');
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        const items = document.querySelectorAll('.equipment-item');
+
+        items.forEach(item => {
+            const label = item.querySelector('label').innerText.toLowerCase();
+            if (label.includes(query)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
     <script>
          let rawPhotos = @Html.Raw(JsonConvert.SerializeObject(Model.SavedPhotoPaths ?? new List<TempPhoto>(), new JsonSerializerSettings {
     ContractResolver = new DefaultContractResolver()
