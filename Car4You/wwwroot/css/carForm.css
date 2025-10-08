@@ -1,0 +1,182 @@
+﻿/* === MODAL STYLING === */
+.modal-content {
+    background-color: #fdfdfd; /* jasne, eleganckie tło */
+    border: 2px solid #d8be6d; /* złote obramowanie */
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    font-family: 'Poppins', sans-serif;
+}
+
+.modal-header {
+    background-color: #24435e; /* granatowe tło */
+    color: #fff;
+    border-bottom: 2px solid #d8be6d;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.modal-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1); /* biała ikonka zamykania */
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+    .btn-close:hover {
+        opacity: 1;
+    }
+
+.modal-body {
+    padding: 1.5rem 2rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 2rem;
+}
+
+/* Pola formularza */
+.modal-body .form-group label {
+    font-weight: 500;
+    color: #24435e;
+    margin-bottom: 0.3rem;
+}
+
+.modal-body .form-control {
+    border: 1.5px solid #d8be6d;
+    border-radius: 8px;
+    padding: 0.6rem;
+    transition: all 0.2s;
+}
+
+    .modal-body .form-control:focus {
+        border-color: #c5a84b;
+        box-shadow: 0 0 4px rgba(216, 190, 109, 0.4);
+    }
+
+.model-select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Opcjonalnie: dla modali */
+.modal-footer .btn_primary,
+.modal-footer .btn_secondary {
+    width: 48%; /* po 2 obok siebie zajmują całą szerokość */
+}
+
+.add-model-btn {
+    margin-left: 0.5rem;
+    /* wyrównanie wysokości do selecta */
+    height: calc(1.5em + 0.75rem + 2px); /* standardowa wysokość form-control w Bootstrap 5 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem;
+}
+
+/* Styl dla przycisku "+" obok dropdowna */
+.form-group .btn-success {
+    transform: translateY(-50%);
+    background-color: #d8be6d;
+    border: none;
+    color: #24435e;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease-in-out;
+}
+
+    /* Hover – lekki efekt podświetlenia */
+    .form-group .btn-success:hover {
+        background-color: #c4a952;
+        box-shadow: 0 0 5px rgba(216, 190, 109, 0.4);
+    }
+
+    /* Disabled (gdy pole nieaktywne) */
+    .form-group .btn-success:disabled {
+        background-color: #e2e2e2;
+        color: #aaa;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+.title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #24435e;
+    font-weight: 550;
+    border-left: 4px solid #d8be6d;
+    margin-top: 2rem;
+}
+
+.icon {
+    width: auto;
+    height: 40px;
+    object-fit: contain;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+}
+
+.form-section {
+    margin-bottom: 3rem;
+    border-top: 1px solid #ccc;
+}
+
+.col-md-4 {
+    margin-top: 1rem;
+}
+
+
+/* Styl dla dropdownów */
+.form-control {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    background-color: #fdfdfd;
+    color: #24435e;
+    transition: all 0.2s ease-in-out;
+}
+
+    /* Efekt po najechaniu */
+    .form-control:hover {
+        border-color: #d8be6d;
+        background-color: #fff;
+        box-shadow: 0 0 4px rgba(216, 190, 109, 0.2);
+    }
+
+    /* Efekt focus (kliknięcie w pole) */
+    .form-control:focus {
+        border-color: #d8be6d;
+        box-shadow: 0 0 6px rgba(216, 190, 109, 0.35);
+        outline: none;
+        background-color: #fff;
+    }
+
+/* Styl etykiety */
+.form-group label {
+    font-weight: 550;
+    color: #24435e;
+    margin-bottom: 0.4rem;
+}
+
+/* Dropdown – strzałka */
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('/icons/arrow-down.png');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+    padding-right: 2rem;
+}

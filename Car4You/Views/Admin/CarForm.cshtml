@@ -2,93 +2,100 @@
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Serialization
 @model Car4You.ViewModels.CarViewModel
-
+<link href="~/css/carform.css" rel="stylesheet" />
 @{
     ViewData["Title"] = (Model.Car?.Id > 0 ? "Edytuj auto" : "Dodaj auto");
 }
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
-
-
-
-<h2 style="margin-top:150px">Dodaj nowe auto</h2>
+    <div style="margin-top:180px;">
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;" >@(Model.Car?.Id > 0 ? "Edytuj auto" : "Dodaj auto")</h1>
+        <div class="line" style="margin-bottom:2rem;"></div>
+    </div>
 
 <form asp-action="SaveCar" asp-controller="Admin" method="post" enctype="multipart/form-data" novalidate>
     <input type="hidden" asp-for="Car.Id" />
-    <!-- Marka -->
+        <!-- Dane pojazdu -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/car_info.png" class="icon"/>Dane pojazdu</h3>
+            <div class="row">
+        <!-- Marka -->
+        <div class="col-md-4">
     <div class="form-group">
-        <label for="BrandId">Marka</label>
+        <label for="BrandId">Marka *</label>
         @Html.DropDownListFor(
                  model => model.Car.CarModel.BrandId,
                  new SelectList(Model.Brands, "Id", "Name"),
                  "Wybierz markę",
                  new { @class = "form-control", id = "BrandId", name = "Car.CarModel.BrandId" })
     </div>
+    </div>
 
-    <!-- Model -->
-    <div class="form-group">
-        <label for="CarModelId">Model</label>
+<!-- Model -->
+    <div class="form-group col-md-4">
+        <div>
+                    <label for="CarModelId">Model *</label>
+                    <button type="button" class="btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal" id="addModelBtn" disabled>
+            +
+        </button>
+        </div>
         @Html.DropDownListFor(
                  model => model.Car.CarModelId,
                  new SelectList(Model.CarModels, "Id", "Name"),
                  "Wybierz model",
                  new { @class = "form-control", id = "CarModelId", name = "Car.CarModelId", disabled = "disabled" })
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal" id="addModelBtn" disabled>
-            +
-        </button>
+
         <input type="hidden" id="SelectedCarModelId" value="@Model.Car.CarModelId" />
     </div>
 
     <!-- Generacja -->
+            <div class="col-md-4">
     <div class="form-group">
-        <label for="VersionId">Generacja</label>
+        <div>
+                    <label for="VersionId">Generacja</label>
+                    <button type="button" class="btn-success" data-bs-toggle="modal" data-bs-target="#addVersionModal" id="addVersionBtn" disabled>
+            +
+        </button>
+        </div>
         @Html.DropDownListFor(
                  model => model.Car.VersionId,
                  new SelectList(Model.Versions, "Id", "Name"),
                  "Wybierz generację",
                  new { @class = "form-control", id = "VersionId", name = "Car.VersionId", disabled = "disabled" })
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVersionModal" id="addVersionBtn" disabled>
-            +
-        </button>
         <input type="hidden" id="SelectedCarVersionId" value="@Model.Car.VersionId" />
     </div>
-
-    <!-- Rok -->
+    </div>
+        <!-- VIN -->
+        <div class="col-md-4">
     <div class="form-group">
-        <label for="Car.Year">Rok produkcji *</label>
-        <input asp-for="Car.Year" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Year == 0 ? null : Model.Car.Year.ToString())" />
-        <span asp-validation-for="Car.Year" class="text-danger"></span>
+        <label for="Car.VIN">VIN</label>
+        <input asp-for="Car.VIN" class="form-control" />
+        <span asp-validation-for="Car.VIN" class="text-danger"></span>
+    </div>
+        </div>
+        </div>
+        </div>
+
+    <!-- Silnik i osiągi -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/engine.png" class="icon"/>Silnik i osiągi</h3>
+        <div class="row">
+            <!-- Pojemność skokowa/silnika -->
+    <div class="form-group col-md-4">
+        <label for="Car.CubicCapacity">Pojemność silnika (cm³) *</label>
+        <input asp-for="Car.CubicCapacity" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.CubicCapacity == 0 ? "" : Model.Car.CubicCapacity.ToString())" />
+        <span asp-validation-for="Car.CubicCapacity" class="text-danger"></span>
+    </div>
+    
+    <!-- Moc silnika -->
+    <div class="form-group col-md-4">
+        <label for="Car.EnginePower">Moc silnika (KM) *</label>
+        <input asp-for="Car.EnginePower" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.EnginePower == 0 ? "" : Model.Car.EnginePower.ToString())" />
+        <span asp-validation-for="Car.EnginePower" class="text-danger"></span>
     </div>
 
-    <!-- Tytuł -->
-    <div class="form-group">
-        <label for="Title">Tytuł *</label>
-        <input asp-for="Car.Title" id="Title" name="Car.Title" type="text" class="form-control"/>
-        <span asp-validation-for="Car.Title" class="text-danger"></span>
-    </div>
-
-    <!-- Przebieg -->
-    <div class="form-group">
-        <label for="Car.Mileage">Przebieg (km) *</label>
-        <input asp-for="Car.Mileage" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Mileage == 0 ? null : Model.Car.Mileage.ToString())" />
-        <span asp-validation-for="Car.Mileage" class="text-danger"></span>
-    </div>
-
-    <!-- Paliwo -->
-    <div class="form-group">
-        <label for="FuelType">Typ paliwa *</label>
-        <select id="FuelType" name="Car.FuelType" class="form-control" asp-for="Car.FuelType">
-            @foreach(var fuel in Model.FuelTypes)
-            {
-                <option value="@fuel">@fuel</option>
-            }
-        </select>
-    </div>
-
-    <!-- Skrzynia biegów -->
-    <div class="form-group">
+        <!-- Skrzynia biegów -->
+    <div class="form-group col-md-4">
         <label for="Gearbox">Rodzaj skrzyni biegów *</label>
         <select id="Gearbox" name="Car.Gearbox" class="form-control" asp-for="Car.Gearbox">
             @foreach (var gearbox in Model.Gearboxes)
@@ -98,8 +105,44 @@
         </select>
     </div>
 
-    <!-- Typ nadwozia -->
+        <!-- Napęd -->
+    <div class="form-group col-md-4">
+        <label for="Car.Drive">Napęd *</label>
+        <select asp-for="Car.Drive" class="form-control">
+            <option value="4x4">4x4</option>
+            <option value="Na przód">Na przód</option>
+            <option value="Na tył">Na tył</option>
+        </select>
+    </div>
+
+        <!-- Paliwo -->
+    <div class="form-group col-md-4">
+        <label for="FuelType">Typ paliwa *</label>
+        <select id="FuelType" name="Car.FuelType" class="form-control" asp-for="Car.FuelType">
+            @foreach(var fuel in Model.FuelTypes)
+            {
+                <option value="@fuel">@fuel</option>
+            }
+        </select>
+    </div>
+
+        <!-- Przebieg -->
+        <div class="col-md-4">
     <div class="form-group">
+        <label for="Car.Mileage">Przebieg (km) *</label>
+        <input asp-for="Car.Mileage" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Mileage == 0 ? null : Model.Car.Mileage.ToString())" />
+        <span asp-validation-for="Car.Mileage" class="text-danger"></span>
+    </div>
+    </div>
+        </div>
+        </div>
+
+            <!-- Nadwozie i wymiary -->
+            <div class="form-section">
+                <h3 class="title"><img src="~/icons/car.png" class="icon" />Nadwozie i wymiary</h3>
+                <div class="row">
+            <!-- Typ nadwozia -->
+    <div class="form-group col-md-4">
         <label for="BodyId">Typ nadwozia *</label>
         <select id="BodyId" name="Car.BodyId" class="form-control" asp-for="Car.BodyId">
             @foreach (var body in Model.BodyTypes)
@@ -109,22 +152,8 @@
         </select>
     </div>
 
-    <!-- Pojemność skokowa/silnika -->
-    <div class="form-group">
-        <label for="Car.CubicCapacity">Pojemność silnika (cm³) *</label>
-        <input asp-for="Car.CubicCapacity" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.CubicCapacity == 0 ? "" : Model.Car.CubicCapacity.ToString())" />
-        <span asp-validation-for="Car.CubicCapacity" class="text-danger"></span>
-    </div>
-
-    <!-- Moc silnika -->
-    <div class="form-group">
-        <label for="Car.EnginePower">Moc silnika (KM) *</label>
-        <input asp-for="Car.EnginePower" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.EnginePower == 0 ? "" : Model.Car.EnginePower.ToString())" />
-        <span asp-validation-for="Car.EnginePower" class="text-danger"></span>
-    </div>
-
-    <!-- Kolor -->
-    <div class="form-group">
+        <!-- Kolor -->
+    <div class="form-group col-md-4">
         <label for="Car.Color">Kolor *</label>
         <select asp-for="Car.Color" class="form-control">
             @foreach (var color in Model.Colors)
@@ -137,7 +166,7 @@
     </div>
 
     <!-- Typ lakieru -->
-    <div class="form-group">
+    <div class="form-group col-md-4">
         <label for="Car.ColorType">Typ lakieru *</label>
         <select asp-for="Car.ColorType" class="form-control">
             <option value="Błyszczący">Błyszczący</option>
@@ -151,8 +180,8 @@
         </select>
     </div>
 
-    <!-- Drzwi -->
-    <div class="form-group">
+        <!-- Drzwi -->
+    <div class="form-group col-md-4">
         <label for="Car.Door">Liczba drzwi *</label>
         <input asp-for="Car.Door" type="number" class="form-control"
                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
@@ -161,24 +190,28 @@
     </div>
 
     <!-- Miejsca -->
-    <div class="form-group">
+    <div class="form-group col-md-4">
         <label for="Car.Seat">Ilość miejsc *</label>
         <input asp-for="Car.Seat" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Seat == 0 ? "" : Model.Car.Seat.ToString())" />
         <span asp-validation-for="Car.Seat" class="text-danger"></span>
     </div>
 
-    <!-- Napęd -->
-    <div class="form-group">
-        <label for="Car.Drive">Napęd *</label>
-        <select asp-for="Car.Drive" class="form-control">
-            <option value="4x4">4x4</option>
-            <option value="Na przód">Na przód</option>
-            <option value="Na tył">Na tył</option>
-        </select>
+</div>
+</div>
+
+    <!-- Pochodzenie i właściciel -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/origin.png" class="icon" />Pochodzenie i właściciel</h3>
+            <div class="row">
+            <!-- Rok -->
+    <div class="form-group col-md-4">
+        <label for="Car.Year">Rok produkcji *</label>
+        <input asp-for="Car.Year" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Year == 0 ? null : Model.Car.Year.ToString())" />
+        <span asp-validation-for="Car.Year" class="text-danger"></span>
     </div>
 
-    <!-- Kraj pochodzenia -->
-    <div class="form-group">
+        <!-- Kraj pochodzenia -->
+    <div class="form-group col-md-4">
         <label for="Car.Origin">Kraj pochodzenia *</label>
         <select asp-for="Car.Origin" class="form-control">
             @foreach (var country in Model.Countries)
@@ -191,7 +224,7 @@
 
     </div>
 
-    <!-- Pierwszy właściciel -->
+        <!-- Pierwszy właściciel -->
     <div class="form-group form-check">
         <input asp-for="Car.FirstOwner" class="form-check-input" type="checkbox" id="FirstOwner" />
         <label class="form-check-label" for="FirstOwner">Pierwszy właściciel</label>
@@ -208,30 +241,42 @@
         <input asp-for="Car.AccidentFree" class="form-check-input" type="checkbox" id="AccidentFree" />
         <label class="form-check-label" for="AccidentFree">Bezwypadkowy</label>
     </div>
+</div>
+</div>
+
 
     <!-- Cena -->
-    <div class="form-group">
-        <label for="Car.OldPrice">Cena *</label>
+        <div class="form-section">
+            <div class="row">
+                <div class="form-group col-md-4">
+        <h3 class="title"><img src="~/icons/price.png" class="icon" /><label for="Car.OldPrice">Cena *</label></h3>
         <input asp-for="Car.OldPrice" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.OldPrice == 0 ? "" : Model.Car.OldPrice.ToString())" />
         <span asp-validation-for="Car.OldPrice" class="text-danger"></span>
     </div>
-
-    <!-- VIN -->
-    <div class="form-group">
-        <label for="Car.VIN">VIN</label>
-        <input asp-for="Car.VIN" class="form-control" />
-        <span asp-validation-for="Car.VIN" class="text-danger"></span>
     </div>
-
+    </div>
+        <!-- Dodatkowe informacje -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/plus.png" class="icon" />Dodatkowe informacje</h3>
+        <div class="row">
+        <!-- Tytuł -->
+    <div class="form-group col-md-4">
+        <label for="Title">Tytuł *</label>
+        <input asp-for="Car.Title" id="Title" name="Car.Title" type="text" class="form-control"/>
+        <span asp-validation-for="Car.Title" class="text-danger"></span>
+    </div>
     <!-- Opis -->
     <div class="form-group">
         <label for="description">Opis</label>
         <textarea asp-for="Car.Description" class="form-control" rows="6"></textarea>
     </div>
-
+        </div>
+        
+        </div>
     <!-- Zdjęcia -->
-    <div class="form-group">
-        <label for="carPhotos">Zdjęcia samochodu</label>
+        <div class="form-section">
+                <div class="form-group">
+        <h3 class="title"><img src="~/icons/photos.png" class="icon" /><label for="carPhotos">Zdjęcia samochodu</label></h3>
         <input type="file" name="carPhotos" id="carPhotos" class="form-control" multiple accept="image/*" />
         <small class="form-text text-muted">Możesz dodać jedno lub więcej zdjęć.</small>
         <span asp-validation-for="CarPhotos" class="text-danger"></span>
@@ -247,11 +292,15 @@
     <!-- Wybór głównego zdjęcia -->
     <div id="photoPreview" class="d-flex flex-wrap mt-3"></div>
     <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
+    </div>
 
 <!-- Wyposażenie -->
-<div class="form-group">
-    <label>Wybierz wyposażenie</label>
-    <input type="text" id="equipmentSearch" class="form-control mb-2" placeholder="Wpisz nazwę wyposażenia">
+        <div class="form-section">
+            <div class="row">
+                <div class="form-group">
+        <h3 class="title"><img src="~/icons/equipment.png" class="icon" /><label>Wybierz wyposażenie</label></h3>
+    <div class="col-md-4">    <input type="text" id="equipmentSearch" class="form-control mb-2" placeholder="Wpisz nazwę wyposażenia"></div>
+
     <table class="table">
         <thead>
             <tr>
@@ -286,8 +335,9 @@
         </tbody>
     </table>
 </div>
-
-    <button type="submit" class="btn btn-primary" style="margin-bottom:4rem;">
+</div>
+</div>
+    <button type="submit" class="btn_primary" style="margin-bottom:4rem;">
     @(Model.Car?.Id > 0 ? "Zapisz zmiany" : "Dodaj Auto")
 </button>
 
@@ -311,8 +361,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-primary" onclick="addNewModel()">Dodaj</button>
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" onclick="addNewModel()">Dodaj</button>
             </div>
         </div>
     </div>
@@ -336,8 +386,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-primary" onclick="addNewVersion()">Dodaj</button>
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" onclick="addNewVersion()">Dodaj</button>
             </div>
         </div>
     </div>
