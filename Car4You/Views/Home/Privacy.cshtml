@@ -1,6 +1,75 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Polityka Prywatności";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div style="margin-top:180px;">
+    <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+        <a asp-action="Index" asp-controller="Home" style="margin-right:1rem;">
+            <i class="fas fa-home btn_previous"></i>
+        </a>
+        POLITYKA PRYWATNOŚCI
+    </h1>
+    <div class="line"></div>
+</div>
+
+<div class="container py-5">
+    <section class="mb-5">
+        <h2>Ochrona danych osobowych</h2>
+        <p>
+            Dbamy o bezpieczeństwo Twoich danych osobowych. Wszystkie informacje przekazane w formularzach
+            kontaktowych są przetwarzane zgodnie z obowiązującymi przepisami o ochronie danych osobowych (RODO).
+        </p>
+        <p>
+            Dane zbierane na stronie obejmują jedynie te niezbędne do obsługi zapytań.
+        </p>
+    </section>
+
+    <section class="mb-5">
+        <h2>Pliki Cookies</h2>
+        <p>
+            Strona wykorzystuje pliki cookies w celu zapewnienia prawidłowego działania serwisu oraz do celów statystycznych.
+            Możesz zmienić ustawienia przeglądarki, aby blokować cookies, ale może to ograniczyć funkcjonalność strony.
+        </p>
+    </section>
+
+    <section class="mb-5">
+        <h2>Użyte obrazki / licencje</h2>
+        <p>
+            Niektóre grafiki użyte na stronie pochodzą z serwisu Freepik.
+        </p>
+        <p><a href="http://www.freepik.com">Designed by Photoroyalty / Freepik</a></p>
+        <p>
+            Inne grafiki użyte na stronie:
+            <a href="https://pl.pinterest.com/?boardId=503488502031202190" target="_blank">Kliknij tutaj, aby zobaczyć źródło</a>.
+        </p>
+    </section>
+</div>
+
+<style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        font-family: Arial, sans-serif;
+        color: #333;
+    }
+
+    h1, h2 {
+        color: #24435e;
+    }
+
+    section p, section ul, section pre {
+        line-height: 1.6;
+    }
+
+    pre {
+        background-color: #f7f7f7;
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+
+    a {
+        color: #24435e;
+        text-decoration: underline;
+    }
+</style>

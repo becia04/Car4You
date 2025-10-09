@@ -3,23 +3,80 @@
     ViewData["Title"] = "Error";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
+@{
+    ViewData["Title"] = "Błąd";
+    var errorCode = ViewData["ErrorCode"] ?? "404";
+    var errorMessage = ViewData["ErrorMessage"] ?? "Strona nie została znaleziona";
 }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+<div class="error-container">
+    <div class="error-content">
+        <h1>@errorCode</h1>
+        <h2>@errorMessage</h2>
+        <p>
+            Przepraszamy, ale strona, której szukasz, nie jest dostępna.
+            Możesz wrócić na <a href="/">stronę główną</a>.
+        </p>
+        <a href="/" class="btn-home">Strona główna</a>
+    </div>
+</div>
+
+<style>
+    .error-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+        background-color: #f5f5f5;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .error-content {
+        max-width: 500px;
+        background-color: #fff;
+        padding: 40px 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+        .error-content h1 {
+            font-size: 80px;
+            margin: 0;
+            color: #24435e; /* granat */
+        }
+
+        .error-content h2 {
+            font-size: 24px;
+            margin: 10px 0 20px;
+            color: #d8be6d; /* żółty akcent */
+        }
+
+        .error-content p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .error-content a {
+            color: #24435e;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+    .btn-home {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #24435e;
+        color: #fff;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+
+        .btn-home:hover {
+            background-color: #1b324a;
+        }
+
+</style>

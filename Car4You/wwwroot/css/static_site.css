@@ -1,0 +1,275 @@
+﻿
+
+.about-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 60px;
+    flex-wrap: wrap;
+    margin-top: 4rem;
+    border-top: 1px solid #7b2e1f;
+}
+
+.about-image {
+    flex: 1 1 45%;
+    text-align: center;
+}
+
+    .about-image img {
+        width: 100%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        object-fit: cover;
+    }
+
+.about-text {
+    flex: 1 1 50%;
+    text-align: left;
+}
+.about-text i{
+    color:#24435e;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #24435e;
+    margin-bottom: 25px;
+    margin-top: 1.5rem;
+}
+
+.about-intro {
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.about-text p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.about-text strong {
+    color: #7b2e1f;
+}
+
+/* Responsywność */
+@media (max-width: 992px) {
+    .about-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .about-text {
+        text-align: center;
+    }
+
+    .about-image img {
+        max-width: 400px;
+    }
+}
+
+
+.static-container i {
+    color: #7b2e1f;
+    margin-right: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+.cta-section {
+    background-color: rgba(36, 67, 94, 0.95);
+    color: #f0f0f0;
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 60px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+    .cta-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .cta-section p {
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+    }
+
+.cta-btn {
+    display: inline-block;
+    margin: 8px;
+    padding: 12px 24px;
+    background-color: #f0f0f0;
+    color: #24435e;
+    font-weight: bold;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+    .cta-btn:hover {
+        background-color: #dce3eb;
+    }
+
+.cta-btn-secondary {
+    background-color: transparent;
+    border: 2px solid #f0f0f0;
+    color: #f0f0f0;
+}
+
+    .cta-btn-secondary:hover {
+        background-color: #f0f0f0;
+        color: #24435e;
+    }
+
+.about-footer {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+    .about-footer a {
+        color: #24435e;
+        text-decoration: none;
+    }
+
+        .about-footer a:hover {
+            text-decoration: underline;
+        }
+
+
+
+
+
+
+.contact-social {
+    margin-top: 30px;
+    text-align: center;
+}
+.facebook-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: transparent;
+    border: 2px solid #d8be6d;
+    color: #7b2e1f !important;
+    padding: 10px 20px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+    .facebook-link:hover {
+        background-color: #d8be6d;
+        color: #24435e !important;
+    }
+
+    .facebook-link i {
+        font-size: 1.2rem;
+    }
+
+
+.static-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+
+.static-content {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+/* Lewa kolumna: info kontaktowe */
+.contact-info {
+    flex: 1;
+    min-width: 300px;
+    padding: 2rem;
+}
+
+    .contact-info .info-item {
+        margin-bottom: 1.5rem;
+    }
+
+        .contact-info .info-item strong {
+            display: block;
+            font-size: 1.2rem;
+            color: #24435e;
+            margin-bottom: 0.3rem;
+        }
+        .contact-info .info-item strong i{
+            margin-right:10px;
+        }
+
+        .contact-info .info-item p {
+            font-size: 1.1rem;
+            margin: 0;
+            color: #7b2e1f;
+        }
+
+        .contact-info .info-item a {
+            color: #7b2e1f;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+            .contact-info .info-item a:hover {
+                color: #5a2015;
+            }
+
+/* Prawa kolumna: mapa */
+.contact-map {
+    flex: 1;
+    min-width: 350px;
+    overflow: hidden;
+    position: relative;
+}
+
+    /* Mapa dopasowana do kontenera */
+    .contact-map iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    /* Ustal proporcje mapy */
+    .contact-map::before {
+        content: "";
+        display: block;
+        padding-top: 56.25%; /* 16:9 na desktopie */
+    }
+
+/* Responsywność — mapa pod spodem i wyższa */
+@media (max-width: 900px) {
+    .contact-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .contact-map {
+        min-width: 100%;
+    }
+
+        .contact-map::before {
+            padding-top: 90%; /* wyższa mapa na telefonie */
+        }
+
+    .contact-title {
+        font-size: 2rem;
+    }
+}

@@ -1,250 +1,311 @@
 ﻿@model Brand
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="~/css/admin_site.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!--Zmiana nazwy marki-->
+<style>
+    .btn-group-cell .btn_primary,
+    .btn-group-cell .btn_delete {
+        min-width:50px;
+    }
+    /* Kontener wersji — ustawienie tekstu i przycisków w jednej linii */
+    td ul li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        border-bottom: 1px solid #ccc;
+
+    }
+
+    /* Nazwa wersji z elastycznym miejscem */
+    .version-text {
+        flex: 1;
+        text-align: center;
+        margin-right: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+
+
+</style>
+
 <label class="id-label" data-id="@Model.Id" style="visibility:hidden;">@Model.Id</label>
-<div>
-    <h2>
-        Zarządzanie marką <label class="name-text" data-id="@Model.Name">@Model.Name</label>
-    </h2>
-    <button class="btn btn-warning edit-name-btn">
-        <i class="fa fa-pencil-alt"></i>
-    </button>
-    <input type="text" name="name" value="@Model.Name" class="form-control name-input d-none" />
-    <button class="btn btn-success save-name-btn d-none">
-        <i class="fa fa-save"></i>
-    </button>
-    <button class="btn btn-secondary cancel-name-btn d-none">
-        <i class="fa fa-times"></i>
-    </button>
-    <div id="errorName" class="alert alert-danger d-none"></div>
+<div class="details-header">
+    <div style="flex: 0 0 75%;">
+        <h1 style="margin-right:1rem; display:inline-block; color:#24435e; font-weight:500;">
+            <a asp-action="Brand" asp-controller="Admin">
+                <i class="fas fa-arrow-left btn_previous"></i>
+            </a>
+        </h1>
+        <img src="@Model.Icon" style="height:40px; width:auto; margin-right:1rem; margin-bottom:1rem;" />
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+            Zarządzaj marką - <label class="name-text" data-id="@Model.Id" style="margin:0; display:inline-block; color:#24435e; font-weight:500;">@Model.Name</label>
+        </h1>
+        
+    </div>
+    <div class="admin-btn">
+        <!-- Przycisk wywołujący modal -->
+        <button class="btn_primary edit-brand-btn" data-bs-toggle="modal" data-bs-target="#editBrandModal">
+            <i class="far fa-edit"></i> Edytuj
+        </button>
+    </div>
 </div>
+<div class="line"></div>
 
-<!--Zmiana ikony marki-->
-<div>
-    <img src="@Model.Icon" alt="@Model.Name" class="icon-preview" style="width: 350px; height: 350px;" />
-    <button class="btn btn-warning edit-icon-btn">
-        <i class="fa fa-pencil-alt"></i>
-    </button>
-    <button class="btn btn-success save-icon-btn d-none">
-        <i class="fa fa-save"></i>
-    </button>
-    <button class="btn btn-secondary cancel-icon-btn d-none">
-        <i class="fa fa-times"></i>
-    </button>
-    <input type="file" class="form-control icon-input d-none" />
-    <div id="errorIcon" class="alert alert-danger d-none"></div>
-</div>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Model</th>
-            <th>Wersja</th>
+            <th style="width:35%">
+                Model
+            </th>
+            <th style="width:20%;">
+                    <button class="btn_primary" data-bs-toggle="modal" data-bs-target="#addModelModal">
+                        <i class="fa fa-plus"></i> Dodaj
+                    </button>
+            </th>
+            <th style="width:35%;">Wersja</th>
+            <th style="width:10%"></th>
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>
-                <button class="btn btn-primary add-carModel-btn">
-                    <i class="fa fa-plus"></i>
-                </button>
-                <input type="text" class="form-control newModel-input d-none" value="" />
-                <div id="errorNewModel" class="alert alert-danger d-none"></div>
-                <button class="btn btn-success save-newModel-btn d-none">
-                    <i class="fa fa-save"></i>
-                </button>
-            </td>
-        </tr>
         @foreach (var carModel in Model.CarModels)
         {
             <tr data-id="@carModel.Id">
-                <td>
+                <td style="width:35%;">
                     <label class="carModel-id" data-id="@carModel.Id" style="visibility:hidden;">@Model.Id</label>
                     <span class="carModel-text">@carModel.Name</span>
-                    <input type="text" class="form-control carModel-input d-none" value="@carModel.Name" />
-                    <div id="errorCarModel" class="alert alert-danger d-none"></div>
-                    <button class="btn btn-warning edit-carModel-btn">
-                        <i class="fa fa-pencil-alt"></i>
+                    
+                </td>
+                <td class="action-cell" style="width:20%">
+                    <div class="btn-group-cell">
+                    <button class="btn_primary edit-carModel-btn">
+                            <i class="far fa-edit"></i>
                     </button>
-                    <button class="btn btn-danger delete-carModel-btn">
+                    <button class="btn_delete delete-carModel-btn">
                         <i class="fa fa-trash"></i>
                     </button>
-                    <button class="btn btn-success save-carModel-btn d-none">
-                        <i class="fa fa-save"></i>
-                    </button>
-                    <button class="btn btn-secondary cancel-carModel-btn d-none">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </td>
-
+                    </div>
+</td>
                 <!-- Kolumna Wersja -->
-                <td>
+                <td style="width:35%;">
                     <ul class="list-unstyled">
                         @foreach (var version in carModel.Versions)
                         {
                             <li data-version-id="@version.Id">
                                 <label class="version-id" data-id="@version.Id" style="visibility:hidden;">@version.Id</label>
                                 <span class="version-text">@version.Name</span>
-                                <input type="text" class="form-control version-input d-none" value="@version.Name" />
-                                <div id="errorVersion" class="alert alert-danger d-none"></div>
-                                <button class="btn btn-warning edit-version-btn">
-                                    <i class="fa fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger delete-version-btn">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                                <button class="btn btn-success save-version-btn d-none">
-                                    <i class="fa fa-save"></i>
-                                </button>
-                                <button class="btn btn-secondary cancel-version-btn d-none">
-                                    <i class="fa fa-times"></i>
-                                </button>
+                                <div class="btn-group-cell" style="flex-shrink:0; display: flex; gap: 6px;">
+                                    <button class="btn_primary edit-version-btn">
+                                        <i class="far fa-edit"></i>
+                                    </button>
+                                    <button class="btn_delete delete-version-btn">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
                             </li>
                         }
                     </ul>
-                    <!-- Przycisk do dodawania nowej wersji -->
-                    <button class="btn btn-primary add-version-btn">
-                        <i class="fa fa-plus"></i>
-                    </button>
-                    <input type="text" class="form-control newVersion-input d-none" value="" />
-                    <div id="errorNewVersion" class="alert alert-danger d-none"></div>
-                    <button class="btn btn-success save-newVersion-btn d-none">
-                        <i class="fa fa-save"></i>
-                    </button>
+                    
+                </td>
+                <!-- Przycisk do dodawania nowej wersji -->
+                <td class="action-cell" style="width:10%;">
+                    <div class="btn-group-cell">
+                        <button class="btn_primary add-version-btn">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        
+                    </div>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+<!-- Modal dla marki-->
+<div class="modal fade" id="editBrandModal" tabindex="-1" aria-labelledby="editBrandModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editBrandModalLabel">Edytuj markę - @Model.Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nazwa marki</label>
+                    <input type="text" name="name" value="@Model.Name" class="form-control name-input" placeholder="Nowa nazwa marki" />
+                </div>
+                <div class="mb-3 d-flex align-items-center gap-3">
+                    <img src="@Model.Icon" alt="Podgląd" class="icon-preview" style="height:40px; width:auto;" />
+                    <input type="file" class="form-control icon-input" accept="image/*" />
+                </div>
+                <div id="errorName" class="alert alert-danger d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary cancel-brand-btn" data-bs-dismiss="modal"><i class="fa fa-times"></i> Anuluj</button>
+                <button type="button" class="btn btn-success save-brand-btn"><i class="fa fa-save"></i> Zapisz</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dodaj Nowy Model -->
+<div class="modal fade" id="addModelModal" tabindex="-1" aria-labelledby="addModelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModelModalLabel">Dodaj nowy model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newModelName" class="form-label">Nazwa modelu</label>
+                    <input type="text" class="form-control" id="newModelName" placeholder="Wpisz nazwę modelu" />
+                    <div id="errorNewModelModal" class="alert alert-danger d-none mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" id="saveNewModelModalBtn"><i class="fa fa-save"></i> Dodaj</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edycja Modelu -->
+<div class="modal fade" id="editModelModal" tabindex="-1" aria-labelledby="editModelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModelModalLabel">Edytuj model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="editModelName" class="form-label">Nazwa modelu</label>
+                    <input type="text" class="form-control" id="editModelName" placeholder="Wpisz nową nazwę" />
+                    <div id="errorEditModelModal" class="alert alert-danger d-none mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" id="saveEditModelModalBtn"><i class="fa fa-save"></i> Zapisz</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal edycji wersji -->
+<div class="modal fade" id="editVersionModal" tabindex="-1" aria-labelledby="editVersionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVersionModalLabel">Edytuj generację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editVersionId" />
+                <div class="mb-3">
+                    <label for="editVersionName" class="form-label">Nazwa wersji</label>
+                    <input type="text" id="editVersionName" class="form-control" />
+                    <div id="errorEditVersion" class="alert alert-danger d-none mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" id="saveVersionChanges" class="btn_primary">Zapisz zmiany</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal dodawania nowej wersji -->
+<div class="modal fade" id="addVersionModal" tabindex="-1" aria-labelledby="addVersionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVersionModalLabel">Dodaj nową wersję</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="addVersionModelId" />
+                <div class="mb-3">
+                    <label for="addVersionName" class="form-label">Nazwa wersji</label>
+                    <input type="text" id="addVersionName" class="form-control" />
+                    <div id="errorAddVersion" class="alert alert-danger d-none mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" id="saveNewVersion" class="btn_primary">Dodaj</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 @section Scripts {
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-           // Edycja nazwy marki
-           $(".edit-name-btn").click(function () {
-               $(".cancel-carModel-btn").click();
-               $(".cancel-icon-btn").click();
-               $(".cancel-version-btn").click();
-               $(".name-input").val($(".name-text").text().trim());
-                  $(".edit-name-btn, .name-text, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-               $(".save-name-btn, .cancel-name-btn, .name-input").removeClass("d-none");
-           });
+                 // 🔹 Podgląd nowej ikony
+        $(".icon-input").on("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    $(".icon-preview").attr("src", ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-           // 🔹 Anulowanie edycji nazwy marki
-           $(".cancel-name-btn").click(function () {
-               $(".edit-name-btn, .name-text").removeClass("d-none");
-               $(".save-name-btn, .cancel-name-btn, .name-input, #errorName").addClass("d-none");
-           });
+        // ✅ Zapisz zmianę marki (nazwa + ikona)
+        $(".save-brand-btn").click(async function () {
+            const id = $(".name-input").closest(".modal-content").find(".name-input").data("id") || @Model.Id;
+            const name = $(".name-input").val().trim();
+            const file = $(".icon-input")[0].files[0];
+            const oldName = "@Model.Name";
 
-           // ✅ Zapisywanie zmiany nazwy marki
-           $(".save-name-btn").click(async function () {
-               var name = $(".name-input").val().trim();
-               var id = $(".id-label").data("id");
-
-               // Jeśli nazwa nie została zmieniona, anuluj edycję
-               if (name == $(".name-text").text().trim()) {
-                   $(".cancel-name-btn").click();
-                   return;
-               }
-
-               // Zmienna przechowująca marki
-               let existingBrands = [];
-
-               // Pobieranie danych z serwera
-               try {
-                   const response = await fetch("/Admin/GetBrands");
-                   const data = await response.json();
-
-                   // Mapowanie danych marek
-                   existingBrands = data.map(brand => ({
-                       id: brand.id,
-                       name: brand.name.toLowerCase().trim()  // Używamy .trim() by usunąć ewentualne białe znaki
-                   }));
-               } catch (error) {
-                   console.log("Błąd podczas pobierania marek:", error);
-               }
-
-               var state = 0;
-
-               // Walidacja, czy nazwa jest pusta
-               if (!name) {
-                   $("#errorName").text("Nazwa jest wymagana").removeClass("d-none");
-                   state++;
-               }
-
-               // Sprawdzenie, czy nazwa marki już istnieje
-               else if (existingBrands.some(brand => brand.name === name.toLowerCase().trim() && brand.id !== id)) {
-                   $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
-                   state++;
-               } else {
-                   $("#errorName").addClass("d-none");
-               }
-
-               // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-               if (state > 0) {
-                   return;
-               }
-
-               // Przygotowanie do wysłania danych
-               var formData = new FormData();
-               formData.append("Id", id);
-               formData.append("Name", name);
-
-               // Wysyłanie danych za pomocą AJAX
-               $.ajax({
-                   url: "/Admin/EditBrandName",
-                   type: "POST",
-                   data: formData,
-                   processData: false,
-                   contentType: false,
-                   success: function () {
-                       alert("Zaktualizowano pomyślnie");
-                       location.reload();
-                   },
-                   error: function () {
-                       alert("Błąd aktualizacji");
-                   }
-               });
-           });
-
-           // Edycja ikony marki
-           $(".edit-icon-btn").click(function () {
-               $(".cancel-name-btn").click();
-               $(".cancel-carModel-btn").click();
-               $(".cancel-version-btn").click();
-                  $(".edit-icon-btn, .carModel-input, .save-newModel-btn, .newModel-input, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-               $(".save-icon-btn, .cancel-icon-btn, .icon-input").removeClass("d-none");
-           });
-
-           // 🔹 Anulowanie edycji ikony marki
-           $(".cancel-icon-btn").click(function () {
-               $(".icon-input").val("");
-               $(".edit-icon-btn").removeClass("d-none");
-               $(".save-icon-btn, .cancel-icon-btn, .icon-input").addClass("d-none");
-           });
-
-
-            // ✅ Zapisywanie zmiany ikony marki
-        $(".save-icon-btn").click(async function () {
-            var file = $(".icon-input")[0].files[0];
-            var id = $(".id-label").data("id");
-
-            if (!file) {
-                $(".cancel-icon-btn").click();
+            // Walidacja
+            if (!name) {
+                $("#errorName").text("Nazwa jest wymagana").removeClass("d-none");
                 return;
             }
 
-            var formData = new FormData();
+            if (name === oldName && !file) {
+                $("#editBrandModal").modal('hide');
+                return;
+            }
+
+            // 🔹 walidacja duplikatu tylko jeśli zmieniono nazwę
+            if (name.toLowerCase() !== oldName.toLowerCase()) {
+                let existingBrands = [];
+                try {
+                    const response = await fetch("/Admin/GetBrands");
+                    const data = await response.json();
+                    existingBrands = data.map(b => b.name.toLowerCase().trim());
+                } catch (err) {
+                    console.log("Błąd pobierania marek:", err);
+                }
+
+                if (existingBrands.includes(name.toLowerCase())) {
+                    $("#errorName").text("Podana marka już istnieje").removeClass("d-none");
+                    return;
+                } else {
+                    $("#errorName").addClass("d-none");
+                }
+            } else {
+                $("#errorName").addClass("d-none");
+            }
+
+            const formData = new FormData();
             formData.append("Id", id);
-            formData.append("ImageFile", file);
+            formData.append("Name", name);
+            if (file) formData.append("ImageFile", file);
 
             $.ajax({
-                url: "/Admin/EditBrandIcon",
+                url: "/Admin/EditBrandFull",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -259,88 +320,113 @@
             });
         });
 
-           // Edycja modelu
-           $(".edit-carModel-btn").click(function () {
-               var row = $(this).closest("tr");
-               $(".cancel-icon-btn").click();
-               $(".cancel-name-btn").click();
-               $(".cancel-version-btn").click();
-               $(".cancel-carModel-btn").not(row.find(".cancel-carModel-btn")).click();
-               row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
-                  row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn, .carModel-input, .save-newModel-btn, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-               $(".save-newModel-btn, .newModel-input").addClass("d-none");
-               row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").removeClass("d-none");
-           });
+        // Dodawanie nowego modelu do bazy
+        // Otwieranie modala z przypisaniem brandId
+        let currentBrandId = $(".id-label").data("id"); // zakładamy, że id marki jest w elemencie .id-label
 
-           // Anulowanie edycji modelu
-           $(".cancel-carModel-btn").click(function () {
-               var row = $(this).closest("tr");
-               row.find("#errorCarModel").addClass("d-none");
-               row.find(".carModel-input").val(row.find(".carModel-text").text().trim());
-               row.find(".edit-carModel-btn, .carModel-text, .delete-carModel-btn").removeClass("d-none");
-               row.find(".save-carModel-btn, .cancel-carModel-btn, .carModel-input").addClass("d-none");
-           });
+        // Zapis nowego modelu z modala
+        $("#saveNewModelModalBtn").click(function () {
+            const name = $("#newModelName").val().trim();
+            const brandId = currentBrandId;
 
-           // ✅ Zapisywanie zmiany nazwy modelu
-           $(".save-carModel-btn").click(function () {
-               var row = $(this).closest("tr");
-               var name = row.find(".carModel-input").val().trim();
-               var id = row.data("id");
-               // Jeśli nazwa nie została zmieniona, anuluj edycję
-               if (name == row.find(".carModel-text").text().trim()) {
-                   $(".cancel-carModel-btn").click();
-                   return;
-               }
+            // Pobranie istniejących modeli w tabeli
+            const existingCarModels = $(".carModel-text").map(function() {
+                return $(this).text().trim().toLowerCase();
+            }).get();
 
-               // Zmienna przechowująca modele
-               var existingCarModels = [];
+            let state = 0;
+            if (!name) {
+                $("#errorNewModelModal").text("Nazwa musi być podana").removeClass("d-none");
+                state++;
+            } else if (existingCarModels.includes(name.toLowerCase())) {
+                $("#errorNewModelModal").text("Podany model już istnieje").removeClass("d-none");
+                state++;
+            } else {
+                $("#errorNewModelModal").addClass("d-none");
+            }
 
-               // Pobieranie danych z serwera
-               $(".carModel-text").each(function () {
-                   existingCarModels.push($(this).text().trim().toLowerCase());
-               });
+            if (state > 0) return;
 
-               var state = 0;
-               // Walidacja, czy nazwa jest pusta
-               if (!name) {
-                   row.find("#errorCarModel").text("Nazwa jest wymagana").removeClass("d-none");
-                   state++;
-               }
+            // Wysyłamy do serwera
+            const formData = new FormData();
+            formData.append("Name", name);
+            formData.append("BrandId", brandId);
 
-               // Sprawdzenie, czy nazwa modelu już istnieje
-               else if (existingCarModels.some((model, index) => model === name.toLowerCase() && row.data("id") != $(".carModel-text").eq(index).closest("tr").data("id"))) {
-                   row.find("#errorCarModel").text("Podany model już istnieje").removeClass("d-none");
-                   state++;
-               } else {
-                   row.find("#errorCarModel").addClass("d-none");
-               }
+            $.ajax({
+                url: "/Admin/CreateModel",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Dodano pomyślnie!");
+                    location.reload(); // lub dynamiczne dodanie wiersza do tabeli
+                },
+                error: function (xhr) {
+                    console.error("Błąd:", xhr.responseText);
+                    alert("Wystąpił błąd. Sprawdź konsolę.");
+                }
+            });
+        });
 
-               // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-               if (state > 0) {
-                   return;
-               }
+        // Edycja modelu - otwieranie modala z aktualną nazwą
+        let editModelId = null;
+        $(".edit-carModel-btn").click(function () {
+            const row = $(this).closest("tr");
+            editModelId = row.data("id");
+            const currentName = row.find(".carModel-text").text().trim();
 
-               // Przygotowanie do wysłania danych
-                       var formData = new FormData();
-                       formData.append("Id", id);
-                       formData.append("Name", name);
+            // Wstawiamy aktualną nazwę do inputa w modalu
+            $("#editModelName").val(currentName);
+            $("#errorEditModelModal").addClass("d-none");
 
-               // Wysyłanie danych za pomocą AJAX
-               $.ajax({
-                   url: "/Admin/EditModel",
-                   type: "POST",
-                   data: formData,
-                   processData: false,
-                   contentType: false,
-                   success: function () {
-                       alert("Zaktualizowano pomyślnie");
-                       location.reload();
-                   },
-                   error: function () {
-                       alert("Błąd aktualizacji");
-                   }
-               });
-           });
+            // Otwieramy modal
+            const editModal = new bootstrap.Modal(document.getElementById('editModelModal'));
+            editModal.show();
+        });
+            //Edycja modelu - zapis zmian
+           $("#saveEditModelModalBtn").click(function () {
+            const name = $("#editModelName").val().trim();
+
+            // Pobranie wszystkich modeli w tabeli do walidacji
+            const existingCarModels = $(".carModel-text").map(function() {
+                return $(this).text().trim().toLowerCase();
+            }).get();
+
+            let state = 0;
+            if (!name) {
+                $("#errorEditModelModal").text("Nazwa jest wymagana").removeClass("d-none");
+                state++;
+            } else if (existingCarModels.some((model, index) => model === name.toLowerCase() && editModelId != $(".carModel-text").eq(index).closest("tr").data("id"))) {
+                $("#errorEditModelModal").text("Podany model już istnieje").removeClass("d-none");
+                state++;
+            } else {
+                $("#errorEditModelModal").addClass("d-none");
+            }
+
+            if (state > 0) return;
+
+            // AJAX do backendu
+            const formData = new FormData();
+            formData.append("Id", editModelId);
+            formData.append("Name", name);
+
+            $.ajax({
+                url: "/Admin/EditModel",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    alert("Zaktualizowano pomyślnie!");
+                    location.reload();
+                },
+                error: function () {
+                    alert("Błąd aktualizacji modelu");
+                }
+            });
+        });
+
 
            //Usuwanie modelu
            $(".delete-carModel-btn").click(function () {
@@ -396,157 +482,69 @@
                });
            }
 
-           // Dodawanie nowego modelu
-           $(".add-carModel-btn").click(function () {
-               var row = $(this).closest("tr");
-               $(".cancel-icon-btn").click();
-               $(".cancel-name-btn").click();
-               $(".cancel-carModel-btn").not(row.find(".cancel-carModel-btn")).click();
-               row.find(".save-newModel-btn, .newModel-input").removeClass("d-none");
-           });
 
-           // Dodawanie nowego modelu do bazy
-           $(".save-newModel-btn").click(function () {
-               var name = $(".newModel-input").val();
-               var brandId = $(".id-label").data("id");
-                       // Zmienna przechowująca modele
-               var existingCarModels = [];
+                  // Edycja generacji - otwieranie modala z aktualną nazwą
+        $(document).on("click", ".edit-version-btn", function () {
+            var versionRow = $(this).closest("li");
+            var versionId = versionRow.data("version-id");
+            var versionName = versionRow.find(".version-text").text().trim();
 
-               // Pobieranie danych z serwera
-               $(".carModel-text").each(function () {
-                   existingCarModels.push($(this).text().trim().toLowerCase());
-               });
-               //Walidacja danych
-                   var state=0;
-                   if (existingCarModels.includes(name.toLowerCase())) {
-                       $("#errorNewModel").text("Podana marka już istnieje").removeClass("d-none");
-                       state++;
-                   }
-                   else if(!name){
-                       $("#errorNewModel").text("Nazwa musi być podana").removeClass("d-none");
-                       state++;
-                   }
-                   else{
-                       $("#errorNewModel").addClass("d-none");
-                   }
-                   if(state>0)
-                   {
-                       return;
-                   }
+            // Wypełniamy pola modala
+            $("#editVersionId").val(versionId);
+            $("#editVersionName").val(versionName);
+            $("#errorEditVersion").addClass("d-none").text("");
 
-               var formData = new FormData();
-               formData.append("Name", name);
-               formData.append("BrandId", brandId);
+            // Pokazujemy modal
+            var modal = new bootstrap.Modal(document.getElementById("editVersionModal"));
+            modal.show();
+        });
 
-               $.ajax({
-                   url: "/Admin/CreateModel",
-                   type: "POST",
-                   data: formData,
-                   processData: false,
-                   contentType: false,
-                   success: function (response) {
-                       alert("Dodano pomyślnie!");
-                       location.reload();
-                   },
-                   error: function (xhr) {
-                       console.error("Error:", xhr.responseText);
-                       alert("Error adding equipment. Check the console for details.");
-                   }
-               });
-           });
+        // Edycja generacji - zapis zmian
+        $("#saveVersionChanges").click(function () {
+            var id = $("#editVersionId").val();
+            var name = $("#editVersionName").val().trim();
 
-               // Edycja wersji
-           $(".edit-version-btn").click(function () {
-               var versionRow = $(this).closest("li"); // Pobieramy tylko wersję
-               $(".cancel-icon-btn").click();
-               $(".cancel-name-btn").click();
-               $(".cancel-carModel-btn").click();
-               $(".cancel-version-btn").not(versionRow.closest("li").find(".cancel-version-btn")).click();
-               versionRow.find(".version-input").val(versionRow.find(".version-text").text().trim());
+            // Pobranie aktualnego modelu (tr, który zawiera tę wersję)
+            var modelRow = $("li[data-version-id='" + id + "']").closest("tr");
+            var modelId = modelRow.data("id");
 
-                  versionRow.find(".edit-version-btn, .version-text, .delete-version-btn, #errorNewVersion, .newVersion-input, .save-newVersion-btn").addClass("d-none");
-               versionRow.find(".save-version-btn, .cancel-version-btn, .version-input").removeClass("d-none");
-           });
+            // Walidacja
+            var existingVersions = modelRow.find(".version-text").map(function () {
+                return $(this).text().trim().toLowerCase();
+            }).get();
 
+            if (!name) {
+                $("#errorEditVersion").removeClass("d-none").text("Nazwa jest wymagana");
+                return;
+            }
 
-           // Anulowanie edycji wersji
-           $(".cancel-version-btn").click(function () {
-               var versionRow = $(this).closest("li");
-               versionRow.find("#errorVersion").addClass("d-none");
-               versionRow.find(".version-input").val(versionRow.find(".version-text").text().trim());
-               versionRow.find(".edit-version-btn, .version-text, .delete-version-btn").removeClass("d-none");
-               versionRow.find(".save-version-btn, .cancel-version-btn, .version-input").addClass("d-none");
-           });
+            if (existingVersions.includes(name.toLowerCase()) &&
+                name.toLowerCase() !== $("li[data-version-id='" + id + "'] .version-text").text().trim().toLowerCase()) {
+                $("#errorEditVersion").removeClass("d-none").text("Taka wersja już istnieje w tym modelu");
+                return;
+            }
 
+            // Wysyłamy dane
+            var formData = new FormData();
+            formData.append("Id", id);
+            formData.append("Name", name);
 
-           // ✅ Zapisywanie zmiany nazwy wersji
-           $(".save-version-btn").click(function () {
-               var row = $(this).closest("li");
-               var name = row.find(".version-input").val().trim();
-               var id = row.data("version-id");
-               // Jeśli nazwa nie została zmieniona, anuluj edycję
-               if (name == row.find(".version-text").text().trim()) {
-                   $(".cancel-version-btn").click();
-                   return;
-               }
-                               // Pobieramy model ID z aktualnie edytowanego wiersza
-           var modelId = row.closest("tr").data("id");
-           var existingVersionsByModel = {}; // Obiekt przechowujący wersje dla każdego modelu
-
-           // Pobieramy wszystkie wersje dla każdego modelu
-           $(".carModel-id").each(function () {
-               var id = $(this).data("id"); // Pobranie ID modelu
-               if (!id) return; // Jeśli ID nie istnieje, pomijamy
-
-               existingVersionsByModel[id] = $(this)
-                   .closest("tr")
-                   .find(".version-text")
-                   .map(function () {
-                       return $(this).text().trim().toLowerCase();
-                   })
-                   .get(); // Zamiana na tablicę wartości
-           });
-
-           // Walidacja, czy nazwa jest pusta
-           var state = 0;
-           if (!name) {
-               row.find("#errorVersion").text("Nazwa jest wymagana").removeClass("d-none");
-               state++;
-           }
-           // Sprawdzamy, czy podana wersja już istnieje w tym modelu
-           else if (existingVersionsByModel[modelId]?.includes(name.toLowerCase())) {
-               row.find("#errorVersion").text("Podana wersja już istnieje dla tego modelu").removeClass("d-none");
-               state++;
-           }
-        else {
-               row.find("#errorVersion").addClass("d-none");
-           }
-               // Jeśli wystąpił błąd, zatrzymujemy dalsze działanie
-               if (state > 0) {
-                   return;
-               }
-
-               // Przygotowanie do wysłania danych
-                       var formData = new FormData();
-                       formData.append("Id", id);
-                       formData.append("Name", name);
-
-               // Wysyłanie danych za pomocą AJAX
-               $.ajax({
-                   url: "/Admin/EditVersion",
-                   type: "POST",
-                   data: formData,
-                   processData: false,
-                   contentType: false,
-                   success: function () {
-                       alert("Zaktualizowano pomyślnie");
-                       location.reload();
-                   },
-                   error: function () {
-                       alert("Błąd aktualizacji");
-                   }
-               });
-           });
+            $.ajax({
+                url: "/Admin/EditVersion",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    $("#editVersionModal").modal("hide");
+                    alert("Zaktualizowano pomyślnie!");
+                    location.reload();
+                },
+                error: function () {
+                    $("#errorEditVersion").removeClass("d-none").text("Błąd aktualizacji.");
+                }
+            });
+        });
 
            // 🔹 Usuwanie wersji
                $(".delete-version-btn").click(function () {
@@ -568,74 +566,66 @@
                    }
                });
 
-                 // Dodawanie nowej wersji (poprawka, żeby pole było tylko w jednym wierszu)
-           $(".add-version-btn").click(function () {
-               $(".cancel-icon-btn").click();
-               $(".cancel-name-btn").click();
-               $(".cancel-carModel").click();
-               $(".cancel-version-btn").click();
+                   // 🔹 Otwieranie modala dodawania wersji
+        $(document).on("click", ".add-version-btn", function () {
+            var modelRow = $(this).closest("tr");
+            var modelId = modelRow.data("id");
 
-               var row = $(this).closest("tr");
+            // Zapisz ID modelu w ukrytym polu modala
+            $("#addVersionModelId").val(modelId);
+            $("#addVersionName").val("");
+            $("#errorAddVersion").addClass("d-none").text("");
 
-               // Ukrywamy inne inputy i pokazujemy tylko ten w klikniętym wierszu
-               $(".newVersion-input, .save-newVersion-btn, #errorNewVersion").addClass("d-none");
+            var modal = new bootstrap.Modal(document.getElementById("addVersionModal"));
+            modal.show();
+        });
 
-               row.find(".newVersion-input").removeClass("d-none").focus();
-               row.find(".save-newVersion-btn").removeClass("d-none");
-           });
+        // 🔹 Zapis nowej wersji przez AJAX
+        $("#saveNewVersion").click(function () {
+            var name = $("#addVersionName").val().trim();
+            var modelId = $("#addVersionModelId").val();
 
-           // Dodawanie nowej wersji do bazy
-           $(".save-newVersion-btn").click(function () {
-               var row = $(this).closest("tr");
-               var name = row.find(".newVersion-input").val(); // Pobranie wartości z odpowiedniego inputa
-               var modelId = row.data("id"); // Pobranie ID modelu z atrybutu data-id w <tr>
+            // Znajdź wiersz modelu po ID
+            var modelRow = $("tr[data-id='" + modelId + "']");
+            var existingVersions = modelRow.find(".version-text").map(function () {
+                return $(this).text().trim().toLowerCase();
+            }).get();
 
-               if (!modelId) {
-                   console.error("❌ Błąd: ModelId jest pusty!");
-                   return;
-               }
+            // Walidacja
+            if (!name) {
+                $("#errorAddVersion").removeClass("d-none").text("Nazwa jest wymagana");
+                return;
+            }
 
+            if (existingVersions.includes(name.toLowerCase())) {
+                $("#errorAddVersion").removeClass("d-none").text("Taka wersja już istnieje dla tego modelu");
+                return;
+            }
 
+            $("#errorAddVersion").addClass("d-none");
 
-               // Pobieramy istniejące wersje dla tego modelu
-               var existingVersions = row.find(".version-text").map(function () {
-                   return $(this).text().trim().toLowerCase();
-               }).get();
+            var formData = new FormData();
+            formData.append("Name", name);
+            formData.append("CarModelId", modelId);
 
-               // Walidacja, czy nazwa jest pusta
-               if (!name) {
-                   row.find("#errorNewVersion").text("Nazwa jest wymagana").removeClass("d-none");
-                   return;
-               }
+            $.ajax({
+                url: "/Admin/CreateVersion",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    $("#addVersionModal").modal("hide");
+                    alert("Wersja została dodana!");
+                    location.reload();
+                },
+                error: function (xhr) {
+                    $("#errorAddVersion").removeClass("d-none").text("❌ Błąd podczas dodawania wersji.");
+                    console.error("❌ Error:", xhr.responseText);
+                }
+            });
+        });
 
-               // Sprawdzenie, czy wersja już istnieje
-               if (existingVersions.includes(name.toLowerCase())) {
-                   row.find("#errorNewVersion").text("Podana wersja już istnieje dla tego modelu").removeClass("d-none");
-                   return;
-               } else {
-                   row.find("#errorNewVersion").addClass("d-none");
-               }
-
-               var formData = new FormData();
-               formData.append("Name", name);
-               formData.append("CarModelId", modelId);
-
-               $.ajax({
-                   url: "/Admin/CreateVersion",
-                   type: "POST",
-                   data: formData,
-                   processData: false,
-                   contentType: false,
-                   success: function (response) {
-                       alert("✅ Dodano pomyślnie!");
-                       location.reload();
-                   },
-                   error: function (xhr) {
-                       console.error("❌ Error:", xhr.responseText);
-                       alert("❌ Wystąpił błąd. Sprawdź konsolę.");
-                   }
-               });
-           });
 
     </script>
 }

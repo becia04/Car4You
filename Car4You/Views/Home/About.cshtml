@@ -1,3 +1,80 @@
 ﻿@{
     ViewData["Title"] = "O nas";
 }
+<link href="~/css/static_site.css" rel="stylesheet" />
+
+    <div style="margin-top:180px;">
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+            <a asp-action="Index" asp-controller="Home" style="margin-right:1rem;">
+                <i class="fas fa-home btn_previous"></i>
+            </a>
+            O NAS
+        </h1>
+        <div class="line" style="margin-bottom:2rem;"></div>
+    </div>
+
+<section>
+    <div class="about-container" style="margin-top:0;border-top:none">
+        <div class="about-image scroll-animate slide-in">
+            <img src="~/logo.png" alt="Auto-Handel Szubin - komis samochodowy" style="border-radius:none;box-shadow:none;" />
+        </div>
+        <div class="about-text scroll-animate fade-in">
+            <h2 class="section-title scroll-animate fade-in">Kim jesteśmy?</h2>
+            <p style="font-size:1.25rem;">
+                <b>Auto-Handel Szubin</b> to miejsce stworzone z pasji do motoryzacji.
+                Od lat zajmuję się sprzedażą aut używanych, które dokładnie sprawdzam i przygotowuję,
+                aby każdy klient mógł wyjechać zadowolony i pewny swojego wyboru.
+                Działam uczciwie, rzetelnie i zawsze stawiam na jakość – <strong>bo dobre auto to nie przypadek.</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="about-container">
+        <div class="about-text scroll-animate fade-in">
+            <h2 class="section-title">Uczciwość i jakość przede wszystkim</h2>
+            <p>
+                Każde auto, które oferuję, przechodzi dokładną selekcję oraz kontrolę techniczną.
+                Nie sprzedaję samochodów „w ciemno” – każdy egzemplarz sprawdzam osobiście, zarówno pod względem mechanicznym, jak i wizualnym.
+                Do każdego pojazdu udostępniam pełną dokumentację i historię serwisową, abyś miał pewność, co kupujesz.
+            </p>
+
+            <p>
+                <i class="fas fa-tools"></i> <strong>Dokładna kontrola techniczna</strong> każdego auta<br/>
+                <i class="far fa-file-alt"></i> <strong>Przejrzysta historia pojazdu</strong> i kompletna dokumentacja<br/>
+                <i class="fas fa-car"></i> <strong>Szeroki wybór aut</strong> – miejskie, rodzinne, SUV-y, kombi i inne<br />
+                <i class="fas fa-wrench"></i> <strong>Pomoc w rejestracji i finansowaniu</strong> – sprzedaż ratalna w uproszczonej procedurze<br />
+                <i class="fas fa-truck-pickup"></i> <strong>Możliwość dostarczenia auta do klienta</strong> na terenie kraju<br />
+                <i class="fas fa-globe-europe"></i> <strong>Sprowadzanie samochodów na życzenie</strong> – pomagam znaleźć i sprowadzić auto z zagranicy<br />
+                <i class="far fa-comments"></i> <strong>Indywidualne podejście</strong> i doradztwo przy wyborze samochodu<br />
+            </p>
+        </div>
+        <div class="about-image scroll-animate fade-out">
+            <img src="~/about_1.jpg" alt="Auto-Handel Szubin - komis samochodowy" />
+        </div>
+    </div>
+
+    <div class="about-container">
+        <div class="about-image scroll-animate fade-out" style="margin-top:1.5rem;">
+            <img src="~/about_2.jpg" alt="Auto-Handel Szubin - komis samochodowy" />
+        </div>
+        <div class="about-text scroll-animate fade-in">
+            <h2 class="section-title">Dlaczego warto mi zaufać?</h2>
+            <p>
+                Każde auto traktuję tak, jakbym miał je kupić dla siebie.
+                Wiem, jak ważne jest zaufanie przy zakupie samochodu, dlatego zawsze stawiam na przejrzystość, uczciwość i kontakt bez pośpiechu.
+                Klienci często wracają do mnie po kolejne auta lub polecają mnie swoim znajomym – i to jest dla mnie największym dowodem uznania.
+            </p>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section scroll-animate slide-in">
+        <h2>Masz pytania? Szukasz konkretnego auta?</h2>
+        <p>Skontaktuj się ze mną – chętnie pomogę i przygotuję indywidualną ofertę.</p>
+        <a href="tel:+48505044979" class="cta-btn cta-btn-secondary"><i class="fas fa-phone"></i> Zadzwoń teraz</a>
+        <a href="mailto:kontakt@autohandelszubin.pl" class="cta-btn cta-btn-secondary"><i class="fas fa-envelope"></i> Napisz wiadomość</a>
+        <a href="https://www.facebook.com/profile.php?id=61571723789889" target="_blank" class="cta-btn cta-btn-secondary">
+            <i class="fab fa-facebook-f"></i> Odwiedź nas na Facebooku
+        </a>
+    </div>
+</section>

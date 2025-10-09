@@ -7,11 +7,30 @@
     ViewData["Title"] = (Model.Car?.Id > 0 ? "Edytuj auto" : "Dodaj auto");
 }
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+@if(Model.Car?.Id>0)
+{
     <div style="margin-top:180px;">
-        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;" >@(Model.Car?.Id > 0 ? "Edytuj auto" : "Dodaj auto")</h1>
+    <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+        <a asp-action="Details" asp-controller="Home" asp-route-id="@Model.Car.Id" style="margin-right:1rem;">
+    <i class="fas fa-arrow-left btn_previous"></i>
+</a>
+        Edytuj auto
+    </h1>
+    <div class="line" style="margin-bottom:2rem;"></div>
+    </div>
+}
+else
+{
+        <div style="margin-top:180px;">
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;" >
+            <a asp-action="Index" asp-controller="Admin" style="margin-right:1rem;">
+    <i class="fas fa-home btn_previous"></i>
+</a>
+            Dodaj auto</h1>
         <div class="line" style="margin-bottom:2rem;"></div>
     </div>
+}
+
 
 <form asp-action="SaveCar" asp-controller="Admin" method="post" enctype="multipart/form-data" novalidate>
     <input type="hidden" asp-for="Car.Id" />
@@ -306,7 +325,7 @@
             <tr>
                 @foreach (var equipmentType in Model.EquipmentTypes)
                 {
-                    <th>@equipmentType.Name</th>
+                    <th> <img src="@equipmentType.Icon" style="max-height:10px;"/>@equipmentType.Name</th>
                 }
             </tr>
         </thead>

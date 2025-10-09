@@ -1,0 +1,233 @@
+﻿
+
+.clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #6c757d; /* neutralny Bootstrapowy szary */
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    display: none;
+    transition: color 0.2s ease;
+    margin-right:1rem;
+}
+
+    .clear-btn:hover {
+        color: #dc3545; /* czerwony przy hover */
+    }
+
+    .clear-btn i {
+        pointer-events: none; /* ikona nie przechwytuje kliknięcia */
+    }
+
+/* Dodatkowo – żeby inputy nie były przykrywane przez przycisk */
+#searchInput,
+#typeFilter {
+    padding-right: 2rem; /* miejsce na ikonę X */
+}
+
+
+
+.icon-cell {
+    vertical-align: middle; /* wyrównuje zawartość do środka wiersza */
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center; /* wyrównanie pionowe */
+    gap: 8px; /* odstęp między ikoną a inputem */
+}
+
+.icon-preview {
+    height: 50px;
+    object-fit: cover; /* żeby obrazek się nie rozciągał */
+}
+
+/* Jeśli input jest tymczasowo ukryty */
+.image-input {
+    flex: 1; /* pozwala mu zająć resztę miejsca */
+    min-width: 150px; /* można dostosować */
+}
+
+
+
+/* Dropdown – strzałka */
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('/icons/arrow-down.png');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+    padding-right: 2rem;
+}
+
+/* Kontener przycisków */
+.btn-group-cell {
+    display: flex;
+    white-space: nowrap;
+    flex-wrap: wrap;
+}
+
+    /* Przyciski obok siebie, dopasowane do komórki */
+    .btn-group-cell button {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 4px 6px;
+        line-height: 1;
+        margin: 0 2px;
+        height:50px;
+
+    }
+
+/* Wyrównanie pionowe komórki do środka */
+td.action-cell {
+    vertical-align: middle;
+    text-align: center;
+    width: 120px; /* szerokość kolumny dla przycisków edytuj i usuń */
+}
+
+
+.details-header {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top:180px;
+}
+
+/* Kontener przycisków administratora */
+.admin-btn {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-grow: 1;
+}
+
+
+.form-control {
+    border: 2px solid #24435e;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+    background-color: #fdfdfd;
+    color: #24435e;
+    transition: all 0.2s ease-in-out;
+}
+
+    /* Efekt po najechaniu */
+    .form-control:hover {
+        border-color: #d8be6d;
+        background-color: #fff;
+        box-shadow: 0 0 4px rgba(216, 190, 109, 0.2);
+    }
+
+    /* Efekt focus (kliknięcie w pole) */
+    .form-control:focus {
+        border-color: #d8be6d;
+        box-shadow: 0 0 6px rgba(216, 190, 109, 0.35);
+        outline: none;
+        background-color: #fff;
+    }
+
+
+/* === MODAL STYLING === */
+.modal-content {
+    background-color: #fdfdfd; /* jasne, eleganckie tło */
+    border: 2px solid #d8be6d; /* złote obramowanie */
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    font-family: 'Poppins', sans-serif;
+}
+
+.modal-header {
+    background-color: #24435e; /* granatowe tło */
+    color: #fff;
+    border-bottom: 2px solid #d8be6d;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.modal-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1); /* biała ikonka zamykania */
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+    .btn-close:hover {
+        opacity: 1;
+    }
+
+.modal-body {
+    padding: 1.5rem 2rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 2rem;
+}
+
+    .modal-footer .btn_primary,
+    .modal-footer .btn_secondary {
+        width: 48%; /* po 2 obok siebie zajmują całą szerokość */
+    }
+
+
+/* Tabela */
+.table {
+    width: 100%;
+    margin-top: 2rem;
+    background-color: #fff;
+    border-radius: 80px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    -ms-align-content: inherit;
+    -webkit-align-content: inherit;
+    align-content: inherit;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem; /* lekki odstęp między wierszami */
+    table-layout: fixed;
+}
+
+    .table th {
+        background-color: rgba(36, 67, 94, 0.95);
+        color: #d8be6d;
+        font-weight: 600;
+        padding: 1rem;
+        text-align: center;
+        border-bottom: 1.5px solid rgba(36, 67, 94, 0.3);
+        vertical-align: middle;
+        font-size: 1.5rem;
+        word-wrap: break-word;
+    }
+
+    .table td {
+        padding: 1rem;
+        border-bottom: 1.5px solid rgba(36, 67, 94, 0.3);
+        vertical-align: middle;
+        color: #7b2e1f;
+        font-size: 1.25rem;
+        text-align: center;
+        word-wrap: break-word;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+    .table tr:hover {
+        background-color: rgba(216, 190, 109, 0.3);
+        transform: translateY(-2px);
+        transition: all 0.2s ease-in-out;
+    }
+
+

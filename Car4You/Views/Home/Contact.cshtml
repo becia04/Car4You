@@ -1,16 +1,19 @@
-﻿<link href="~/css/contact_site.css" rel="stylesheet" />
+﻿<link href="~/css/static_site.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 @{
     ViewData["Title"] = "Kontakt";
 }
-
-<div class="contact-container" style="margin-top:180px;">
-    <div>
-        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;" ><i class="fas fa-envelope-open-text" style="margin-right:10px;"></i>KONTAKT</h1>
+    <div style="margin-top:180px;">
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+            <a asp-action="Index" asp-controller="Home" style="margin-right:1rem;">
+                <i class="fas fa-home btn_previous"></i>
+            </a>
+            KONTAKT
+        </h1>
         <div class="line" style="margin-bottom:2rem;"></div>
     </div>
-    <div class="car-item scroll-animate slide-in">
+    <div class="scroll-animate slide-in">
     <div class="contact-content">
         <!-- Lewa kolumna: informacje kontaktowe -->
         <div class="contact-info">
@@ -47,5 +50,4 @@
             allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
-</div>
 </div>

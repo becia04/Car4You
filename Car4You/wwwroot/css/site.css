@@ -1,6 +1,89 @@
-﻿/* === Przyciski – wspólna baza === */
+﻿.cookie-banner {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(36, 67, 94, 0.95);
+    color: #f0f0f0;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    flex-wrap: wrap; /* dopasowanie do węższych ekranów */
+    justify-content: center;
+    text-align: center;
+}
+
+    .cookie-banner p {
+        margin: 0;
+        flex: 1 1 100%;
+    }
+
+    .cookie-banner a {
+        color: #d8be6d;
+        text-decoration: underline;
+    }
+
+    .cookie-banner button {
+        background-color: #d8be6d;
+        color: #24435e;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+        .cookie-banner button:hover {
+            background-color: #e6b800;
+        }
+
+/* Dodatkowe dopasowanie dla bardzo małych ekranów */
+@media (max-width: 480px) {
+    .cookie-banner {
+        font-size: 13px;
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+        .cookie-banner button {
+            padding: 5px 10px;
+            font-size: 13px;
+        }
+}
+
+.btn_previous {
+    color: #24435e;
+}
+
+    .btn_previous:hover {
+        color: #d8be6d;
+    }
+
+
+/* Usuwanie – czerwony, ale stonowany */
+.btn_delete {
+    background-color: #fdfdfd;
+    color: #a03737;
+    border: 2px solid #a03737;
+}
+
+    .btn_delete:hover {
+        background-color: #a03737;
+        color: #fff;
+        box-shadow: 0 3px 6px rgba(160, 55, 55, 0.3);
+    }
+
+
+/* === Przyciski – wspólna baza === */
 .btn_primary,
-.btn_secondary {
+.btn_secondary,
+.btn_delete {
     min-width: 130px; /* wszystkie przyciski mają tę samą szerokość */
     text-align: center; /* wyrównanie tekstu */
     border-radius: 8px;
@@ -21,7 +104,7 @@
     .btn_primary:hover {
         background-color: #d8be6d; /* złote tło po najechaniu */
         border-color: #d8be6d;
-        color: #24435e;
+        color: #7b2e1f;
         box-shadow: 0 3px 6px rgba(216, 190, 109, 0.3);
     }
 
@@ -38,21 +121,21 @@
     }
 
 footer {
-    background-color: rgba(36, 67, 94, 0.95); /* granatowy */
+    background-color: rgba(36, 67, 94, 0.95);
     color: #f0f0f0;
     padding: 40px 0 20px;
+    text-align: center; /* tekst w środku stopki */
 }
 
 .footer-content {
     display: flex;
-    justify-content: space-around;
+    justify-content: center; /* 🔹 wyśrodkowanie sekcji */
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 40px;
     max-width: 1100px;
-    margin: 0 auto;
-    text-align: left;
-    margin-left: 5%;
-    margin-right: 5%;
+    margin: 0 auto; /* 🔹 wyśrodkowanie całego bloku */
+    text-align: left; /* zawartość sekcji zostaje wyrównana do lewej */
 }
 
 .footer-section {
@@ -90,7 +173,7 @@ footer {
             }
 
                 .footer-section ul li a:hover {
-                    color: #d8be6d; /* bordowy przy hoverze */
+                    color: #d8be6d;
                 }
 
     .footer-section.contact p {
@@ -105,6 +188,7 @@ footer .bottom {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 15px;
 }
+
 
 
 .nav-btn {

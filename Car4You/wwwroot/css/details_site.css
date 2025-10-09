@@ -1,4 +1,19 @@
-﻿
+﻿.details-header {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Kontener przycisków administratora */
+.admin-btn {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-grow: 1;
+}
+
+
 
 .right-info {
     width: 40%;
@@ -499,6 +514,17 @@
 
 
 @media (max-width: 900px) {
+    .car-header {
+        flex-direction: column;
+        align-items: flex-start; /* tytuł i przyciski wyrównane do lewej */
+    }
+
+    .admin-btn {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
     .car-details-container {
         flex-direction: column; /* jedna kolumna: galeria nad info */
         gap: 1.5rem;

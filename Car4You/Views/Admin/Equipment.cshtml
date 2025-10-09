@@ -1,63 +1,44 @@
 ﻿@model List<Equipment>
 
+<link href="~/css/admin_site.css" rel="stylesheet" />
 @{
     ViewData["Title"] = "Wyposażenie";
 }
-
-<!-- Dodanie Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<a asp-action="Index" asp-controller="Admin" class="btn btn-success">
-    <i class="fa fa-arrow-left" aria-hidden="true">
-    </i>
-</a>
-
-<h1 style=" margin-top:150px;">Zarządzaj wyposażeniem</h1>
-
-<!-- Przycisk do rozwijania formularza -->
-<button id="toggleAddFormBtn" class="btn btn-primary">
-    <i class="fa fa-plus"></i> Dodaj
-</button>
-
-<!-- Ukryty formularz dodawania -->
-<div id="addEquipmentFormContainer" style="display: none; margin-top: 20px;">
-    <form id="addEquipmentForm">
-        <div class="form-group">
-            <label>Nazwa:</label>
-            <input type="text" id="newName" class="form-control"/>
-            <div id="errorName" class="alert alert-danger d-none"></div>
-        </div>
-        <div class="form-group">
-            <label>Typ wyposażenia:</label>
-            <select id="newEquipmentType" class="form-control">
-                @foreach (var type in ViewBag.EquipmentTypes)
-                {
-                    <option value="@type.Id">@type.Name</option>
-                }
-            </select>
-            <div id="errorType" class="alert alert-danger d-none"></div>
-        </div>
-        <div class="form-group">
-            <label>Ikona:</label>
-            <input type="file" id="newImageFile" class="form-control"/>
-            <div id="errorIcon" class="alert alert-danger d-none"></div>
-        </div>
-        <button type="submit" class="btn btn-success">
-            <i class="fa fa-check"></i> Add
+<style>
+    .btn-group-cell .btn_primary,
+    .btn-group-cell .btn_delete {
+        min-width: 50px;
+    }
+</style>
+<div class="details-header" style="margin-top:180px;">
+    <div style="flex: 0 0 75%;">
+        <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+            <a asp-action="Index" asp-controller="Admin" style="margin-right:1rem;">
+                <i class="fas fa-arrow-left btn_previous"></i>
+            </a>
+            Zarządzaj wyposażeniem
+        </h1>
+    </div>
+    <div class="admin-btn">
+        <!-- PRZYCISK OTWIERAJĄCY MODAL -->
+        <button class="btn_primary" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+            <i class="fa fa-plus"></i> Dodaj
         </button>
-    </form>
+    </div>
 </div>
+<div class="line"></div>
 
 <!-- Filtrowanie tabeli -->
-<div class="row mb-3">
-    <!-- Pole wyszukiwania z przyciskiem "X" -->
+<div class="row mb-3" style="margin-top:2rem;">
+    <!-- Pole wyszukiwania -->
     <div class="col-md-6 position-relative">
         <input type="text" id="searchInput" class="form-control" placeholder="Szukaj po nazwie...">
-        <button id="clearSearch" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+        <button id="clearSearch" class="clear-btn" type="button">
             <i class="fa fa-times"></i>
         </button>
     </div>
 
-    <!-- Filtr marki z przyciskiem "X" -->
+    <!-- Filtr typu -->
     <div class="col-md-6 position-relative">
         <select id="typeFilter" class="form-control">
             <option value="">Wybierz typ...</option>
@@ -66,36 +47,40 @@
                 <option value="@type.Name">@type.Name</option>
             }
         </select>
-        <button id="clearType" class="btn btn-light position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+        <button id="clearType" class="clear-btn" type="button">
             <i class="fa fa-times"></i>
         </button>
     </div>
 </div>
 
+
 <table class="table">
     <thead>
         <tr>
-            <th>Nazwa</th>
-            <th>Ikona</th>
-            <th>Typ</th>
-            <th></th>
+            <th style="width:28%;">Nazwa</th>
+            <th style="width:28%;">Ikona</th>
+            <th style="width:28%;">Typ</th>
+            <th style="width:15%;"></th>
         </tr>
     </thead>
     <tbody id="equipmentTable">
         @foreach (var equipment in Model)
         {
             <tr data-id="@equipment.Id">
-                <td>
+                <td style="width:28%;">
                     <span class="name-text">@equipment.Name</span>
                     <input type="text" class="form-control name-input d-none" value="@equipment.Name" />
                     <div id="errorNameTable" class="alert alert-danger d-none"></div>
                 </td>
-                <td>
-                    <img src="@equipment.Icon" alt="@equipment.Name" class="icon-preview" style="width: 50px; height: 50px;" />
-                    <input type="file" class="form-control image-input d-none" />
-                    <div id="errorIconTable" class="alert alert-danger d-none"></div>
+                <td style="width:28%;">
+                        <img src="@equipment.Icon"
+                             alt="@equipment.Name"
+                             class="icon-preview" />
+
+                        <input type="file" class="form-control image-input d-none" />
+                        <div id="errorIconTable" class="alert alert-danger d-none"></div>
                 </td>
-                <td>
+                <td style="width:28%;">
                     <span class="type-text">@equipment.EquipmentType.Name</span>
                     <select class="form-control equipment-type d-none">
                         @foreach (var type in ViewBag.EquipmentTypes)
@@ -107,25 +92,69 @@
                     </select>
                     <div id="errorTypeTable" class="alert alert-danger d-none"></div>
                 </td>
-                <td>
-                    <button class="btn btn-warning edit-btn">
-                        <i class="fa fa-pencil-alt"></i>
-                    </button>
-                    <button class="btn btn-success save-btn d-none">
-                        <i class="fa fa-save"></i>
-                    </button>
-                    <button class="btn btn-secondary cancel-btn d-none">
-                        <i class="fa fa-times"></i>
-                    </button>
-                    <button class="btn btn-danger delete-btn">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                <td class="action-cell" style="width:15%;">
+                    <div class="btn-group-cell">
+                        <button class="btn_primary edit-btn">
+                            <i class="far fa-edit"></i>
+                        </button>
+                        <button class="btn_primary save-btn d-none">
+                            <i class="fa fa-save"></i>
+                        </button>
+                        <button class="btn_secondary cancel-btn d-none">
+                            <i class="fa fa-times"></i>
+                        </button>
+                        <button class="btn_delete delete-btn">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
+
             </tr>
         }
     </tbody>
 </table>
 
+<div class="modal fade" id="addEquipmentModal" tabindex="-1" role="dialog" aria-labelledby="addEquipmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius:16px;">
+            <div class="modal-header" style="border-bottom:none;">
+                <h5 class="modal-title" id="addEquipmentModalLabel" style="color:#24435e;">Dodaj nowe wyposażenie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+
+            </div>
+            <div class="modal-body">
+                <form id="addEquipmentForm">
+                    <div class="form-group">
+                        <label>Nazwa</label>
+                        <input type="text" id="newName" class="form-control" />
+                        <div id="errorName" class="alert alert-danger d-none mt-2"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Typ wyposażenia</label>
+                        <select id="newEquipmentType" class="form-control">
+                            @foreach (var type in ViewBag.EquipmentTypes)
+                            {
+                                <option value="@type.Id">@type.Name</option>
+                            }
+                        </select>
+                        <div id="errorType" class="alert alert-danger d-none mt-2"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Ikona</label>
+                        <input type="file" id="newImageFile" class="form-control" />
+                        <div id="errorIcon" class="alert alert-danger d-none mt-2"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top:none;">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" id="saveEquipmentBtn" class="btn_primary">
+                    <i class="fa fa-check"></i> Zapisz
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -166,16 +195,108 @@
         });
     });
 
-    var existingEquipments = [];
-     $(document).ready(function () {
-        // Pobranie listy marek do tablicy
-        $(".name-text").each(function () {
+        $(document).ready(function() {
+        var existingEquipments = [];
+        $(".table tbody tr td:first-child").each(function() {
             existingEquipments.push($(this).text().trim().toLowerCase());
         });
 
-        // Pokazanie/ukrycie formularza
-        $("#toggleAddFormBtn").click(function () {
-            $("#addEquipmentFormContainer").slideToggle();
+        // Podgląd wybranego pliku
+        $("#newImageFile").change(function() {
+            const file = this.files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = e => $("#previewImage").attr("src", e.target.result).show();
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Reset formularza przy zamknięciu modala
+        $('#addEquipmentModal').on('hidden.bs.modal', function () {
+            $("#addEquipmentForm")[0].reset();
+            $("#previewImage").hide();
+            $(".alert").addClass("d-none");
+        });
+
+        // Zapisz nowe wyposażenie
+        $("#saveEquipmentBtn").click(function() {
+            $("#addEquipmentForm").submit();
+        });
+
+        $("#addEquipmentForm").submit(function(e) {
+            e.preventDefault();
+
+            var name = $("#newName").val().trim();
+            var typeId = $("#newEquipmentType").val();
+            var file = $("#newImageFile")[0].files[0];
+            var state = 0;
+
+            // Walidacja
+            if(!name){
+                $("#errorName").text("Nazwa jest wymagana").removeClass("d-none"); state++;
+            } else if(existingEquipments.includes(name.toLowerCase())){
+                $("#errorName").text("Podane wyposażenie już istnieje").removeClass("d-none"); state++;
+            } else { $("#errorName").addClass("d-none"); }
+
+            if(!typeId){ $("#errorType").text("Wybierz typ").removeClass("d-none"); state++; }
+            else { $("#errorType").addClass("d-none"); }
+
+            if(!file){ $("#errorIcon").text("Wymagana ikona").removeClass("d-none"); state++; }
+            else { $("#errorIcon").addClass("d-none"); }
+
+            if(state>0) return;
+
+            var formData = new FormData();
+            formData.append("Name", name);
+            formData.append("EquipmentTypeId", typeId);
+            formData.append("ImageFile", file);
+
+            $.ajax({
+                url: "/Admin/CreateEquipment",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    // Dodanie wiersza do tabeli bez przeładowania
+                    var newRow = `<tr data-id="${response.id}">
+                                    <td>${name}</td>
+                                    <td><img src="${response.icon}" alt="${name}" style="width:50px;height:50px;" /></td>
+                                    <td>${response.typeName}</td>
+                                    <td>
+                                        <button class="btn btn-danger delete-btn"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                  </tr>`;
+                    $("#equipmentTable").append(newRow);
+                    existingEquipments.push(name.toLowerCase());
+                    alert("Wyposażenie dodane pomyślnie");
+                    location.reload();
+                    $("#addEquipmentModal").modal('hide');
+                },
+                error: function(xhr) {
+                    console.error("Błąd:", xhr.responseText);
+                    alert("Wystąpił błąd. Sprawdź konsolę.");
+                }
+            });
+        });
+
+        // Delegowanie zdarzeń dla dynamicznych wierszy
+        $("#equipmentTable").on("click", ".delete-btn", function() {
+            var row = $(this).closest("tr");
+            var id = row.data("id");
+            if(confirm("Jesteś pewien, że chcesz usunąć?")){
+                $.ajax({
+                    url: "/Admin/DeleteEquipment/" + id,
+                    type: "POST",
+                    success: function() {
+                        row.remove();
+                        alert("Usunięto pomyślnie");
+                    },
+                    error: function(xhr){
+                        alert(xhr.responseText || "Błąd usuwania");
+                    }
+                });
+            }
         });
 
         // Edycja istniejącego rekordu
@@ -258,88 +379,6 @@
         row.find(".save-btn, .cancel-btn").addClass("d-none");
         errorContainer.addClass("d-none");
     });
-
-        // Usuwanie elementu
-            $(".delete-btn").click(function () {
-        var row = $(this).closest("tr");
-        var id = row.data("id");
-
-        if (confirm("Jesteś pewien, że chcesz usunąć?")) {
-            $.ajax({
-                url: "/Admin/DeleteEquipment/" + id,
-                type: "POST",
-                success: function () {
-                    row.remove();
-                    alert("Pomyślnie usunięto");
-                },
-                error: function (xhr) {
-                    alert(xhr.responseText || "Błąd usuwania");
-                }
-            });
-        }
     });
 
-        // Dodawanie nowego rekordu
-    $("#addEquipmentForm").submit(function (e) {
-        e.preventDefault();
-
-        var name = $("#newName").val();
-        var typeId = $("#newEquipmentType").val();
-        var file = $("#newImageFile")[0].files[0];
-
-        //Walidacja danych
-            var state=0;
-            if (existingEquipments.includes(name.toLowerCase())) {
-                $("#errorName").text("Podane wyposażenie już istnieje").removeClass("d-none");
-                state++;
-            }
-            else if(!name){
-                $("#errorName").text("Nazwa musi być podana").removeClass("d-none");
-                state++;
-            }
-            else{
-                $("#errorName").addClass("d-none");
-            }
-            if(!file){
-                $("#errorIcon").text("Wymagana ikona").removeClass("d-none");
-                state++;
-            }
-            else{
-                $("#errorIcon").addClass("d-none");
-            }
-            if(!typeId)
-            {
-                $("#errorType").text("Wybierz typ").removeClass("d-none");
-                state++;
-            }
-            else{
-                $("#errorType").addClass("d-none");
-            }
-            if(state>0)
-            {
-                return;
-            }
-
-        var formData = new FormData();
-        formData.append("Name", name);
-        formData.append("EquipmentTypeId", typeId);
-        formData.append("ImageFile", file);
-
-        $.ajax({
-            url: "/Admin/CreateEquipment",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                alert("Pomyślnie dodano!");
-                location.reload();
-            },
-            error: function (xhr) {
-                console.error("Error:", xhr.responseText);
-                alert("Error adding equipment. Check the console for details.");
-            }
-        });
-    });
-    });
 </script>

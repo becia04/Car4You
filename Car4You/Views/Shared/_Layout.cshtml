@@ -3,16 +3,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Car4You</title>
+    <title>@ViewData["Title"] - Auto Szubin</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link href="~/css/home_site.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/Car4You.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
 </head>
 <body>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-3" style="min-height:100vh;">
             <header class="@(ViewData["AnimateMode"] ?? "load-animations") main_h">
                 <div class="navbar-container">
                     <div class="navbar-top">
@@ -27,16 +28,17 @@
                             <li><a href=".sec02">Wynajem autolawety</a></li>
                             <li><a href="@Url.Action("Contact", "Home")">Kontakt</a></li>
                             <li><a href="@Url.Action("About", "Home")">O nas</a></li>
+                            <li><a href="@Url.Action("Index", "Admin")"><i class="fas fa-wrench"></i></a></li>
                         </ul>
                     </nav>
                 </div>
                 <div class="line" style="height:6px; margin:0; width:100%">
                 </div>
             </header>
-            @RenderBody()
+                @RenderBody()
         </main>
     </div>
-    <footer>
+    <footer style="margin-top:2rem;">
         <div class="footer-content">
             <div class="footer-section about">
                 <h2>Auto-Handel Szubin</h2>
@@ -54,16 +56,23 @@
             </div>
             <div class="footer-section contact">
                 <h3>Kontakt</h3>
-                <p>📍 ul. Konopnickiej 49, 89-200 Szubin</p>
-                <p>📞 +48 505 044 979</p>
-                <p>✉️ kontakt@autoszubin.pl</p>
+                <p><i class="fas fa-map-marker-alt"></i> <a href="https://maps.app.goo.gl/kNnncunYPW1f9b6N6" target="_blank" style="text-decoration:none; color:white;">ul. Marii Konopnickiej 49, 89-200 Szubin</a></p>
+                <p><i class="fas fa-phone"></i>  +48 505 044 979</p>
+                <p><i class="fas fa-envelope"></i>  kontakt@autoszubin.pl</p>
             </div>
         </div>
         <div class="bottom">
-            © 2025 Auto-Handel Szubin. Wszelkie prawa zastrzeżone.
+            © 2025 Auto-Handel Szubin. Wszelkie prawa zastrzeżone. <a href="@Url.Action("Privacy", "Home")">Polityka prywatności</a>
         </div>
     </footer>
-
+    <!-- Cookie Banner (Responsive) -->
+    <div id="cookieBanner" class="cookie-banner">
+        <p>
+            Strona używa plików cookie w celu poprawnego działania serwisu.
+            <a href="/Privacy">Dowiedz się więcej</a>.
+        </p>
+        <button id="acceptCookies">Akceptuję</button>
+    </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -71,6 +80,7 @@
 </body>
 </html>
 <script>
+
          const menuToggle = document.getElementById("menu-toggle");
     const navbar = document.getElementById("navbar");
 
@@ -80,6 +90,23 @@
         });
     }
     document.addEventListener('DOMContentLoaded', () => {
+
+        const banner = document.getElementById('cookieBanner');
+    const acceptBtn = document.getElementById('acceptCookies');
+
+    if (!banner || !acceptBtn) return; // jeśli element nie istnieje, przerywamy
+
+    // Sprawdź, czy użytkownik już zaakceptował
+    if (!localStorage.getItem('cookiesAccepted')) {
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
+
+    acceptBtn.addEventListener('click', function() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        banner.style.display = 'none';
+    });
 
         const header = document.querySelector('.main_h');
         const elements = document.querySelectorAll('.scroll-animate');
