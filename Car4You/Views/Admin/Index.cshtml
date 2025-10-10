@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Admin";
+    bool rentalVisible = (bool)ViewBag.RentalVisible;
 }
 <link href="~/css/admin_site.css" rel="stylesheet" />
 <style>
@@ -21,3 +22,36 @@
 <a asp-action="Brand" asp-controller="Admin" class="btn_primary">Zarządzaj markami</a>
 <a asp-action="Equipment" asp-controller="Admin" class="btn_primary">Zarządzaj wyposażeniem</a>
 <a asp-action="AddCar" asp-controller="Admin" class="btn_primary">Dodaj auto</a>
+
+
+<div class="form-section" style="margin-top:1.5rem; border-top:1px solid #24435e;">
+    <div class="col-md-5">
+        <p>
+            Wynajem autolawety jest aktualnie: 
+            @if (rentalVisible==true)
+            {
+                <i class="far fa-check-circle" style="color:green"></i><label style="color:green"> Aktywny</label>
+            }
+            else
+            {
+                <i class="far fa-times-circle" style="color:red"></i>
+            
+                <label style="color:red;"> Nieaktywny</label>
+            }
+        </p>
+        </div>
+    <form asp-action="ToggleRental" method="post">
+        @Html.AntiForgeryToken()
+        @if(rentalVisible==true)
+        {
+            <button type="submit" class="btn_delete" style="min-width:30px;">Deaktywuj</button>
+        }
+        else
+        {
+            <button type="submit" class="btn_primary"style="min-width:30px;">Aktywuj</button>
+        }
+    </form>
+</div>
+
+
+

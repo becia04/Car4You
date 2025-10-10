@@ -7,17 +7,25 @@
     color: #f0f0f0;
     padding: 10px 15px;
     border-radius: 8px;
-    display: flex;
     align-items: center;
     gap: 10px;
     z-index: 9999;
     font-family: Arial, sans-serif;
     font-size: 14px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    flex-wrap: wrap; /* dopasowanie do węższych ekranów */
+    flex-wrap: wrap;
     justify-content: center;
     text-align: center;
+    display: none; /* 🔹 domyślnie ukryty */
+    opacity: 0;
+    transition: opacity 0.4s ease; /* 🔹 płynne pojawienie */
 }
+
+    .cookie-banner.show {
+        display: flex;
+        opacity: 1;
+    }
+
 
     .cookie-banner p {
         margin: 0;

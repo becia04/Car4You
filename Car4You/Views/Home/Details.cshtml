@@ -1,4 +1,8 @@
-﻿@model Car4You.Models.Car
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Car4You.Models.AppUser> SignInManager
+@inject UserManager<Car4You.Models.AppUser> UserManager
+
+@model Car4You.Models.Car
 @{
     ViewData["Title"] = Model.Title;
 }
@@ -18,17 +22,21 @@
             <img src="@Model.BodyTypes.Icon" style="height:40px; width:auto; margin-right:1rem; margin-bottom:1rem;" />
             <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">@Model.Title</h1>
         </div>
-        <div class="admin-btn">
-            <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn_primary" style="margin-bottom:1rem;">
-                <i class="far fa-edit"></i>
-                Edytuj
-            </a>
-            <form asp-action="DeleteCar" asp-controller="Admin" style="margin-bottom:1rem;" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
-                <button type="submit" class="btn_delete">
-                    <i class="fa fa-trash"></i> Usuń
-                </button>
-            </form>
-        </div>
+        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+        {
+            <div class="admin-btn">
+                <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn_primary" style="margin-bottom:1rem;">
+                    <i class="far fa-edit"></i>
+                    Edytuj
+                </a>
+                <form asp-action="DeleteCar" asp-controller="Admin" style="margin-bottom:1rem;" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
+                    <button type="submit" class="btn_delete">
+                        <i class="fa fa-trash"></i> Usuń
+                    </button>
+                </form>
+            </div>
+        }
+        
     </div>
     <div class="line"></div>
 

@@ -1,13 +1,17 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Text;
-using Car4You.DAL;
+﻿using Car4You.DAL;
+using Car4You.Data;
 using Car4You.Models;
+using DinkToPdf;
+using DinkToPdf.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Car4You.Controllers
 {
@@ -15,16 +19,34 @@ namespace Car4You.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly CarDbContext _context;
+        private readonly AppDbContext _appcontext;
 
-        public HomeController(ILogger<HomeController> logger, CarDbContext context)
+        public HomeController(ILogger<HomeController> logger, CarDbContext context, AppDbContext appcontext)
         {
             _context = context;
             _logger = logger;
+            _appcontext = appcontext;
         }
+
+
+
 
         public IActionResult About()
         {
             return View();
+        }
+
+        public IActionResult Rental()
+        {
+            var setting = _appcontext.SiteSettings.FirstOrDefault(s => s.Key == "RentalVisible");
+
+            if (setting == null || setting.Value != "true")
+            {
+                TempData["RentalMessage"] = "Aktualnie nie wynajmujemy.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(); // normalny widok
         }
 
         public IActionResult Contact()
@@ -139,5 +161,6 @@ namespace Car4You.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
     }
 }

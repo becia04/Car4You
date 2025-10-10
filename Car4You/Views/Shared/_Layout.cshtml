@@ -1,4 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Car4You.Models.AppUser> SignInManager
+@inject UserManager<Car4You.Models.AppUser> UserManager
+@inject Car4You.Data.AppDbContext Db
+@{
+    var rentalVisible = Db.SiteSettings.FirstOrDefault(s => s.Key == "RentalVisible")?.Value == "true";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -25,10 +33,26 @@
                     <nav id="navbar">
                         <ul>
                             <li><a href="@Url.Action("CarList", "Home")">Nasze auta</a></li>
-                            <li><a href=".sec02">Wynajem autolawety</a></li>
+                            @if (rentalVisible)
+                            {
+                                <li><a href="@Url.Action("Rental", "Home")">Wynajem autolawety</a></li>
+                            }
                             <li><a href="@Url.Action("Contact", "Home")">Kontakt</a></li>
                             <li><a href="@Url.Action("About", "Home")">O nas</a></li>
-                            <li><a href="@Url.Action("Index", "Admin")"><i class="fas fa-wrench"></i></a></li>
+                            @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                            {
+                                <li><a href="@Url.Action("Index", "Admin")"><i class="fas fa-wrench"></i></a></li>
+                            }
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn">Wyloguj</button>
+                                    </form>
+</li>
+
+                            }
                         </ul>
                     </nav>
                 </div>
@@ -49,7 +73,10 @@
                 <ul>
                     <li><a href="@Url.Action("Index", "Home")">Strona główna</a></li>
                     <li><a href="@Url.Action("CarList", "Home")">Nasze auta</a></li>
-                    <li><a href="#sec02">Wynajem autolawety</a></li>
+                    @if (rentalVisible)
+                    {
+                        <li><a href="@Url.Action("Rental", "Home")">Wynajem autolawety</a></li>
+                    }
                     <li><a href="@Url.Action("Contact", "Home")">Kontakt</a></li>
                     <li><a href="#sec04">O nas</a></li>
                 </ul>
@@ -98,10 +125,9 @@
 
     // Sprawdź, czy użytkownik już zaakceptował
     if (!localStorage.getItem('cookiesAccepted')) {
-        banner.style.display = 'flex';
-    } else {
-        banner.style.display = 'none';
+        banner.classList.add('show'); // pokaż tylko gdy potrzeba
     }
+
 
     acceptBtn.addEventListener('click', function() {
         localStorage.setItem('cookiesAccepted', 'true');

@@ -20,29 +20,56 @@ using System.Text;
 using System.Text.RegularExpressions;
 using static Car4You.ViewModels.CarViewModel;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.AspNetCore.Authorization;
+using Car4You.Data;
 
 namespace Car4You.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly CarDbContext _context;
+        private readonly AppDbContext _appcontext;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<AdminController> _logger;
         private readonly PhotoUploadHelper _photoHelper;
 
-        public AdminController(CarDbContext context, IWebHostEnvironment environment, ILogger<AdminController> logger, PhotoUploadHelper photoHelper)
+        public AdminController(CarDbContext context, AppDbContext appcontext, IWebHostEnvironment environment, ILogger<AdminController> logger, PhotoUploadHelper photoHelper)
         {
             _context = context;
+            _appcontext = appcontext;
             _environment = environment;
             _logger = logger;
             _photoHelper = photoHelper;
         }
 
+
         public IActionResult Index()
         {
+            var setting = _appcontext.SiteSettings.FirstOrDefault(s => s.Key == "RentalVisible");
+            bool isVisible = setting != null && setting.Value == "true";
+            ViewBag.RentalVisible = isVisible;
             return View();
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ToggleRental()
+        {
+            var setting = _appcontext.SiteSettings.FirstOrDefault(s => s.Key == "RentalVisible");
 
+            if (setting == null)
+            {
+                setting = new SiteSetting { Key = "RentalVisible", Value = "true" };
+                _appcontext.SiteSettings.Add(setting);
+            }
+            else
+            {
+                setting.Value = (setting.Value == "true") ? "false" : "true";
+            }
+
+            _appcontext.SaveChanges();
+            return RedirectToAction("Index");
+        }
 
         [HttpGet]
         public async Task<IActionResult> AddCar()
@@ -72,7 +99,7 @@ namespace Car4You.Controllers
 
             return View("CarForm", viewModel);
         }
-
+        
         [HttpGet]
         public async Task<IActionResult> EditCar(int id)
         {
@@ -129,7 +156,7 @@ namespace Car4You.Controllers
 
             return View("CarForm", viewModel);
         }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken] // Zapobiega atakom CSRF
         public async Task<IActionResult>SaveCar(CarViewModel model, int MainPhotoIndex)
@@ -575,7 +602,7 @@ namespace Car4You.Controllers
             }
 
         }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCar(int id, CancellationToken ct)
@@ -686,7 +713,7 @@ namespace Car4You.Controllers
             return Json(versions);
         }
 
-
+        
         public IActionResult ManageBrand(int id)
         {
             var brand = _context.Brands
@@ -726,7 +753,7 @@ namespace Car4You.Controllers
 
             return Json(brands);
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> EditBrandFull(int Id, string? Name, IFormFile? ImageFile)
         {
@@ -819,7 +846,7 @@ namespace Car4You.Controllers
             }
         }
 
-
+        
         [HttpPost]
         public async Task<IActionResult> EditModel(int Id, string Name, int BrandId)
         {
@@ -839,7 +866,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public IActionResult CreateModel(Models.CarModel carModel)
         {
@@ -866,7 +893,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> DeleteModel(int id)
         {
@@ -906,7 +933,7 @@ namespace Car4You.Controllers
             await _context.SaveChangesAsync();
             return Json(new { success = true });
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> DeleteModelWithVersions(int id)
         {
@@ -923,7 +950,7 @@ namespace Car4You.Controllers
 
             return Json(new { success = true });
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> EditVersion(int Id, string Name)
         {
@@ -942,7 +969,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> DeleteVersion(int id)
         {
@@ -966,7 +993,7 @@ namespace Car4You.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
-
+        
         [HttpPost]
         public IActionResult CreateVersion(Models.Version version)
         {
@@ -991,7 +1018,6 @@ namespace Car4You.Controllers
             }
         }
 
-
         public IActionResult Equipment()
         {
             var equipments = _context.Equipments
@@ -1003,7 +1029,7 @@ namespace Car4You.Controllers
             ViewBag.EquipmentTypes = equipmentTypes;
             return View(equipments);
         }
-
+        
         [HttpPost]
         public IActionResult CreateEquipment(Equipment equipment, IFormFile imageFile)
         {
@@ -1040,7 +1066,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> EditEquipment(int Id, string Name, int EquipmentTypeId, IFormFile ImageFile)
         {
@@ -1096,7 +1122,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> DeleteEquipment(int id)
         {
@@ -1131,7 +1157,7 @@ namespace Car4You.Controllers
             return Ok();
         }
 
-
+        
         public IActionResult Brand()
         {
            var brands = _context.Brands
@@ -1140,7 +1166,7 @@ namespace Car4You.Controllers
                  .ToList();
             return View(brands);
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> DeleteBrand(int id)
         {
@@ -1184,7 +1210,7 @@ namespace Car4You.Controllers
                 return StatusCode(500, $"Błąd wewnętrzny: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         public IActionResult CreateBrand(Brand brand, IFormFile imageFile)
         {
