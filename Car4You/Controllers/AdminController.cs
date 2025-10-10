@@ -507,13 +507,42 @@ namespace Car4You.Controllers
                     // 2. Existing photos
                     var existingPhotos = car.Photos.ToList();
 
-                    // 3. Mapowanie po nazwach plików
-                    var existingByFileName = existingPhotos
-                        .ToDictionary(p => Path.GetFileName(p.PhotoPath), p => p, StringComparer.OrdinalIgnoreCase);
+                    // 3. Mapowanie po nazwach plików (bez rzucania błędem)
+                    var existingByFileName = new Dictionary<string, Photo>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var photo in existingPhotos)
+                    {
+                        var key = Path.GetFileName(photo.PhotoPath);
+                        if (!existingByFileName.ContainsKey(key))
+                            existingByFileName[key] = photo;
+                        else
+                            _logger.LogWarning("Duplikat pliku w bazie: {File}", key);
+                    }
 
+                    // 4. Usuwanie zdjęć, które użytkownik usunął
+                    var incomingFileNames = model.SavedPhotoPaths
+                        .Select(p => Path.GetFileName(p.Src))
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                    var photosToRemove = existingPhotos
+                        .Where(p => !incomingFileNames.Contains(Path.GetFileName(p.PhotoPath)))
+                        .ToList();
+
+                    foreach (var p in photosToRemove)
+                    {
+                        string fullPath = Path.Combine(_environment.WebRootPath, p.PhotoPath.TrimStart('/'));
+                        if (System.IO.File.Exists(fullPath))
+                        {
+                            try { System.IO.File.Delete(fullPath); }
+                            catch (Exception ex) { _logger.LogWarning(ex, "Nie udało się usunąć pliku: {Path}", fullPath); }
+                        }
+                    }
+
+                    _context.Photos.RemoveRange(photosToRemove);
+
+                    // 5. Dodawanie / aktualizacja zdjęć
                     var photosToAdd = new List<Photo>();
-                    // 4. Kolejność incoming
                     int index = 1;
+
                     foreach (var tempPhoto in model.SavedPhotoPaths)
                     {
                         var fileName = Path.GetFileName(tempPhoto.Src);
@@ -523,6 +552,7 @@ namespace Car4You.Controllers
                             // Istniejące zdjęcie -> rename jeśli zmieniła się marka/model/rok
                             string ext = Path.GetExtension(dbPhoto.PhotoPath);
                             string expectedName = $"{FileHelper.NormalizeFileName($"{car.Id}_{newBrand}_{newModel}_{newYear}_{index}")}{ext}";
+
                             if (!Path.GetFileName(dbPhoto.PhotoPath).Equals(expectedName, StringComparison.OrdinalIgnoreCase))
                             {
                                 string oldFull = Path.Combine(_environment.WebRootPath, dbPhoto.PhotoPath.TrimStart('/'));
@@ -553,36 +583,45 @@ namespace Car4You.Controllers
 
                             if (System.IO.File.Exists(sourcePath))
                             {
-                                var logoPath = System.IO.Path.Combine(_environment.WebRootPath, "logo.png");
-                                // Nowa wersja: najpierw nałożenie logo, potem kompresja do max 140 KB
+                                var logoPath = Path.Combine(_environment.WebRootPath, "logo.png");
                                 string tempPathWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
 
-                                await PhotoUploadHelper.OverlayLogoAsync(sourcePath, logoPath, tempPathWithLogo);
+                                // 1. Kompresuj z ograniczeniem rozdzielczości
+                                string compressedPath = Path.Combine(_environment.WebRootPath, "temp", "compressed_" + fileName);
+                                await _photoHelper.CompressToMaxSizeAsync(sourcePath, compressedPath, 140 * 1024);
 
-                                // Kompresja do max 140KB
-                                await _photoHelper.CompressToMaxSizeAsync(tempPathWithLogo, targetPath, 140 * 1024);
+                                // 2. Nałóż logo na mniejszy plik
+                                await PhotoUploadHelper.OverlayLogoAsync(compressedPath, logoPath, targetPath);
 
-                                photosToAdd.Add(new Photo
+
+                                if (!photosToAdd.Any(p => p.PhotoPath.Equals($"/cars/{finalName}", StringComparison.OrdinalIgnoreCase)))
                                 {
-                                    CarId = car.Id,
-                                    Title = finalName,
-                                    PhotoPath = $"/cars/{finalName}",
-                                    IsMain = tempPhoto.IsMain
-                                });
+                                    photosToAdd.Add(new Photo
+                                    {
+                                        CarId = car.Id,
+                                        Title = finalName,
+                                        PhotoPath = $"/cars/{finalName}",
+                                        IsMain = tempPhoto.IsMain
+                                    });
+                                }
                             }
                         }
 
                         index++;
                     }
+
+                    // Usuń plik tymczasowy
                     string tempWithLogo = Path.Combine(_environment.WebRootPath, "temp_with_logo.jpg");
                     if (System.IO.File.Exists(tempWithLogo))
                     {
                         try { System.IO.File.Delete(tempWithLogo); }
                         catch (Exception ex) { _logger.LogWarning(ex, "Nie udało się usunąć pliku tymczasowego: {Path}", tempWithLogo); }
                     }
-                    // 5. Dodaj nowe zdjęcia
+
+                    // Dodaj nowe zdjęcia do bazy
                     if (photosToAdd.Any())
                         _context.Photos.AddRange(photosToAdd);
+
 
 
 

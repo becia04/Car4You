@@ -193,9 +193,18 @@ public class PhotoUploadHelper
         await image.SaveAsync(targetPath, new JpegEncoder { Quality = 90 });
     }
 
-    public async Task CompressToMaxSizeAsync(string sourcePath, string targetPath, int maxBytes = 140 * 1024)
+    public async Task CompressToMaxSizeAsync(string sourcePath, string targetPath, int maxBytes = 200 * 1024)
     {
         using var image = await Image.LoadAsync<Rgba32>(sourcePath);
+
+        // 🔽 Zmniejsz rozdzielczość jeśli zbyt duża
+        const int maxWidth = 1920;
+        if (image.Width > maxWidth)
+        {
+            int newHeight = (int)(image.Height * (maxWidth / (double)image.Width));
+            image.Mutate(x => x.Resize(maxWidth, newHeight));
+        }
+
         int quality = 90;
         int minQuality = 30;
 
@@ -208,10 +217,9 @@ public class PhotoUploadHelper
             if (ms.Length <= maxBytes || quality <= minQuality)
                 break;
 
-            quality -= 5; // zmniejszamy jakość krokowo
+            quality -= 5;
         }
 
-        // Zapis finalny na dysk
         await File.WriteAllBytesAsync(targetPath, ms.ToArray());
     }
 
