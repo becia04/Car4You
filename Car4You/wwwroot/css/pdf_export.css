@@ -1,4 +1,16 @@
-﻿/*Wyposażenie*/
+﻿.pdf-qr-code {
+    position: absolute;
+    right: 20px;
+    width: 100px; /* rozmiar QR */
+    height: 100px;
+}
+
+.pdf-details-header {
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 0; /* zostawia miejsce dla QR */
+}
+/*Wyposażenie*/
 .pdf-equipment-group {
     display: inline-block;
     vertical-align: top;
@@ -106,7 +118,7 @@
 .pdf-main-content {
     font-family: 'Segoe UI', sans-serif;
     color: #383838;
-    padding: 20px;
+    position: relative;
 }
 
 /* Użycie inline-block dla stabilności w PDF */

@@ -13,7 +13,7 @@
 <link href="~/css/details_site.css" rel="stylesheet" />
 <div class="main_content scroll-animate slide-up">
     <div class="details-header">
-        <div style="flex: 0 0 75%;">
+        <div style="display:inline-block">
             <h1 style="margin-right:1rem; display:inline-block; color:#24435e; font-weight:500;">
                 <a asp-action="CarList" asp-controller="Home">
                     <i class="fas fa-arrow-left btn_previous"></i>
@@ -29,14 +29,14 @@
                     <i class="far fa-edit"></i>
                     Edytuj
                 </a>
-                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" class="btn_primary" style="min-width:10px; margin-bottom:1rem;">
-                    <i class="far fa-file-alt"></i> Eksport
-                </a>
                 <form asp-action="DeleteCar" asp-controller="Admin" style="margin-bottom:1rem;" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
                     <button type="submit" class="btn_delete">
                         <i class="fa fa-trash"></i> Usuń
                     </button>
                 </form>
+                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" class="btn_primary" style="min-width:10px; margin-bottom:1rem;">
+                    <i class="far fa-file-alt"></i>
+                </a>
             </div>
         }
         

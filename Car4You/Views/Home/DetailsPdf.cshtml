@@ -1,8 +1,13 @@
 ﻿@using System.IO
 
 @model Car4You.Models.Car
+@{
+    var qrPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "temp", $"qr_{Model.Id}.png");
+    var qrUrl = new Uri(qrPath).AbsoluteUri;
 
+}
 <link href="~/css/pdf_export.css" rel="stylesheet" />
+<img src="@qrUrl" alt="QR Code" class="pdf-qr-code" />
 <div class="pdf-main-content">
     <div class="pdf-details-header">
         @{
@@ -219,4 +224,5 @@
             </div>
         }
     </section>
+
 </div>

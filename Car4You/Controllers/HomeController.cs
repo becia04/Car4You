@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using System;
 using System.Diagnostics;
 using System.Text;
@@ -46,6 +47,21 @@ namespace Car4You.Controllers
             if (car == null)
                 return NotFound();
 
+            // Generowanie kodu QR
+            string carUrl = Url.Action("Details", "Home", new { id = car.Id }, Request.Scheme);
+
+            string qrFileName = $"qr_{car.Id}.png";
+            string qrFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "temp", qrFileName);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(qrFilePath));
+
+            using (var qrGenerator = new QRCoder.QRCodeGenerator())
+            {
+                var qrData = qrGenerator.CreateQrCode(carUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
+                var qrCode = new QRCoder.PngByteQRCode(qrData);
+                var qrBytes = qrCode.GetGraphic(20);
+                System.IO.File.WriteAllBytes(qrFilePath, qrBytes);
+            }
 
             // Render widoku Details do HTML
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
