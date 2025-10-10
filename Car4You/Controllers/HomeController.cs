@@ -37,24 +37,22 @@ namespace Car4You.Controllers
         public async Task<IActionResult> ExportToPdf(int id)
         {
             var car = await _context.Cars
-                            .Include(c => c.BodyTypes)
-                            .Include(c => c.CarModel).ThenInclude(m => m.Brand)
-                            .Include(c => c.Version)
-                            .Include(c => c.CarEquipments).ThenInclude(c => c.Equipment).ThenInclude(c => c.EquipmentType)
-                            .Include(c => c.Photos)
-                            .FirstOrDefaultAsync(c => c.Id == id);
+                .Include(c => c.BodyTypes)
+                .Include(c => c.CarModel).ThenInclude(m => m.Brand)
+                .Include(c => c.Version)
+                .Include(c => c.CarEquipments).ThenInclude(c => c.Equipment).ThenInclude(c => c.EquipmentType)
+                .Include(c => c.Photos)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (car == null)
                 return NotFound();
 
-            // Generowanie kodu QR
+            // 🔹 Generowanie kodu QR
             string carUrl = Url.Action("Details", "Home", new { id = car.Id }, Request.Scheme);
+            string tempDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "temp");
+            Directory.CreateDirectory(tempDir);
 
-            string qrFileName = $"qr_{car.Id}.png";
-            string qrFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "temp", qrFileName);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(qrFilePath));
-
+            string qrFilePath = Path.Combine(tempDir, $"qr_{car.Id}.png");
             using (var qrGenerator = new QRCoder.QRCodeGenerator())
             {
                 var qrData = qrGenerator.CreateQrCode(carUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
@@ -63,35 +61,56 @@ namespace Car4You.Controllers
                 System.IO.File.WriteAllBytes(qrFilePath, qrBytes);
             }
 
-            // Render widoku Details do HTML
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var html = await _viewRenderService.RenderToStringAsync(ControllerContext,"DetailsPdf", car);
+            // 🔹 Render widoku PDF
+            var html = await _viewRenderService.RenderToStringAsync(ControllerContext, "DetailsPdf", car);
 
-            // Ustawienia PDF
+            // 🔹 Ustawienia PDF
             var doc = new HtmlToPdfDocument()
             {
-                GlobalSettings = {
-        ColorMode = ColorMode.Color,
-        Orientation = Orientation.Portrait,
-        PaperSize = PaperKind.A4
-    },
-                Objects = {
-        new ObjectSettings() {
-            PagesCount = true,
-            HtmlContent = html,
-            WebSettings = {
-                DefaultEncoding = "utf-8",
-                UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "pdf_export.css"),
-                LoadImages = true,
-                EnableJavascript = true
+                GlobalSettings = new GlobalSettings
+                {
+                    ColorMode = ColorMode.Color,
+                    Orientation = Orientation.Portrait,
+                    PaperSize = PaperKind.A4
+                },
+                Objects =
+        {
+            new ObjectSettings
+            {
+                PagesCount = true,
+                HtmlContent = html,
+                WebSettings = new WebSettings
+                {
+                    DefaultEncoding = "utf-8",
+                    LoadImages = true,
+                    EnableJavascript = true,
+                    UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "pdf_export.css")
+                }
             }
         }
-    }
             };
 
+            // 🔹 Wygeneruj PDF w pamięci
             var file = _converter.Convert(doc);
-            return File(file, "application/pdf", $"{car.CarModel.Brand.Name}_{car.CarModel.Name}_{car.Version?.Name}_{car.Year}.pdf");
+
+            // 🔹 Zarejestruj czyszczenie plików tymczasowych po wysłaniu odpowiedzi
+            Response.OnCompleted(() =>
+            {
+                try
+                {
+                    if (System.IO.File.Exists(qrFilePath))
+                        System.IO.File.Delete(qrFilePath);
+                }
+                catch { /* Ignorujemy błędy */ }
+
+                return Task.CompletedTask;
+            });
+
+            // 🔹 Zwróć gotowy plik
+            string fileName = $"{car.CarModel.Brand.Name}_{car.CarModel.Name}_{car.Version?.Name}_{car.Year}.pdf";
+            return File(file, "application/pdf", fileName);
         }
+
 
 
         public IActionResult About()
