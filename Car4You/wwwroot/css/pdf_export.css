@@ -1,0 +1,226 @@
+﻿/*Wyposażenie*/
+.pdf-equipment-group {
+    display: inline-block;
+    vertical-align: top;
+    width: 32%; /* trzy kolumny na szerokość strony */
+    margin-right: 1%;
+    margin-bottom: 1.5rem;
+}
+
+    .pdf-equipment-group:nth-child(3n) {
+        margin-right: 0; /* co trzecia kolumna bez marginesu */
+    }
+
+.pdf-equipment-title {
+    font-size: 16px;
+    display: inline;
+    color: #24435e;
+    margin-bottom: 2px;
+}
+
+.pdf-equipment-type-icon {
+    height: 25px;
+    width: auto;
+    margin-right: 5px;
+}
+
+.pdf-equipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+
+.pdf-equipment-item td {
+    margin-bottom: 5px;
+}
+.pdf-equipment-td:last-child {
+    margin-bottom: 0; /* co trzecia kolumna bez marginesu */
+}
+
+.pdf-equipment-icon {
+    width: 18px;
+    height: auto;
+    margin-right: 3px;
+}
+
+
+/* Sekcje PDF */
+.pdf-section {
+    margin-top: 30px;
+}
+
+.pdf-section-title {
+    font-size: 24px;
+    color: #24435e;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #24435e;
+    padding-bottom: 5px;
+}
+
+/* Szczegóły pojazdu - tabela 3 kolumny */
+.pdf-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', sans-serif;
+    margin-left:10px;
+}
+
+    .pdf-details-table td {
+        vertical-align: top;
+        width: 33%; /* trzy kolumny równo */
+        font-size: 16px;
+    }
+
+    .pdf-details-table strong {
+        font-size: 16px;
+        display: inline;
+        color: #24435e;
+        margin-bottom:2px;
+    }
+
+
+
+
+
+.pdf-car-price {
+    text-align: center;
+    margin: 20px 0;
+    font-family: 'Segoe UI', sans-serif;
+    color: #7b2e1f;
+}
+
+    .pdf-car-price .old-price span {
+        text-decoration: line-through;
+        margin-left: 5px;
+    }
+
+    .pdf-car-price .new-price {
+        font-size: 35px;
+        font-weight: 700;
+        margin-top: 10px;
+    }
+
+
+.pdf-main-content {
+    font-family: 'Segoe UI', sans-serif;
+    color: #383838;
+    padding: 20px;
+}
+
+/* Użycie inline-block dla stabilności w PDF */
+.pdf-header-wrapper {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.pdf-icon {
+    height: 40px;
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.pdf-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: #24435e;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.pdf-line {
+    width: 100%;
+    height: 2px;
+    background-color: #24435e;
+    opacity: 0.2;
+    margin: 15px 0;
+}
+
+
+.pdf-car-details-container {
+    display: table;
+    width: 100%;
+    margin-top: 20px;
+    border-spacing: 20px;
+}
+
+.pdf-left-gallery, .pdf-right-info {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.pdf-left-gallery {
+    width: 55%;
+}
+
+.pdf-main-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.pdf-right-info {
+    width: 45%;
+    font-size: 14px;
+    color: #24435e;
+    margin-left: 30px;
+}
+
+.pdf-header {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 15px;
+}
+
+.pdf-brand-logo {
+    height: 40px;
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.pdf-title-group {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.pdf-right-title {
+    font-size: 25px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.pdf-version {
+    font-size: 16px;
+    color: #7b2e1f;
+    font-style: italic;
+    margin: 0;
+}
+
+
+/*Prawa strona z podstawowymi info*/
+.pdf-car-specs {
+    font-family: 'Segoe UI', sans-serif;
+    color: #24435e;
+    margin-top: 20px;
+}
+
+.pdf-info-item {
+    font-size: 20px;
+    color: #383838;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+    .pdf-info-item img {
+        height: 20px;
+        width: auto;
+        margin-right:2px;
+    }

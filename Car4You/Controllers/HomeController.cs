@@ -1,5 +1,6 @@
 ﻿using Car4You.DAL;
 using Car4You.Data;
+using Car4You.Helper;
 using Car4You.Models;
 using DinkToPdf;
 using DinkToPdf.Contracts;
@@ -20,15 +21,61 @@ namespace Car4You.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly CarDbContext _context;
         private readonly AppDbContext _appcontext;
+        private readonly ViewRenderService _viewRenderService;
+        private readonly IConverter _converter;
 
-        public HomeController(ILogger<HomeController> logger, CarDbContext context, AppDbContext appcontext)
+        public HomeController(ILogger<HomeController> logger, CarDbContext context, AppDbContext appcontext, ViewRenderService viewRenderService, IConverter converter)
         {
             _context = context;
             _logger = logger;
             _appcontext = appcontext;
+            _viewRenderService = viewRenderService;
+            _converter = converter;
         }
 
+        public async Task<IActionResult> ExportToPdf(int id)
+        {
+            var car = await _context.Cars
+                            .Include(c => c.BodyTypes)
+                            .Include(c => c.CarModel).ThenInclude(m => m.Brand)
+                            .Include(c => c.Version)
+                            .Include(c => c.CarEquipments).ThenInclude(c => c.Equipment).ThenInclude(c => c.EquipmentType)
+                            .Include(c => c.Photos)
+                            .FirstOrDefaultAsync(c => c.Id == id);
 
+            if (car == null)
+                return NotFound();
+
+
+            // Render widoku Details do HTML
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var html = await _viewRenderService.RenderToStringAsync(ControllerContext,"DetailsPdf", car);
+
+            // Ustawienia PDF
+            var doc = new HtmlToPdfDocument()
+            {
+                GlobalSettings = {
+        ColorMode = ColorMode.Color,
+        Orientation = Orientation.Portrait,
+        PaperSize = PaperKind.A4
+    },
+                Objects = {
+        new ObjectSettings() {
+            PagesCount = true,
+            HtmlContent = html,
+            WebSettings = {
+                DefaultEncoding = "utf-8",
+                UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "pdf_export.css"),
+                LoadImages = true,
+                EnableJavascript = true
+            }
+        }
+    }
+            };
+
+            var file = _converter.Convert(doc);
+            return File(file, "application/pdf", $"{car.CarModel.Brand.Name}_{car.CarModel.Name}_{car.Version?.Name}_{car.Year}.pdf");
+        }
 
 
         public IActionResult About()

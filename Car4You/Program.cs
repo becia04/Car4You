@@ -1,11 +1,18 @@
-using Car4You.Controllers;
+﻿using Car4You.Controllers;
 using Car4You.DAL;
 using Car4You.Data;
+using Car4You.Helper;
 using Car4You.Models;
+using DinkToPdf;
+using DinkToPdf.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 🔧 Ścieżka do natywnej biblioteki
+var context = new CustomAssemblyLoadContext();
+context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "DinkToPdf", "libwkhtmltox.dll"));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -14,6 +21,10 @@ builder.Services.AddDbContext<CarDbContext>(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DB")));
 builder.Services.AddScoped<PhotoUploadHelper>();
+builder.Services.AddScoped<ViewRenderService>();
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+
+
 
 // Dodanie Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
@@ -37,7 +48,7 @@ var scope = app.Services.CreateScope();
 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
-// Utw�rz rol� Admin, je�li nie istnieje
+// Utwórz rolę Admin, jeśli nie istnieje
 if (!await roleManager.RoleExistsAsync("Admin"))
 {
     await roleManager.CreateAsync(new IdentityRole("Admin"));
