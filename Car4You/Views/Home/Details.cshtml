@@ -421,6 +421,46 @@
             if (thumbnails.length === 0) return;
             showLightbox(currentIndex);
         });
+                // Obsługa przeciągania palcem po miniaturkach
+        (function() {
+            const wrapper = document.querySelector(".thumbnails-wrapper");
+            const container = document.querySelector(".thumbnails");
+
+            if (!wrapper || !container) return;
+
+            let startX = 0;
+            let scrollStart = 0;
+            let isDragging = false;
+
+            wrapper.addEventListener("touchstart", (e) => {
+                startX = e.touches[0].clientX;
+                const transform = container.style.transform || "translateX(0px)";
+                scrollStart = parseFloat(transform.replace(/[^-0-9.]/g, "")) || 0;
+                isDragging = true;
+                container.style.transition = "none"; // wyłącz animację podczas przeciągania
+            });
+
+            wrapper.addEventListener("touchmove", (e) => {
+                if (!isDragging) return;
+                const touchX = e.touches[0].clientX;
+                const diff = touchX - startX;
+                let newTransform = scrollStart + diff;
+
+                // ograniczenie przesuwania
+                const maxScroll = 0;
+                const minScroll = Math.min(wrapper.clientWidth - container.scrollWidth, 0);
+                if (newTransform > maxScroll) newTransform = maxScroll;
+                if (newTransform < minScroll) newTransform = minScroll;
+
+                container.style.transform = `translateX(${newTransform}px)`;
+            });
+
+            wrapper.addEventListener("touchend", (e) => {
+                isDragging = false;
+                container.style.transition = "transform 0.3s ease"; // włącz animację z powrotem
+            });
+        })();
+
     </script>
 
 }
