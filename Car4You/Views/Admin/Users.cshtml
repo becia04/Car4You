@@ -1,0 +1,51 @@
+﻿@model List<AppUser>
+@inject UserManager<AppUser> UserManager
+
+@using Microsoft.AspNetCore.Identity
+<link href="~/css/admin_site.css" rel="stylesheet" />
+<div style="margin-top:180px;">
+    <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+        <a asp-action="Index" asp-controller="Admin" style="margin-right:1rem;">
+            <i class="fas fa-home btn_previous"></i>
+        </a>
+        UŻYTKOWNICY
+    </h1>
+    <div class="line" style="margin-bottom:2rem;"></div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Login</th>
+            <th>Rola</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            var isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
+                                                                          <tr>
+                                                                              <td>@user.UserName</td>
+                                                                              <td>@(isAdmin ? "Admin" : "Użytkownik")</td>
+                                                                              <td>
+                                                                                  <form asp-action="ToggleAdmin" method="post" style="display:inline-block">
+                                                                                      <input type="hidden" name="id" value="@user.Id" />
+                                                                                      <button type="submit" class=" @(isAdmin ? "btn_secondary" : "btn_primary") btn-sm">
+                                                                                          @(isAdmin ? "Odbierz admina" : "Nadaj admina")
+                                                                                      </button>
+                                                                                  </form>
+                                                                                  <form asp-action="DeleteUser" method="post" style="display:inline-block" onsubmit="return confirm('Czy na pewno chcesz usunąć użytkownika?');">
+                                                                                      <input type="hidden" name="id" value="@user.Id" />
+                                                                                      <button type="submit" class="btn_delete danger btn-sm">Usuń</button>
+                                                                                  </form>
+                                                                              </td>
+                                                                          </tr>
+        }
+    </tbody>
+</table>

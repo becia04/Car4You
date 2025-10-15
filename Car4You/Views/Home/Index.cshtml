@@ -64,8 +64,13 @@
                         };
                     }
                     <div class="carousel-card">
-                        <div class="car-card">
+                        <div class="car-card @(car.IsHidden ? "car-card--hidden" : "")">
                             <div class="car-card__background" style="background-image: url('@mainPhoto.PhotoPath');"></div>
+                            @* Nakładka dla ukrytego auta *@
+                            @if (car.IsHidden)
+                            {
+                                <div class="car-card__overlay">UKRYTE</div>
+                            }
                             <div class="car-card__info">
                                 <div class="car-card__top">
                                     <div class="car-card__body-type">
@@ -89,7 +94,7 @@
                                         <span class="value"><img src="~/icons/mileage.png" alt="Mileage" style="width:20px; height:20px; margin-right:5px;" />@string.Format("{0:N0}", car.Mileage) km</span>
                                     </div>
                                 </div>
-                                <div class="car-card__price">@string.Format("{0:N0}", car.OldPrice) PLN</div>
+                                <div class="car-card__price">@string.Format("{0:N0}", car.NewPrice) PLN</div>
                                 <a href="@Url.Action("Details", "Home", new { id = car.Id })" class="car-card__btn btn">Zobacz szczegóły</a>
                             </div>
                         </div>

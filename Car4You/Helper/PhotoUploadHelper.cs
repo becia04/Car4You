@@ -35,121 +35,24 @@ public class PhotoUploadHelper
         _context = context;
     }
 
-    public async Task<List<TempPhoto>> ProcessUploadedPhotosAsync(
-        IList<IFormFile> uploadedPhotos,
-        int mainPhotoIndex)
+    public static async Task<Stream> OverlayLogoStreamAsync(Stream inputStream, string logoPath)
     {
-        var tempPhotos = new List<TempPhoto>();
+        inputStream.Position = 0;
 
-        if (uploadedPhotos == null || uploadedPhotos.Count == 0)
-            return tempPhotos;
-
-        string tempFolder = System.IO.Path.Combine(_environment.WebRootPath, "temp");
-        string fallbackFolder = System.IO.Path.Combine(_environment.ContentRootPath, "App_TempUploads");
-        bool useFallback = false;
-
-        try
-        {
-            if (!Directory.Exists(tempFolder))
-                Directory.CreateDirectory(tempFolder);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogWarning(ex, "Brak dostępu do /wwwroot/temp. Używam folderu zapasowego.");
-            tempFolder = fallbackFolder;
-            useFallback = true;
-
-            if (!Directory.Exists(tempFolder))
-                Directory.CreateDirectory(tempFolder);
-        }
-
-        for (int i = 0; i < uploadedPhotos.Count; i++)
-        {
-            var file = uploadedPhotos[i];
-            var fileName = Guid.NewGuid().ToString() + System.IO.Path.GetExtension(file.FileName);
-            var fullPath = System.IO.Path.Combine(tempFolder, fileName);
-
-            try
-            {
-                using var stream = new FileStream(fullPath, FileMode.Create);
-                await file.CopyToAsync(stream);
-
-                var photoSrc = useFallback
-                    ? "/admin/temp-preview?file=" + fileName
-                    : "/temp/" + fileName;
-
-                tempPhotos.Add(new TempPhoto
-                {
-                    Src = photoSrc,
-                    IsMain = (i == mainPhotoIndex)
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Błąd przy zapisie pliku: {fullPath}");
-                throw;
-            }
-        }
-
-        return tempPhotos;
-    }
-
-    public List<TempPhoto> RestoreFromTempData(ITempDataDictionary tempData)
-    {
-        if (tempData["TempPhotos"] is string json)
-        {
-            return JsonConvert.DeserializeObject<List<TempPhoto>>(json);
-        }
-
-        return new List<TempPhoto>();
-    }
-
-    public void SaveToTempData(ITempDataDictionary tempData, List<TempPhoto> photos)
-    {
-        tempData["TempPhotos"] = JsonConvert.SerializeObject(photos);
-    }
-
-    public void ClearTemp()
-    {
-        // Czyść folder temp (tymczasowe zdjęcia)
-        var tempPath = System.IO.Path.Combine(_environment.WebRootPath, "temp");
-        ClearingFolder(tempPath);
-        tempPath = System.IO.Path.Combine(_environment.WebRootPath, "App_TempUploads");
-        ClearingFolder(tempPath);
-        return;
-    }
-
-    private void ClearingFolder(string tempPath)
-    {
-        if (Directory.Exists(tempPath))
-        {
-            foreach (var file in Directory.GetFiles(tempPath))
-            {
-                try
-                {
-                    System.IO.File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Nie udało się usunąć pliku tymczasowego: {file}");
-                }
-            }
-        }
-    }
-
-    public static async Task OverlayLogoAsync(string sourcePath, string logoPath, string targetPath)
-    {
-        using var image = await Image.LoadAsync<Rgba32>(sourcePath);
+        using var image = await Image.LoadAsync<Rgba32>(inputStream);
         using var logo = await Image.LoadAsync<Rgba32>(logoPath);
 
-        // Skaluj logo
-        int logoWidth = image.Width / 5;
+        // Skaluj logo do 20% krótszego boku (zamiast szerokości)
+        int shorterSide = Math.Min(image.Width, image.Height);
+        int logoWidth = (int)(shorterSide * 0.2);
         logo.Mutate(x => x.Resize(logoWidth, 0));
 
-        int x = image.Width - logo.Width - 20;
-        int y = image.Height - logo.Height - 20;
+        // Zawsze prawy dolny róg
+        int margin = 20;
+        int x = image.Width - logo.Width - margin;
+        int y = image.Height - logo.Height - margin;
 
-        // Stwórz kontur logo
+        // Kontur logo
         using var outlineLogo = logo.Clone();
         outlineLogo.ProcessPixelRows(accessor =>
         {
@@ -160,67 +63,64 @@ public class PhotoUploadHelper
                 {
                     var px = pixelRow[col];
                     if (px.A > 0)
-                        pixelRow[col] = new Rgba32(0, 0, 0, 180); // ciemny kontur
+                        pixelRow[col] = new Rgba32(0, 0, 0, 180);
                     else
                         pixelRow[col] = new Rgba32(0, 0, 0, 0);
                 }
             }
         });
 
-        // Stwórz poświatę z rozmyciem
+        // Poświata
         using var glowLogo = outlineLogo.Clone();
-        glowLogo.Mutate(x => x.GaussianBlur(8f)); // wartość 5 = moc poświaty
+        glowLogo.Mutate(x => x.GaussianBlur(3f));
 
+        // Rysowanie
         image.Mutate(ctx =>
         {
-            // Rysuj poświatę pod spodem
-            ctx.DrawImage(glowLogo, new Point(x, y), 0.2f); // lekko przezroczysta
-
-            // Rysuj kontur logo wokół
+            ctx.DrawImage(glowLogo, new Point(x, y), 0.25f);
             for (int offsetX = -1; offsetX <= 1; offsetX++)
             {
                 for (int offsetY = -1; offsetY <= 1; offsetY++)
                 {
                     if (offsetX == 0 && offsetY == 0) continue;
-                    ctx.DrawImage(outlineLogo, new Point(x + offsetX, y + offsetY), 1f);
+                    ctx.DrawImage(outlineLogo, new Point(x + offsetX, y + offsetY), 0.9f);
                 }
             }
-
-            // Nałóż oryginalne logo na środek
             ctx.DrawImage(logo, new Point(x, y), 1f);
         });
 
-        await image.SaveAsync(targetPath, new JpegEncoder { Quality = 90 });
+        var output = new MemoryStream();
+        await image.SaveAsync(output, new JpegEncoder { Quality = 90 });
+        output.Position = 0;
+        return output;
     }
 
-    public async Task CompressToMaxSizeAsync(string sourcePath, string targetPath, int maxBytes = 200 * 1024)
+
+    public async Task CompressToMaxSizeAsync(Stream inputStream, string outputPath, int maxSizeBytes)
     {
-        using var image = await Image.LoadAsync<Rgba32>(sourcePath);
+        inputStream.Position = 0;
 
-        // 🔽 Zmniejsz rozdzielczość jeśli zbyt duża
-        const int maxWidth = 1920;
-        if (image.Width > maxWidth)
+        using (var image = await Image.LoadAsync(inputStream))
         {
-            int newHeight = (int)(image.Height * (maxWidth / (double)image.Width));
-            image.Mutate(x => x.Resize(maxWidth, newHeight));
+            int quality = 85;
+            byte[] imageBytes;
+
+            do
+            {
+                using (var outStream = new MemoryStream())
+                {
+                    var encoder = new JpegEncoder { Quality = quality };
+                    await image.SaveAsync(outStream, encoder);
+                    imageBytes = outStream.ToArray();
+                }
+
+                quality -= 5;
+            }
+            while (imageBytes.Length > maxSizeBytes && quality > 30);
+
+            await File.WriteAllBytesAsync(outputPath, imageBytes);
         }
-
-        int quality = 90;
-        int minQuality = 30;
-
-        using var ms = new MemoryStream();
-        while (true)
-        {
-            ms.SetLength(0);
-            await image.SaveAsync(ms, new JpegEncoder { Quality = quality });
-
-            if (ms.Length <= maxBytes || quality <= minQuality)
-                break;
-
-            quality -= 5;
-        }
-
-        await File.WriteAllBytesAsync(targetPath, ms.ToArray());
     }
+
 
 }

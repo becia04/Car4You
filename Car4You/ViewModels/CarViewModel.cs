@@ -13,6 +13,8 @@ namespace Car4You.ViewModels
         public Car Car { get; set; }
         [ValidateNever]
         public List<Brand> Brands { get; set; }
+        public int SelectedBrandId { get; set; }
+        public int SelectedCarModelId { get; set; }
         [ValidateNever]
         public List<CarModel> CarModels { get; set; }
         public List<string> FuelTypes { get; set; }
@@ -30,7 +32,8 @@ namespace Car4You.ViewModels
         public List<string> Colors { get; set; }
         public List<int> SelectedEquipmentIds { get; set; } = new();
         public List<IFormFile>? CarPhotos { get; set; }
-        public List<TempPhoto> SavedPhotoPaths { get; set; } = new();
+        public List<TempPhoto> SavedPhotoPaths { get; set; }
+        public bool NewPublishDate { get; set; }
 
 
         public class EquipmentGroup

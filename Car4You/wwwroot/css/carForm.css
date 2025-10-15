@@ -1,4 +1,25 @@
-﻿/* === MODAL STYLING === */
+﻿
+#submitCarBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+
+#formErrors {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 360px;
+    white-space: normal;
+}
+
+
+/* === MODAL STYLING === */
 .modal-content {
     background-color: #fdfdfd; /* jasne, eleganckie tło */
     border: 2px solid #d8be6d; /* złote obramowanie */

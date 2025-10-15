@@ -10,8 +10,16 @@
     var mainPhoto = Model.Photos.FirstOrDefault(p => p.IsMain) ?? Model.Photos.FirstOrDefault();
     var photoIndex = 0;
 }
+
 <link href="~/css/details_site.css" rel="stylesheet" />
 <div class="main_content scroll-animate slide-up">
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success mt-2">
+            @TempData["Message"]
+        </div>
+    }
+
     <div class="details-header">
         <div style="display:inline-block">
             <h1 style="margin-right:1rem; display:inline-block; color:#24435e; font-weight:500;">
@@ -25,18 +33,25 @@
         @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
         {
             <div class="admin-btn">
-                <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn_primary" style="margin-bottom:1rem;">
+                <a asp-action="EditCar" asp-controller="Admin" asp-route-id="@Model.Id" class="btn_primary" style="margin-bottom:1rem; min-width:10px;" title="Edytuj auto">
                     <i class="far fa-edit"></i>
-                    Edytuj
                 </a>
-                <form asp-action="DeleteCar" asp-controller="Admin" style="margin-bottom:1rem;" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
-                    <button type="submit" class="btn_delete">
-                        <i class="fa fa-trash"></i> Usuń
+                <form asp-action="DeleteCar" asp-controller="Admin" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Na pewno chcesz usunąć to auto?');">
+                    <button type="submit" class="btn_delete" style="margin-bottom:1rem; min-width:10px;" title="Usuń auto">
+                        <i class="fa fa-trash"></i>
                     </button>
                 </form>
-                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" class="btn_primary" style="min-width:10px; margin-bottom:1rem;">
+                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" class="btn_primary" style="min-width:10px; margin-bottom:1rem;" title="Eksportuj do PDF">
                     <i class="far fa-file-alt"></i>
                 </a>
+                <form asp-action="HideCar" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="@(Model.IsHidden ? "btn_primary" : "btn_secondary")" style="margin-bottom:1rem; min-width:10px;"
+                        title="@(Model.IsHidden ? "Odkryj auto" : "Ukryj auto")">
+                        <i class="far fa-eye-slash"></i>
+                    </button>
+                </form>
+
             </div>
         }
         
@@ -99,12 +114,14 @@
             </div>
 
             <div class="car-price" >
+                <strong>@Model.PriceType</strong>
                 @if (Model.OldPrice.HasValue && Model.NewPrice.HasValue && Model.OldPrice > Model.NewPrice)
                 {
                     <p>
                         <strong>Poprzednia cena:</strong>
                         <span style="text-decoration:line-through">@($"{Model.OldPrice:n0}") PLN</span>
                     </p>
+
                 }
                 <p>
                     <span style="font-size:3.5rem;">@($"{Model.NewPrice:n0}") PLN</span>
@@ -113,6 +130,22 @@
 
         </div>
     </div>
+
+
+    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+    {
+        <!-- Przegląd i OC -->
+        <section class="section scroll-animate slide-up">
+            <h2 class="section-title scroll-animate slide-up">Przegląd i ubezpieczenie</h2>
+        <div class="details-grid  scroll-animate slide-in">
+            <div class="details-group">
+                <p><strong>Przegląd:</strong> @(Model.NextTechnicalBad?.ToString("dd.MM.yyyy"))</p>
+                    <p><strong>Ubezpieczenie:</strong> @(Model.NextOc?.ToString("dd.MM.yyyy"))</p>
+
+            </div>
+            </div>
+        </section>
+        }
     <!-- Szczegółowe informacje o aucie -->
     <section class="section scroll-animate slide-up">
         <h2 class="section-title scroll-animate slide-up">Szczegóły techniczne</h2>

@@ -1,0 +1,603 @@
+﻿@using Car4You.Helper
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@model Car4You.ViewModels.CarViewModel
+<link href="~/css/carform.css" rel="stylesheet" />
+@{
+    ViewData["Title"] = (Model.Car?.Id > 0 ? "Edytuj auto" : "Dodaj auto");
+}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <div style="margin-top:180px;">
+    <h1 style="margin:0; display:inline-block; color:#24435e; font-weight:500;">
+        <a asp-action="Details" asp-controller="Home" asp-route-id="@Model.Car.Id" style="margin-right:1rem;">
+    <i class="fas fa-arrow-left btn_previous"></i>
+</a>
+        Edytuj auto
+    </h1>
+    <div class="line" style="margin-bottom:2rem;"></div>
+    </div>
+
+
+<form asp-action="EditCar" asp-controller="Admin" method="post" enctype="multipart/form-data" novalidate id="editCarForm">
+    <input type="hidden" asp-for="Car.Id" />
+        <!-- Dane pojazdu -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/car_info.png" class="icon"/>Dane pojazdu</h3>
+            <div class="row">
+
+            <!-- Marka -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="BrandId">Marka *</label>
+                    <select id="BrandId" name="BrandId" class="form-control" asp-for="Car.CarModel.Brand.Id">
+                        <option value="" disabled selected>Wybierz markę</option>
+                        @foreach (var brand in Model.Brands)
+                        {
+
+                                <option value="@brand.Id" selected="@(brand.Id == Model.Car.CarModel.BrandId ? "selected" : null)">
+                                    @brand.Name
+                                </option>
+                        }
+                    </select>
+
+                    <label id="BrandError" class="text-danger"></label>
+
+                    <input type="hidden" id="SelectedBrandId" name="SelectedBrandId" value="0" />
+                </div>
+            </div>
+
+            <!-- Model -->
+            <div class="form-group col-md-4">
+                <div>
+                    <label for="CarModelId">Model *</label>
+                    <button type="button" class="btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal" id="addModelBtn" disabled>+</button>
+                </div>
+
+                <select id="CarModelId" name="Car.CarModelId" class="form-control" disabled asp-for="Car.CarModel.Id">
+                    <option value="">Wybierz model</option>
+                        @foreach (var carModel in Model.CarModels)
+        {
+            <option value="@carModel.Id" selected="@(carModel.Id == Model.Car.CarModelId ? "selected" : null)">
+                @carModel.Name
+            </option>
+        }
+                </select>
+                <label id="CarModelError" class="text-danger"></label>
+
+                <input type="hidden" id="SelectedBrandId" name="SelectedBrandId" value="0" />
+
+                <!-- hidden do POST -->
+                <input type="hidden" id="SelectedCarModelId" name="SelectedCarModelId" value="@Model.Car.CarModelId" />
+            </div>
+
+<!-- Generacja -->
+<div class="col-md-4">
+    <div class="form-group">
+        <div>
+            <label for="VersionId">Generacja</label>
+            <button type="button" class="btn-success" data-bs-toggle="modal" data-bs-target="#addVersionModal" id="addVersionBtn" disabled>
+                +
+            </button>
+        </div>
+        <select id="VersionId" name="Car.VersionId" class="form-control" disabled asp-for="Car.VersionId">
+            <option value="" selected>Wybierz generację</option>
+
+                            @foreach (var version in Model.Versions)
+                            {
+                                <option value="@version.Id" selected="@(version.Id == Model.Car.VersionId ? "selected" : null)">
+                                    @version.Name
+                                </option>
+                            }
+                    </select>
+        <input type="hidden" id="SelectedCarVersionId" value="@Model.Car.VersionId" />
+    </div>
+</div>
+
+
+        <!-- VIN -->
+        <div class="col-md-4">
+    <div class="form-group">
+        <label for="Car.VIN">VIN</label>
+        <input asp-for="Car.VIN" class="form-control" name="Car.VIN"/>
+                    <label id="vinError" class="text-danger"></label>
+    </div>
+        </div>
+        </div>
+        </div>
+
+    <!-- Silnik i osiągi -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/engine.png" class="icon"/>Silnik i osiągi</h3>
+        <div class="row">
+            <!-- Pojemność skokowa/silnika -->
+            <div class="form-group col-md-4">
+                <label for="Car_CubicCapacity">Pojemność silnika (cm³) *</label>
+                <input asp-for="Car.CubicCapacity" type="number" class="form-control"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       id="Car_CubicCapacity" name="Car.CubicCapacity"
+                       value="@(Model.Car.CubicCapacity == 0 ? "" : Model.Car.CubicCapacity.ToString())" />
+                <label id="cubicCapacityError" class="text-danger"></label>
+            </div>
+
+    <!-- Moc silnika -->
+    <div class="form-group col-md-4">
+        <label for="Car.EnginePower">Moc silnika (KM) *</label>
+        <input asp-for="Car.EnginePower" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.EnginePower == 0 ? "" : Model.Car.EnginePower.ToString())" />
+                <label id="enginePowerError" class="text-danger"></label>
+    </div>
+
+        <!-- Skrzynia biegów -->
+    <div class="form-group col-md-4">
+        <label for="Gearbox">Rodzaj skrzyni biegów *</label>
+        <select id="Gearbox" class="form-control" asp-for="Car.Gearbox">
+            @foreach (var gearbox in Model.Gearboxes)
+            {
+                <option value="@gearbox">@gearbox</option>
+            }
+        </select>
+    </div>
+
+        <!-- Napęd -->
+    <div class="form-group col-md-4">
+        <label for="Car.Drive">Napęd *</label>
+        <select asp-for="Car.Drive" class="form-control">
+            <option value="4x4">4x4</option>
+            <option value="Na przód">Na przód</option>
+            <option value="Na tył">Na tył</option>
+        </select>
+    </div>
+
+        <!-- Paliwo -->
+    <div class="form-group col-md-4">
+        <label for="FuelType">Typ paliwa *</label>
+        <select id="FuelType" name="Car.FuelType" class="form-control" asp-for="Car.FuelType">
+            @foreach(var fuel in Model.FuelTypes)
+            {
+                <option value="@fuel">@fuel</option>
+            }
+        </select>
+    </div>
+
+        <!-- Przebieg -->
+        <div class="col-md-4">
+    <div class="form-group">
+        <label for="Car.Mileage">Przebieg (km) *</label>
+        <input asp-for="Car.Mileage" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Mileage == 0 ? null : Model.Car.Mileage.ToString())" />
+                    <label id="mileageError" class="text-danger"></label>
+    </div>
+    </div>
+        </div>
+        </div>
+
+            <!-- Nadwozie i wymiary -->
+            <div class="form-section">
+                <h3 class="title"><img src="~/icons/car.png" class="icon" />Nadwozie i wymiary</h3>
+                <div class="row">
+            <!-- Typ nadwozia -->
+    <div class="form-group col-md-4">
+        <label for="BodyId">Typ nadwozia *</label>
+        <select id="BodyId" name="Car.BodyId" class="form-control" asp-for="Car.BodyId">
+            @foreach (var body in Model.BodyTypes)
+            {
+                <option value="@body.Id">@body.Name</option>
+            }
+        </select>
+    </div>
+
+        <!-- Kolor -->
+    <div class="form-group col-md-4">
+        <label for="Car.Color">Kolor *</label>
+        <select asp-for="Car.Color" class="form-control">
+            @foreach (var color in Model.Colors)
+            {
+                <option value="@color">
+                    @color
+                </option>
+            }
+        </select>
+    </div>
+
+    <!-- Typ lakieru -->
+    <div class="form-group col-md-4">
+        <label for="Car.ColorType">Typ lakieru *</label>
+        <select asp-for="Car.ColorType" class="form-control">
+            <option value="Błyszczący">Błyszczący</option>
+            <option value="Chromowany">Chromowany</option>
+            <option value="3D">3D</option>
+            <option value="Matowy">Matowy</option>
+            <option value="Matowy Perłowy">Matowy perłowy</option>
+            <option value="Metalizowany">Metalizowany</option>
+            <option value="Metalizowany Matowy">Metalizowany matowy</option>
+            <option value="Perłowy">Perłowy</option>
+        </select>
+    </div>
+
+        <!-- Drzwi -->
+    <div class="form-group col-md-4">
+        <label for="Car.Door">Liczba drzwi *</label>
+        <input asp-for="Car.Door" type="number" class="form-control"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+               value="@(Model.Car.Door == 0 ? "" : Model.Car.Door.ToString())" />
+                <label id="doorError" class="text-danger"></label>
+    </div>
+
+    <!-- Miejsca -->
+    <div class="form-group col-md-4">
+        <label for="Car.Seat">Ilość miejsc *</label>
+        <input asp-for="Car.Seat" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Seat == 0 ? "" : Model.Car.Seat.ToString())" />
+        <label id="seatError" class="text-danger"></label>
+    </div>
+
+</div>
+</div>
+
+    <!-- Pochodzenie i właściciel -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/origin.png" class="icon" />Pochodzenie i właściciel</h3>
+            <div class="row">
+            <!-- Rok -->
+    <div class="form-group col-md-4">
+        <label for="Car.Year">Rok produkcji *</label>
+        <input asp-for="Car.Year" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.Year == 0 ? null : Model.Car.Year.ToString())" />
+                <label id="yearError" class="text-danger"></label>
+    </div>
+
+        <!-- Kraj pochodzenia -->
+    <div class="form-group col-md-4">
+        <label for="Car.Origin">Kraj pochodzenia *</label>
+        <select asp-for="Car.Origin" class="form-control">
+            @foreach (var country in Model.Countries)
+            {
+                <option value="@country">
+                    @country
+                </option>
+            }
+        </select>
+
+    </div>
+
+        <!-- Pierwszy właściciel -->
+    <div class="form-group form-check">
+        <input asp-for="Car.FirstOwner" class="form-check-input" type="checkbox" id="FirstOwner" />
+        <label class="form-check-label" for="FirstOwner">Pierwszy właściciel</label>
+    </div>
+
+    <!-- Zarejstrowany w PL -->
+    <div class="form-group form-check">
+        <input asp-for="Car.PolishPlate" class="form-check-input" type="checkbox" id="PolishPlate" />
+        <label class="form-check-label" for="PolishPlate">Zarejstrowany w PL</label>
+    </div>
+
+    <!-- Bezwypadkowy -->
+    <div class="form-group form-check">
+        <input asp-for="Car.AccidentFree" class="form-check-input" type="checkbox" id="AccidentFree" />
+        <label class="form-check-label" for="AccidentFree">Bezwypadkowy</label>
+    </div>
+</div>
+</div>
+
+
+    <!-- Cena -->
+        <div class="form-section">
+            <div class="row">
+            <h3 class="title"><img src="~/icons/price.png" class="icon" /><label for="Car.OldPrice">Cena *</label></h3>
+         <div class="form-group col-md-4">
+                <label for="Car.OldPrice">Wartość</label>
+        <input asp-for="Car.OldPrice" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.OldPrice == 0 ? "" : Model.Car.OldPrice.ToString())" />
+                <label id="oldPriceError" class="text-danger"></label>
+    </div>
+            <!-- Typ ceny -->
+            <div class="form-group col-md-4">
+                <label for="Car.PriceType">Typ ceny *</label>
+                <select asp-for="Car.PriceType" class="form-control">
+                    <option value="Brutto">Brutto</option>
+                    <option value="Faktura bez VAT">Faktura bez VAT</option>
+                    <option value="Netto">Netto</option>
+                    <option value="VAT marża">VAT marża</option>
+                    <option value="VAT 23%">VAT 23%</option>
+                    
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="Car.NewPrice">Cena w promocji:</label>
+                <input asp-for="Car.NewPrice" type="number" class="form-control" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="@(Model.Car.NewPrice == 0 ? "" : Model.Car.NewPrice.ToString())" />
+                <label id="newPriceError" class="text-danger"></label>
+            </div>
+    </div>
+    </div>
+
+        <!-- Dodatkowe informacje -->
+    <div class="form-section">
+        <h3 class="title"><img src="~/icons/plus.png" class="icon" />Dodatkowe informacje</h3>
+        <div class="row">
+        <!-- Tytuł -->
+    <div class="form-group col-md-4">
+        <label for="Title">Tytuł *</label>
+        <input asp-for="Car.Title" id="Title" name="Car.Title" type="text" class="form-control"/>
+                <label id="titleError" class="text-danger"></label>
+    </div>
+    <!--Data przeglądu-->
+<div class="form-group col-md-4">
+    <label for="NextTechnicalBad">Do kiedy przegląd?</label>
+    <input asp-for="Car.NextTechnicalBad" 
+           id="NextTechnicalBad" 
+           name="Car.NextTechnicalBad" 
+           type="date" 
+           class="form-control"/>
+                <label id="nextTechnicalError" class="text-danger"></label>
+</div>
+
+    <!--Data OC-->
+<div class="form-group col-md-4">
+    <label for="NextOc">Do kiedy ubezpieczenie?</label>
+    <input asp-for="Car.NextOc" 
+           id="NextOc" 
+           name="Car.NextOc" 
+           type="date" 
+           class="form-control"/>
+                <label id="nextOcError" class="text-danger"></label>
+</div>
+
+            <!-- Nowa data ogłoszenia -->
+            <div class="form-group form-check col-md-4">
+                <input asp-for="NewPublishDate" class="form-check-input" type="checkbox" id="NewPublishDate" name="NewPublishDate" />
+                <label class="form-check-label" for="NewPublishDate">Data dzisiejsza dla ogłoszenia?</label>
+            </div>
+
+
+    <!-- Opis -->
+    <div class="form-group">
+        <label for="description">Opis</label>
+        <textarea asp-for="Car.Description" class="form-control" rows="6"></textarea>
+    </div>
+        </div>
+        
+        </div>
+
+
+    <!-- Zdjęcia -->
+    <div id="existingPhotosData"
+         data-photos='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SavedPhotoPaths))'>
+    </div>
+
+    <div class="form-section">
+        <div class="form-group">
+            <h3 class="title">
+                <img src="~/icons/photos.png" class="icon" />
+                <label for="carPhotos">Zdjęcia samochodu</label>
+            </h3>
+            <input type="file" name="carPhotos" id="carPhotos" class="form-control" multiple accept="image/*" />
+            <small class="form-text text-muted">Możesz dodać jedno lub więcej zdjęć.</small>
+            <label id="photoError" class="text-danger"></label>
+        </div> <!--Wybór głównego zdjęcia -->
+        <div id="photoPreview">
+           
+        </div>
+        <input type="hidden" id="mainPhotoIndex" name="MainPhotoIndex" value="0" />
+    </div>
+
+<!-- Wyposażenie -->
+        <div class="form-section">
+            <div class="row">
+                <div class="form-group">
+        <h3 class="title"><img src="~/icons/equipment.png" class="icon" /><label>Wybierz wyposażenie</label></h3>
+    <div class="col-md-4">    <input type="text" id="equipmentSearch" class="form-control mb-2" placeholder="Wpisz nazwę wyposażenia"></div>
+                <label id="equipmentError" class="text-danger"></label>
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (var equipmentType in Model.EquipmentTypes)
+                {
+                    <th>@equipmentType.Name</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @foreach (var group in Model.GroupedEquipment)
+                {
+                    <td>
+                        @foreach (var equipment in group.Equipments)
+                        {
+                            <div class="form-check equipment-item">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="equipment_@equipment.Id"
+                                       name="SelectedEquipmentIds"
+                                       value="@equipment.Id"
+                                       @(Model.SelectedEquipmentIds.Contains(equipment.Id) ? "checked" : "")>
+                                <label class="form-check-label" for="equipment_@equipment.Id">
+                                    @equipment.Name
+                                </label>
+                            </div>
+                        }
+                    </td>
+                }
+            </tr>
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+    <!-- Przycisk submit -->
+    <div id="formErrors" ></div>
+
+    <button type="submit" class="btn_primary" id="submitCarBtn" style="margin-bottom:4rem;">
+        Zapisz zmiany
+    </button>
+</form>
+
+<!-- Modal do dodawania nowego modelu -->
+<div class="modal fade" id="addModelModal" tabindex="-1" aria-labelledby="addModelLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModelLabel">Dodaj nowy model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addModelForm">
+                    <div class="form-group">
+                        <label for="newModelName">Nazwa modelu</label>
+                        <input type="text" id="newModelName" class="form-control" required>
+                    </div>
+                    <input type="hidden" id="selectedBrandId" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" onclick="addNewModel()">Dodaj</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do dodawania nowej wersji -->
+<div class="modal fade" id="addVersionModal" tabindex="-1" aria-labelledby="addVersionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVersionLabel">Dodaj nową generację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVersionForm">
+                    <div class="form-group">
+                        <label for="newVersionName">Nazwa generacji</label>
+                        <input type="text" id="newVersionName" class="form-control" required>
+                    </div>
+                    <input type="hidden" id="selectedCarModelId" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn_secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn_primary" onclick="addNewVersion()">Dodaj</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/js/carform.js"> </script>
+    <script>
+               $('#submitCarBtn').off('click').on('click', async function(e) {
+            e.preventDefault();
+                 const btn = $(this);
+
+        // ✅ zablokuj przycisk od razu po kliknięciu
+        btn.prop('disabled', true);
+        btn.text('Wysyłanie...'); // opcjonalnie zmiana tekstu
+
+                    const formEl = document.getElementById('editCarForm');
+        if (!formEl) {
+            alert('Nie znaleziono formularza editCar!');
+            return;
+        }
+
+            const formData = new FormData();
+
+                     formEl.querySelectorAll('input[name], select[name], textarea[name]').forEach(el => {
+            // checkboxy i file obsłużone osobno
+            if (el.type === 'checkbox' || el.type === 'file') return;
+
+            let value = '';
+
+            if (el.tagName.toLowerCase() === 'select') {
+                // dla selectów nawet jeśli disabled
+                if (el.multiple) {
+                    value = Array.from(el.selectedOptions).map(o => o.value).join(',');
+                } else {
+                    value = el.value;
+                }
+            } else {
+                value = el.value;
+            }
+
+            formData.set(el.name, value);
+        });
+
+
+                // 2️⃣ Pojedyncze checkboxy typu bool (FirstOwner, PolishPlate, AccidentFree itd.)
+        formEl.querySelectorAll('input[type="checkbox"][name]').forEach(el => {
+            if (el.name === 'SelectedEquipmentIds') {
+                // grupowe checkboxy (wyposażenie)
+                if (el.checked) formData.append(el.name, el.value);
+            } else {
+                // pojedyncze bool
+                formData.set(el.name, el.checked);
+            }
+        });
+
+
+            // --- Zdjęcia ---
+        const photoContainers = document.querySelectorAll('#photoPreview .photo-container');
+        if (photoContainers.length === 0) {
+            alert('Brak zdjęć do wysłania!');
+            return;
+        }
+
+        let mainPhotoIndex = -1;
+        let savedPhotoPaths = [];
+
+        function dataURLtoFile(dataUrl, filename) {
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, { type: mime });
+        }
+
+                for (let idx = 0; idx < photoContainers.length; idx++) {
+            const container = photoContainers[idx];
+            const img = container.querySelector('.preview-img');
+            const span = container.querySelector('span');
+
+            if (!img) continue;
+
+            if (span && span.style.display === 'block') mainPhotoIndex = idx;
+
+            if (img.src.startsWith('data:')) {
+                const file = dataURLtoFile(img.src, `photo_${idx}.jpg`);
+                formData.append('CarPhotos', file);
+            } else {
+                // Zamień pełny URL na relatywną ścieżkę
+                let relativePath = img.src.replace(window.location.origin, '');
+                savedPhotoPaths.push(relativePath);
+            }
+        }
+
+        formData.set('SavedPhotoPathsJson', JSON.stringify(savedPhotoPaths));
+        formData.set('MainPhotoIndex', mainPhotoIndex);
+
+
+            // 3️⃣ Token CSRF
+            const tokenInput = formEl.querySelector('input[name="__RequestVerificationToken"]');
+            if (tokenInput) formData.set('__RequestVerificationToken', tokenInput.value);
+
+            // 5️⃣ AJAX POST
+            try {
+                const res = await $.ajax({
+                    url: '/Admin/EditCar',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                });
+                console.log('Sukces!', res);
+                window.location.href = '/Home/CarList';
+            } catch (err) {
+
+                console.log("Form element:", formEl);
+        formEl.querySelectorAll('input, select, textarea').forEach(el => console.log(el.name, el.value));
+                console.error('Błąd AJAX:', err);
+                alert('Błąd przy wysyłaniu danych. Sprawdź konsolę.');
+                btn.prop('disabled', false);
+                btn.text('Zapisz zmiany');
+            }
+        });
+    </script>
+
+}
+

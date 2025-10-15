@@ -9,6 +9,7 @@ namespace Car4You.Models
         public int Id { get; set; }
         [Required(ErrorMessage = "Tytuł jest wymagany")]
         public string Title { get; set; } //Tytuł
+        [StringLength(500, ErrorMessage = "Opis nie może mieć więcej niż 500 znaków")]
         public string ?Description { get; set; } //Opis
 
         [Required(ErrorMessage = "Rok produkcji jest wymagany")]
@@ -62,10 +63,13 @@ namespace Car4You.Models
 
         public bool FirstOwner { get; set; }
         public bool PolishPlate { get; set; }
+        public DateTime ?NextTechnicalBad { get; set; } //Następne badanie techniczne
+        public DateTime ?NextOc { get; set; } //Następne OC
 
         [Required(ErrorMessage = "Cena jest wymagana")]
         public int? OldPrice { get; set; }
         public int? NewPrice { get; set; }
+        public string PriceType { get; set; }
         public bool IsHidden {  get; set; }
         public DateTime PublishDate { get; set; }
         [StringLength(17, ErrorMessage = "Vin nie może mieć więcej niż 17 znaków")]

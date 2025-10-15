@@ -4,6 +4,7 @@ using Car4You.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Car4You.Migrations
 {
     [DbContext(typeof(CarDbContext))]
-    partial class CarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251010213857_NextTechnicalBad_NextOc")]
+    partial class NextTechnicalBad_NextOc
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -151,10 +154,6 @@ namespace Car4You.Migrations
 
                     b.Property<bool>("PolishPlate")
                         .HasColumnType("bit");
-
-                    b.Property<string>("PriceType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("PublishDate")
                         .HasColumnType("datetime2");
