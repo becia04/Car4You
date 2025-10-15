@@ -5,7 +5,10 @@
 @model Car4You.Models.Car
 @{
     ViewData["Title"] = Model.Title;
+    ViewData["Description"] = $"Sprawdź ofertę {Model.CarModel.Brand.Name} {Model.CarModel.Name} z Auto Szubin – samochód używany w dobrym stanie, gotowy do jazdy.";
+    ViewData["Keywords"] = $"{Model.CarModel.Brand.Name} {Model.CarModel.Name}, samochody używane, komis, Szubin";
 }
+
 @{
     var mainPhoto = Model.Photos.FirstOrDefault(p => p.IsMain) ?? Model.Photos.FirstOrDefault();
     var photoIndex = 0;
