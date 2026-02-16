@@ -457,7 +457,6 @@
 
         $('#oldPriceError').text(msg);
         setError('price', msg);
-        updateTitle();
     });
 
     // --- Walidacja ceny w promocji ---
@@ -476,7 +475,7 @@
 
         $('#newPriceError').text(msg);
         setError('newPrice', msg);
-        updateTitle();
+      
     });
 
     // --- Walidacja tytułu ---

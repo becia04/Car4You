@@ -69,6 +69,8 @@ namespace Car4You.Controllers
 
             if (car == null)
                 return NotFound();
+            double enginePowerKW = car.EnginePower.HasValue ? Math.Round(car.EnginePower.Value * 0.74) : 0;
+            ViewBag.EnginePowerKW = enginePowerKW;
 
             // 🔹 Generowanie kodu QR
             string carUrl = Url.Action("Details", "Home", new { id = car.Id }, Request.Scheme);

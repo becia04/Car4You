@@ -50,7 +50,6 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 
-
 var app = builder.Build();
 
 
