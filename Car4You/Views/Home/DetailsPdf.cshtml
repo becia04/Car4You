@@ -1,22 +1,14 @@
 ﻿@using System.IO
 
 @model Car4You.Models.Car
-@{
-    var qrPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "temp", $"qr_{Model.Id}.png");
-    var qrUrl = new Uri(qrPath).AbsoluteUri;
-
-}
 <link href="~/css/pdf_export.css" rel="stylesheet" />
-<img src="@qrUrl" alt="QR Code" class="pdf-qr-code" />
+<img src="~/temp/qr_@(Model.Id).png" alt="QR Code" class="pdf-qr-code" />
+
 <div class="pdf-main-content">
     <div class="pdf-details-header">
-        @{
-            var bodyPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", Model.BodyTypes.Icon.TrimStart('\\', '/'));
-            var bodyUrl = new Uri(bodyPath).AbsoluteUri;
-
-        }
         <div class="pdf-header-wrapper">
-            <img src="@bodyUrl" class="pdf-icon" />
+            <img src="~/@Model.BodyTypes.Icon.TrimStart('~', '/','\\')" class="pdf-icon" />
+
             <span class="pdf-title">@Model.Title</span>
         </div>
     </div>
@@ -25,16 +17,13 @@
         <!-- Kolumna lewa: główne zdjęcie -->
         <div class="pdf-left-gallery">
             @{
-                var mainPhoto = Model.Photos.FirstOrDefault(p => p.IsMain) ?? Model.Photos.FirstOrDefault();
-                if (mainPhoto == null)
-                {
-                    mainPhoto = new Photo { PhotoPath = "/no-photo.png", IsMain = true };
-                }
-
-                var photoPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", mainPhoto.PhotoPath.TrimStart('\\', '/'));
-                var photoUrl = new Uri(photoPath).AbsoluteUri;
+                var mainPhoto = Model.Photos.FirstOrDefault(p => p.IsMain)
+                ?? Model.Photos.FirstOrDefault()
+                ?? new Photo { PhotoPath = "/no-photo.png" };
             }
-            <img src="@photoUrl" alt="@Model.Title" class="pdf-main-photo" />
+
+            <img src="~/@mainPhoto.PhotoPath.TrimStart('~', '/', '\\')" class="pdf-main-photo" />
+
         </div>
 
         <!-- Kolumna prawa: informacje o aucie -->
@@ -42,10 +31,10 @@
             <div class="pdf-header">
                 @if (!string.IsNullOrEmpty(Model.CarModel?.Brand?.Icon))
                 {
-                    var brandIconPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", Model.CarModel.Brand.Icon.TrimStart('\\', '/'));
-                    var brandIconUrl = new Uri(brandIconPath).AbsoluteUri;
-                    <img src="@brandIconUrl" alt="Logo @Model.CarModel.Brand.Name" class="pdf-brand-logo" />
+                    <img src="~/@Model.CarModel.Brand.Icon.TrimStart('~', '/', '\\')"
+                         class="pdf-brand-logo" />
                 }
+
                 <div class="pdf-title-group">
                     <h2 class="pdf-right-title">@Model.CarModel?.Brand?.Name @Model.CarModel?.Name</h2>
                     @if (Model.Version != null)
@@ -54,41 +43,36 @@
                     }
                 </div>
             </div>
-            @{
-                var yearPath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "year.png");
-                var yearUrl = new Uri(yearPath).AbsoluteUri;
-                var mileageUrl = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "mileage.png")).AbsoluteUri;
-                var petrolUrl = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "petrol.png")).AbsoluteUri;
-                var gearboxUrl = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "gearbox.png")).AbsoluteUri;
-                var fuelUrl = new Uri(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "petrol.png")).AbsoluteUri;
-            }
-
 
             <div class="pdf-car-specs">
                 <table style="width:100%; border-collapse: collapse;">
                     <tr>
                         <td style="width:50%; vertical-align: top;">
                             <div class="pdf-info-item">
-                                <img src="@yearUrl" alt="Rok" />
+                                <img src="~/icons/year.png" alt="Rok produkcji"/>
                                  @Model.Year
                             </div>
                             <div class="pdf-info-item">
-                                <img src="@mileageUrl" alt="Przebieg" /> @($"{Model.Mileage:n0}") km
+                                <img src="~/icons/mileage.png" alt="Napęd"/> 
+                                @($"{Model.Mileage:n0}") km
                             </div>
                         </td>
                         <td style="width:50%; vertical-align: top;">
                             <div class="pdf-info-item">
-                                <img src="@fuelUrl" alt="Paliwo" /> @Model.FuelType
+                                <img src="~/icons/petrol.png" alt="Typ paliwa"/>
+                                @Model.FuelType
                             </div>
                             <div class="pdf-info-item">
-                                <img src="@gearboxUrl" alt="Skrzynia" /> @Model.Gearbox
+                                <img src="~/icons/gearbox.png" alt="Skrzynia biegów"/>
+                                @Model.Gearbox
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align:center; padding-top:10px;">
                             <div class="pdf-info-item">
-                                <img src="@bodyUrl" alt="Skrzynia" /> @Model.BodyTypes?.Name
+                                <img src="~/@Model.BodyTypes.Icon.TrimStart('~', '/', '\\')" class="pdf-icon" />
+                                @Model.BodyTypes?.Name
                             </div>
                         </td>
                     </tr>
@@ -107,17 +91,12 @@
     </div>
 
     <!--Informacje szczegółowe-->
-    @{
-        var engineUrl = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "engine.png");
-        var carUrl = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "car.png");
-        var originUrl = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "icons", "origin.png");
-    }
     <div class="pdf-section">
         <h2 class="pdf-section-title">Szczegóły techniczne</h2>
         <table class="pdf-details-table">
             <tr>
                 <td>
-                    <strong><img src="@engineUrl" class="pdf-icon" alt="Silnik" /> Silnik i osiągi</strong><br />
+                    <strong><img src="~/icons/engine.png" class="pdf-icon" alt="Silnik"/> Silnik i osiągi</strong><br />
                     <b>Pojemność:</b> @($"{Model.CubicCapacity:n0}") cm³<br />
                     <b>Moc silnika:</b> @Model.EnginePower KM (@ViewBag.EnginePowerKW kW)<br />
                     <b>Skrzynia biegów:</b> @Model.Gearbox<br />
@@ -126,14 +105,14 @@
                     <b>Przebieg:</b> @($"{Model.Mileage:n0}") km
                 </td>
                 <td>
-                    <strong><img src="@carUrl" class="pdf-icon" alt="Nadwozie" /> Nadwozie i wymiary</strong><br />
+                    <strong><img src="~/icons/car.png" class="pdf-icon" alt="Ikona"/> Nadwozie i wymiary</strong><br />
                     <b>Rodzaj nadwozia:</b> @Model.BodyTypes?.Name<br />
                     <b>Kolor:</b> @Model.Color @Model.ColorType?.ToLower()<br />
                     <b>Liczba drzwi:</b> @Model.Door<br />
                     <b>Liczba miejsc:</b> @Model.Seat
                 </td>
                 <td>
-                    <strong><img src="@originUrl" class="pdf-icon" alt="Pochodzenie" /> Pochodzenie i właściciel</strong><br />
+                    <strong><img src="~/icons/origin.png" class="pdf-icon" alt="Pochodzenie"/> Pochodzenie i właściciel</strong><br />
                     <b>Rok produkcji:</b> @Model.Year<br />
                     <b>Kraj pochodzenia:</b> @Model.Origin<br />
                     @if (Model.FirstOwner == true)
@@ -172,18 +151,13 @@
         {
             var equipmentType = group.Key;
 
-            // Pobieramy ikonę dla tego typu wyposażenia
-            var eqTypePath = System.IO.Path.Combine(
-            System.IO.Directory.GetCurrentDirectory(),
-            "wwwroot",
-            equipmentType.Icon.TrimStart('\\', '/')
-            );
-            var eqTypeUrl = new Uri(eqTypePath).AbsoluteUri;
+            
             <div class="pdf-equipment-group">
                 <h3 class="pdf-equipment-title">
                     @if (!string.IsNullOrEmpty(equipmentType.Icon))
                     {
-                        <img src="@eqTypeUrl" alt="@equipmentType.Name" class="pdf-equipment-type-icon" />
+                        <img src="~/@equipmentType.Icon.TrimStart('~', '/', '\\')"
+                             class="pdf-equipment-type-icon" />
                     }
                     @equipmentType.Name
                 </h3>
@@ -203,18 +177,12 @@
                                     })
                                     .OrderBy(x => x.fullName))
                     {
-                        // Ścieżka do ikonki konkretnego wyposażenia
-                        var eqPath = System.IO.Path.Combine(
-                        System.IO.Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        item.icon.TrimStart('\\', '/')
-                        );
-                        var eqUrl = new Uri(eqPath).AbsoluteUri;
                         <tr class="pdf-equipment-item">
                             <td>
                                 @if (!string.IsNullOrEmpty(item.icon))
                                 {
-                                    <img src="@eqUrl" alt="@item.fullName" class="pdf-equipment-icon" />
+                                    <img src="~/@item.icon.TrimStart('~', '/', '\\')"
+                                         class="pdf-equipment-icon" />
                                 }
                                 @item.fullName
                             </td>

@@ -3,17 +3,12 @@ using Car4You.DAL;
 using Car4You.Data;
 using Car4You.Helper;
 using Car4You.Models;
-using DinkToPdf;
-using DinkToPdf.Contracts;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🔧 Ścieżka do natywnej biblioteki
-var context = new CustomAssemblyLoadContext();
-context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "DinkToPdf", "libwkhtmltox.dll"));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -23,7 +18,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DB")));
 builder.Services.AddScoped<PhotoUploadHelper>();
 builder.Services.AddScoped<ViewRenderService>();
-builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
 builder.Services.Configure<FormOptions>(options =>
 {

@@ -2,15 +2,15 @@
 using Car4You.Data;
 using Car4You.Helper;
 using Car4You.Models;
-using DinkToPdf;
-using DinkToPdf.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using QRCoder;
+using SelectPdf;
 using System;
 using System.Diagnostics;
 using System.Text;
@@ -24,15 +24,15 @@ namespace Car4You.Controllers
         private readonly CarDbContext _context;
         private readonly AppDbContext _appcontext;
         private readonly ViewRenderService _viewRenderService;
-        private readonly IConverter _converter;
+        private readonly IWebHostEnvironment _environment;
 
-        public HomeController(ILogger<HomeController> logger, CarDbContext context, AppDbContext appcontext, ViewRenderService viewRenderService, IConverter converter)
+        public HomeController(ILogger<HomeController> logger, CarDbContext context, AppDbContext appcontext, ViewRenderService viewRenderService, IWebHostEnvironment environment)
         {
             _context = context;
             _logger = logger;
             _appcontext = appcontext;
             _viewRenderService = viewRenderService;
-            _converter = converter;
+            _environment = environment;
         }
 
         [Authorize(Roles = "Admin")]
@@ -63,62 +63,66 @@ namespace Car4You.Controllers
                 .Include(c => c.BodyTypes)
                 .Include(c => c.CarModel).ThenInclude(m => m.Brand)
                 .Include(c => c.Version)
-                .Include(c => c.CarEquipments).ThenInclude(c => c.Equipment).ThenInclude(c => c.EquipmentType)
+                .Include(c => c.CarEquipments)
+                    .ThenInclude(ce => ce.Equipment)
+                    .ThenInclude(e => e.EquipmentType)
                 .Include(c => c.Photos)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (car == null)
                 return NotFound();
-            double enginePowerKW = car.EnginePower.HasValue ? Math.Round(car.EnginePower.Value * 0.74) : 0;
-            ViewBag.EnginePowerKW = enginePowerKW;
 
-            // 🔹 Generowanie kodu QR
-            string carUrl = Url.Action("Details", "Home", new { id = car.Id }, Request.Scheme);
-            string tempDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "temp");
+            // 🔹 Dane pomocnicze
+            ViewBag.EnginePowerKW = car.EnginePower.HasValue
+                ? Math.Round(car.EnginePower.Value * 0.74)
+                : 0;
+
+            // 🔹 Generowanie QR
+            string carUrl = Url.Action(
+                "Details",
+                "Home",
+                new { id = car.Id },
+                Request.Scheme
+            )!;
+
+            string tempDir = Path.Combine(_environment.WebRootPath, "temp");
             Directory.CreateDirectory(tempDir);
 
             string qrFilePath = Path.Combine(tempDir, $"qr_{car.Id}.png");
-            using (var qrGenerator = new QRCoder.QRCodeGenerator())
+
+            using (var qrGenerator = new QRCodeGenerator())
             {
-                var qrData = qrGenerator.CreateQrCode(carUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new QRCoder.PngByteQRCode(qrData);
-                var qrBytes = qrCode.GetGraphic(20);
-                System.IO.File.WriteAllBytes(qrFilePath, qrBytes);
+                var qrData = qrGenerator.CreateQrCode(carUrl, QRCodeGenerator.ECCLevel.Q);
+                var qrCode = new PngByteQRCode(qrData);
+                System.IO.File.WriteAllBytes(qrFilePath, qrCode.GetGraphic(20));
             }
 
-            // 🔹 Render widoku PDF
-            var html = await _viewRenderService.RenderToStringAsync(ControllerContext, "DetailsPdf", car);
+            // 🔹 Render Razor → HTML
+            var html = await _viewRenderService.RenderToStringAsync(
+                ControllerContext,
+                "DetailsPdf",
+                car
+            );
 
-            // 🔹 Ustawienia PDF
-            var doc = new HtmlToPdfDocument()
-            {
-                GlobalSettings = new GlobalSettings
-                {
-                    ColorMode = ColorMode.Color,
-                    Orientation = Orientation.Portrait,
-                    PaperSize = PaperKind.A4
-                },
-                Objects =
-        {
-            new ObjectSettings
-            {
-                PagesCount = true,
-                HtmlContent = html,
-                WebSettings = new WebSettings
-                {
-                    DefaultEncoding = "utf-8",
-                    LoadImages = true,
-                    EnableJavascript = true,
-                    UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "pdf_export.css")
-                }
-            }
-        }
-            };
+            // 🔹 Konwerter PDF (SelectPdf)
+            var converter = new HtmlToPdf();
 
-            // 🔹 Wygeneruj PDF w pamięci
-            var file = _converter.Convert(doc);
+            converter.Options.PdfPageSize = PdfPageSize.A4;
+            converter.Options.PdfPageOrientation = PdfPageOrientation.Portrait;
+            converter.Options.MarginTop = 10;
+            converter.Options.MarginBottom = 10;
+            converter.Options.MarginLeft = 10;
+            converter.Options.MarginRight = 10;
 
-            // 🔹 Zarejestruj czyszczenie plików tymczasowych po wysłaniu odpowiedzi
+            // 🔑 KLUCZOWE – base URL dla /css, /icons, /temp
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+            var doc = converter.ConvertHtmlString(html, baseUrl);
+
+            byte[] pdf = doc.Save();
+            doc.Close();
+
+            // 🔹 Sprzątanie QR po zakończeniu odpowiedzi
             Response.OnCompleted(() =>
             {
                 try
@@ -126,16 +130,16 @@ namespace Car4You.Controllers
                     if (System.IO.File.Exists(qrFilePath))
                         System.IO.File.Delete(qrFilePath);
                 }
-                catch { /* Ignorujemy błędy */ }
+                catch { }
 
                 return Task.CompletedTask;
             });
 
-            // 🔹 Zwróć gotowy plik
-            string fileName = $"{car.CarModel.Brand.Name}_{car.CarModel.Name}_{car.Version?.Name}_{car.Year}.pdf";
-            return File(file, "application/pdf", fileName);
-        }
+            string fileName =
+                $"{car.CarModel.Brand.Name}_{car.CarModel.Name}_{car.Version?.Name}_{car.Year}.pdf";
 
+            return File(pdf, "application/pdf", fileName);
+        }
 
 
         public IActionResult About()
